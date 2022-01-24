@@ -1,0 +1,31 @@
+Source: ubuntu-security-guides
+Section: misc
+Priority: optional
+Maintainer: Ubuntu Security <security@ubuntu.com>
+Build-Depends: pandoc (>= 2.5-3build2), debhelper (>=12)
+Standards-Version: 3.9.7
+
+Package: usg
+Architecture: all
+Depends: libopenscap8, ${misc:Depends}
+Conflicts: usg-common
+Recommends: usg-benchmarks-1
+Description: usg tool application to work with Ubuntu Benchmarks
+ This package contains a helper application to simplify the auditing
+ and hardening executions.
+
+Package: usg-benchmarks-1
+Architecture: all
+Depends: usg, ${misc:Depends}
+Description: SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
+ This package contains SCAP content to support the automation of
+ compliance evaluation for CIS v1.0.0 and DISA-STIG V1R1 Benchmarks.
+ This includes XCCDF, OVAL, CPE and tailoring files.
+ .
+ SCAP (Security Content Automation Protocol) is a set of standards to
+ enable automated vulnerability amanagement, measurement, and policy
+ compliance evaluation of systems deployed in an organization.
+ The SCAP content in this package is expected to be passed into SCAP
+ auditing tools that utilize the Extensible Configuration Checklist
+ Description Format (XCCDF). It was tested with openSCAP which has been
+ extended to include bash scripts as part of the content.

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+version=$(echo "${DPKG_MAINTSCRIPT_PACKAGE}" | grep -Po '(?<=usg-benchmarks-).*')
+path=$(dpkg -L ${DPKG_MAINTSCRIPT_PACKAGE} | grep -Po '(/.*)+'"(?=/${version}/benchmarks)" | uniq)
+
+update-alternatives --remove usg_benchmarks ${path}/${version}

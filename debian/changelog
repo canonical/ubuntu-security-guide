@@ -1,0 +1,41 @@
+ubuntu-security-guides (20.04.10) focal; urgency=medium
+
+  * New version based on ComplianceAsCode project. Version bumped to 20.04.10
+    since this is a major release.
+  * Replaces helper script usg-cis by usg, which includes additional features.
+    - Generation of a bash script bundle containing all the fixes
+    - Possibility of fixing the uncompliant rules after the audit process.
+  * Includes benchmarks and fix scripts for CIS (all profiles on version 1.0.0
+    for Focal) and for DISA-STIG.
+  * package name changed to reflect the addition of DISA-STIG benchmark (and
+    possible others in the future)
+  * Documentation broken in man pages for easier access
+  * Upgrades preserve old benchmarks versions
+  * Addition of tailoring files which allow users to easily customize which
+    rules will be audited/enforced
+  * Package isn't considered an upgrade to old ubuntu security guides packages
+    anymore. Albeit it conflicts with them.
+
+ -- Richard Maciel Costa <richard.maciel.costa@canonical.com>  Wed, 06 Oct 2021 23:40:44 -0300
+
+ubuntu-security-guides (20.04.4) focal; urgency=medium
+
+  * Fixed usage displaying an error
+  * Rule 5.4.5 hardening now outputs a result similar to the used on STIG
+
+ -- Richard Maciel Costa <richard.maciel.costa@canonical.com>  Thu, 06 May 2021 15:53:29 -0300
+
+ubuntu-security-guides (20.04.2) focal; urgency=medium
+
+  * Enhancement to rule 5.4.5
+
+ -- Richard Maciel Costa <richard.maciel.costa@canonical.com>  Mon, 03 May 2021 22:16:51 -0300
+
+ubuntu-security-guides (20.04.1) focal; urgency=medium
+
+
+  * 20.04 Audit and Hardening tools release, based on CIS Benchmark version
+    1.0.0
+
+ -- Richard Maciel Costa <richard.maciel.costa@canonical.com>  Mon, 26 Apr 2021 15:20:29 -0300
+

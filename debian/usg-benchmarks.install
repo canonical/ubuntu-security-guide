@@ -1,0 +1,3 @@
+benchmarks/*                                ${env:DESTDIR}/${env:BENCHMARK_VERSION}/benchmarks/
+benchmarks/ubuntu2004/checks/sce/*          ${env:DESTDIR}/${env:BENCHMARK_VERSION}/benchmarks/ubuntu2004/checks/sce/
+tailoring/*                                 ${env:DESTDIR}/${env:BENCHMARK_VERSION}/tailoring/

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+version=$(echo "${DPKG_MAINTSCRIPT_PACKAGE}" | grep -Po '(?<=usg-benchmarks-).*')
+path=$(dpkg -L ${DPKG_MAINTSCRIPT_PACKAGE} | grep -Po '(/.*)+'"(?=/${version}/benchmarks)" | uniq)
+
+update-alternatives --install "${path}/current" usg_benchmarks "${path}/${version}" 50 \
+    --slave /usr/share/man/man7/usg-cis.gz usg-cis /usr/share/man/man7/usg-cis-${version}.7.gz \
+    --slave /usr/share/man/man7/usg-disa-stig.gz usg-stig /usr/share/man/man7/usg-disa-stig-${version}.7.gz \
+    --slave /usr/share/man/man7/usg-rules.gz usg-rules /usr/share/man/man7/usg-rules-${version}.7.gz \
+    --slave /usr/share/man/man7/usg-variables.gz usg-variables /usr/share/man/man7/usg-variables-${version}.7.gz
