@@ -38,7 +38,7 @@ cp "${cac_path}/ssg-ubuntu2004-ocil.xml" "${usg_path}"
 cp "${cac_path}/ssg-ubuntu2004-cpe-oval.xml" "${usg_path}"
 
 # Copy the license file
-cp $(dirname "${cac_path}")/LICENSE "${usg_path}"
+cp $(dirname "${cac_path}")/LICENSE "${usg_path}"/ComplianceAsCode-LICENSE
 
 # Copy the SCE check scripts
 cp "${cac_path}"/ubuntu2004/checks/sce/*.sh "${usg_sce_path}"
