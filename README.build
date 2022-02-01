@@ -4,6 +4,15 @@ built. This README file contains information on how to execute these steps.
 Prerequisite: build the CaC project
 
 
+METHOD 1: FULLY SCRIPTED
+========================
+1. Modify the configuration variables in tools/build_config.ini to match your paths and desired settings.
+2. Run tools/build.py -- no arguments necessary.
+3. Package the project as a deb using your preferred tooling.
+
+
+METHOD 2: LESS-AUTOMATED
+========================
 
 * STEP 1. Update the rules
 After you fetch the CaC-based usg project from the git repo, you need to copy
