@@ -127,21 +127,21 @@ def markdown_output(item_dict, is_variable=False):
             extra_char=''
         print(f"### Description:\n\n```{ extra_char }{ it.description }\n```\n")
 
-if "__main__" == __name__:
+def main(args):
     profiles=['cis_level1_server.profile',
              'cis_level2_server.profile',
               'cis_level1_workstation.profile',
               'cis_level2_workstation.profile',
               'stig.profile']
-    usage=f'Usage: {sys.argv[0]} [ rules | variables ] <profile path> <xccdf file path>'
+    usage=f'Usage: {args[0]} [ rules | variables ] <profile path> <xccdf file path>'
 
-    if len(sys.argv) != 4:
+    if len(args) != 4:
         print(usage, file=sys.stderr)
         sys.exit(1)
 
-    command=sys.argv[1]
-    profile_path=sys.argv[2]
-    xccdf_path=sys.argv[3]
+    command=args[1]
+    profile_path=args[2]
+    xccdf_path=args[3]
 
     is_variable=False
     if command == 'variables':
@@ -155,3 +155,7 @@ if "__main__" == __name__:
     item_dict = create_item_dict_using_profiles(profile_paths, is_variable)
     fill_item_dict_using_xccdf(xccdf_path, item_dict, is_variable)
     markdown_output(item_dict, is_variable)
+
+
+if "__main__" == __name__:
+    main(sys.argv)
