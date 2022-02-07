@@ -36,6 +36,8 @@ cp "${cac_path}/ssg-ubuntu2004-cpe-dictionary.xml" "${usg_path}/Canonical_Ubuntu
 cp "${cac_path}/ssg-ubuntu2004-oval.xml" "${usg_path}"
 cp "${cac_path}/ssg-ubuntu2004-ocil.xml" "${usg_path}"
 cp "${cac_path}/ssg-ubuntu2004-cpe-oval.xml" "${usg_path}"
+cp "${cac_path}/ssg-ubuntu2004-ds.xml" "${usg_path}"
+cp "${cac_path}/ssg-ubuntu2004-ds-1.2.xml" "${usg_path}"
 
 # Copy the license file
 cp $(dirname "${cac_path}")/LICENSE "${usg_path}"/ComplianceAsCode-LICENSE
