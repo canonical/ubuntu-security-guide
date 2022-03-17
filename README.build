@@ -82,12 +82,12 @@ All the current tailoring files are located into the tailoring subdirectory.
 Four are associated with CIS profiles (cis_level{1,2}_{server,workstation}-tailoring.xml)
 while a single one (stig-tailoring.xml) is associated with DISA-STIG.
 
-The local CaC project provides the `generate_tailoring_file.py` located into
-the utils subdirectory to help update the aforementioned tailoring files. For
+The tools/ directory provides the `generate_tailoring_file.py` script, which
+can be used to help update the aforementioned tailoring files. For
 instance, execute the command below to fetch the data for updating the
 `cis_level1_server-tailoring.xml`:
 
-python <cac directory>/utils/generate_tailoring_file.py <cac directory>/products/ubuntu2004/profiles/cis_level1_server.profile <usg directory>/benchmarks/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml
+python <usg directory>/tools/generate_tailoring_file.py <cac directory>/products/ubuntu2004/profiles/cis_level1_server.profile <usg directory>/benchmarks/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml
 
 The output data must be put into the <usg directory>/tailoring/cis_level1_server-tailoring.xml
 file, under the `xccdf:Profile` element. You can override the other elements
@@ -117,9 +117,6 @@ profile.
 ** When this step must be done?
 When a new rule is added, a rule is removed or its base description is changed and the rule
 belongs to a profile we care about.
-
-TODO: update the <cac directory>/utils/generate_tailoring_file.py script to automatically
-update the tailoring files, without any manual intervention required.
 
 
 
