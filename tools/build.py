@@ -136,7 +136,7 @@ def gen_tailoring(cac_directory, usg_directory):
             "products/ubuntu2004/profiles/cis_level1_workstation.profile",
             "products/ubuntu2004/profiles/stig.profile"]
     
-    gen_tailoring_script = "%s/%s/utils/generate_tailoring_file.py"%(tools_directory, cac_directory)
+    gen_tailoring_script = "%s/generate_tailoring_file.py"%(tools_directory)
     benchmark_xml = "%s/%s/benchmarks/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml"%(tools_directory, usg_directory)
     tailoring_data = [""] * len(tailoring_file_info)
     
