@@ -66,6 +66,7 @@ function usage_common_options()
 {
     echo "	--html-file <path to file>          Overrides the HTML output file
 	--results-file <path to file>       Overrides the results file
+	--oval-results                      Dumps the OVAL results files into the CWD
 "
 }
 
@@ -172,6 +173,7 @@ alternatives entry 'usg_current_benchmarks' is properly configured.
 remediate_flag=""
 output_flag=""
 tailoring_flag=""
+oval_results_flag=""
 
 function usage
 {
@@ -277,7 +279,7 @@ command="$1"
 case "${command}" in
     $AUDIT_CMD|$FIX_CMD)
         shift
-        all_params=$(getopt -n ${prog_name} -oh --long tailoring-file:,html-file:,results-file:,help -- "$@")
+        all_params=$(getopt -n ${prog_name} -oh --long tailoring-file:,html-file:,results-file:,oval-results,help -- "$@")
         ;;
     $GENFIX_CMD)
         shift
@@ -309,10 +311,12 @@ while true ; do
             output_flag="$1 $2"; shift 2 ;;
         --tailoring-file)
             tailoring_file=$2; shift 2 ;;
-	--html-file)
-	    HTML_FILE=$2; shift 2 ;;
-	--results-file)
-	    RESULTS_FILE=$2; shift 2;;
+        --html-file)
+	        HTML_FILE=$2; shift 2 ;;
+        --results-file)
+            RESULTS_FILE=$2; shift 2;;
+        --oval-results)
+            oval_results_flag="--oval-results"; shift;;
         -h|--help)
             usage "${command}"
             exit 0
@@ -372,7 +376,7 @@ if [ "${command}" == $FIX_CMD ]; then
 fi
 case "${command}" in
     $AUDIT_CMD|$FIX_CMD)
-        command="oscap xccdf eval --profile ${profile} --cpe $FOCAL_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${remediate_flag} $FOCAL_XCCDF_FILE"
+        command="oscap xccdf eval --profile ${profile} --cpe $FOCAL_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${oval_results_flag} ${remediate_flag} $FOCAL_XCCDF_FILE"
 
         # remove old results file
 	mkdir -p $RESULTS_DIR
