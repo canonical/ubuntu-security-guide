@@ -140,15 +140,24 @@ def gen_documentation(cac_directory, usg_directory):
     # In order of [rules, variables]
     return (doc_output[0], doc_output[1])
 
-def gen_tailoring(cac_directory, usg_directory):
 
-    # This is an array of profile paths (below cac_directory) in the order of c1s, c1w, c2s, c2w, stig
+def gen_tailoring(cac_directory, usg_directory, benchmark_version):
+
+    # This is an array of profile paths (below cac_directory) in the order
+    # of c1s, c1w, c2s, c2w, stig
     tailoring_file_info = [
         "products/ubuntu2004/profiles/cis_level1_server.profile",
         "products/ubuntu2004/profiles/cis_level1_workstation.profile",
         "products/ubuntu2004/profiles/cis_level2_server.profile",
         "products/ubuntu2004/profiles/cis_level2_workstation.profile",
         "products/ubuntu2004/profiles/stig.profile"]
+
+    tailoring_template = [
+        "templates/tailoring/cis_level1_server-tailoring.xml",
+        "templates/tailoring/cis_level1_workstation-tailoring.xml",
+        "templates/tailoring/cis_level2_server-tailoring.xml",
+        "templates/tailoring/cis_level2_workstation-tailoring.xml",
+        "templates/tailoring/stig-tailoring.xml"]
 
     gen_tailoring_script = "%s/generate_tailoring_file.py" % (tools_directory)
     benchmark_xml = \
@@ -179,40 +188,43 @@ def gen_tailoring(cac_directory, usg_directory):
     stig_data = tailoring_data[4]
     return (c1s_data, c1w_data, c2s_data, c2w_data, stig_data)
 
-def mass_replacer(the_meat, meat_placeholder, package_version, alternative_version, current_timestamp, file_lines):
-    # This function significantly reduces code reuse and other potential ickyness.
-    # "the_meat" refers to the main data that needs to be put in the file,
-    #   ie the generated documentation or tailoring XML data.
+
+def mass_replacer(the_meat, meat_placeholder, package_version,
+                  alternative_version, current_timestamp, file_lines):
+    # This function significantly reduces code reuse and other potential
+    # ickyness. "the_meat" refers to the main data that needs to be put
+    # in the file,ie the generated documentation.
     # "meat_placeholder" is the template placeholder string for "the_meat"
 
     # Generate the different time-related values that this function will use.
-    current_iso = current_timestamp.isoformat()
-    current_datestring = datetime.datetime.strftime(current_timestamp, "%d %B %Y")
+    current_datestring = datetime.datetime.strftime(current_timestamp,
+                                                    "%d %B %Y")
     current_year = current_timestamp.year
 
     corrected_lines = file_lines.replace(
         "<<YEAR_PLACEHOLDER>>", str(current_year))\
         .replace("<<DATE_PLACEHOLDER>>", str(current_datestring))\
-        .replace("<<ISODATETIME_PLACEHOLDER>>", str(current_iso))\
-        .replace("<<USG_BENCHMARKS_VERSION_PLACEHOLDER>>", str(package_version))\
-        .replace("<<USG_BENCHMARKS_ALTERNATIVE_PLACEHOLDER>>", str(alternative_version))\
+        .replace("<<USG_BENCHMARKS_VERSION_PLACEHOLDER>>",
+                 str(package_version))\
+        .replace("<<USG_BENCHMARKS_ALTERNATIVE_PLACEHOLDER>>",
+                 str(alternative_version))\
         .replace(meat_placeholder, str(the_meat))
 
     return corrected_lines
 
-def build_files(rules_doc, vars_doc, c1s_data, c1w_data, c2s_data, c2w_data, stig_data, package_version, alternative_version, current_timestamp, usg_directory):
+
+def build_files(rules_doc, vars_doc,
+                package_version, alternative_version,
+                current_timestamp, usg_directory):
     # An array of [path, data, placeholder]
     data_info = [
         ["doc/man8/usg.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-cis.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-disa-stig.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-rules.md", rules_doc, "<<USG_MAN_RULES_PLACEHOLDER>>"],
-        ["doc/man7/usg-variables.md", vars_doc, "<<USG_MAN_VARIABLE_PLACEHOLDER>>"],
-        ["tailoring/cis_level1_server-tailoring.xml", c1s_data, "<<LEVEL_1_SERVER_TAILORING_PLACEHOLDER>>"],
-        ["tailoring/cis_level1_workstation-tailoring.xml", c1w_data, "<<LEVEL_1_WORKSTATION_TAILORING_PLACEHOLDER>>"],
-        ["tailoring/cis_level2_server-tailoring.xml", c2s_data, "<<LEVEL_2_SERVER_TAILORING_PLACEHOLDER>>"],
-        ["tailoring/cis_level2_workstation-tailoring.xml", c2w_data, "<<LEVEL_2_WORKSTATION_TAILORING_PLACEHOLDER>>"],
-        ["tailoring/stig-tailoring.xml", stig_data, "<<STIG_TAILORING_PLACEHOLDER>>"]]
+        ["doc/man7/usg-variables.md", vars_doc,
+         "<<USG_MAN_VARIABLE_PLACEHOLDER>>"]
+    ]
 
     for specific_file_data in data_info:
         try:
@@ -260,19 +272,14 @@ def main(arg):
     rules_doc, vars_doc = gen_documentation(cac_directory, usg_directory)
 
     # Generate the tailoring data
-    c1s_data, c1w_data, c2s_data, c2w_data, stig_data = gen_tailoring(cac_directory, usg_directory)
+    gen_tailoring(cac_directory, usg_directory, alternative_version)
 
     # Build the template files from all of the data that we've collected.
-    build_files(rules_doc,\
-                vars_doc,\
-                c1s_data,\
-                c1w_data,\
-                c2s_data,\
-                c2w_data,\
-                stig_data,\
-                package_version,\
-                alternative_version,\
-                current_timestamp,\
+    build_files(rules_doc,
+                vars_doc,
+                package_version,
+                alternative_version,
+                current_timestamp,
                 usg_directory)
 
 
