@@ -1,7 +1,41 @@
-ubuntu-security-guides (20.04.10) focal; urgency=medium
+ubuntu-security-guides-enhanced (20.04.15) focal; urgency=medium
 
-  * New version based on ComplianceAsCode project. Version bumped to 20.04.10
-    since this is a major release.
+  * USG Tool: Add --oval-results flag to dump OVAL results
+    - This flag was requested in LP#1966068.
+      It merely dumps the OVAL result files into the CWD.
+  * CaC Content: Avoid grep failure because of '[' character in PAM
+    - Issues reported in LP#1969479 and LP#1969480
+
+ -- Adam Bell <adam.bell@canonical.com>  Tue, 28 Jun 2022 11:09:57 -0600
+
+ubuntu-security-guides-enhanced (20.04.14.1) focal; urgency=medium
+
+  * Tailoring file content update.
+
+ -- Adam Bell <adam.bell@canonical.com>  Fri, 04 Mar 2022 10:54:08 -0700
+
+ubuntu-security-guides-enhanced (20.04.14) focal; urgency=medium
+
+  * Implements changes found at github.com/canonical/ubuntu-security-guide
+    (this repository was open-sourced since the 20.04.13 package).
+    - CaC-built Datastream files are now included in USG.
+    - New USG build tools, updated USG build instructions.
+  * CaC content: Correction of "obsecure" -> "obscure" typo
+    in accounts_password_pam_unix_remember rule.
+
+ -- Adam Bell <adam.bell@canonical.com>  Fri, 18 Feb 2022 09:13:11 -0700
+
+ubuntu-security-guides-enhanced (20.04.13) focal; urgency=medium
+
+  * Updates benchmark data to modify HTML report footer. The footer
+    now links to the USG online documentation.
+
+ -- Adam Bell <adam.bell@canonical.com>  Wed, 14 Jan 2022 08:10:22 -0700
+
+ubuntu-security-guides-enhanced (20.04.12) focal; urgency=medium
+
+  * New version of ubuntu-security-guides based on ComplianceAsCode project.
+    Source and binary names changed to reflect this.
   * Replaces helper script usg-cis by usg, which includes additional features.
     - Generation of a bash script bundle containing all the fixes
     - Possibility of fixing the uncompliant rules after the audit process.
