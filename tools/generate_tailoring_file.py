@@ -33,6 +33,8 @@ def search_comment(raw_yaml, linenum):
             return raw_yaml[linenum]
         else:
             linenum -= 1
+
+
 search_comment.prog = re.compile("^\s*#+\s*((?:\d+\.)*\d+\.?|UBTU-.*)\s+")
 
 
@@ -41,135 +43,119 @@ def process_comment(s):
     return s.strip(' \n#')
 
 
-def print_xml_comment(comment, add_line_before):
-    ret_buf = ""
-    if add_line_before:
-        ret_buf += "\n"
-    ret_buf += f"<!-- { comment } -->\n"
-    return ret_buf
-
-
 def process_var(doc, var, val):
     root = doc.getroot()
     for xmlVal in root.findall(".//{http://checklists.nist.gov/xccdf/1.1}Value"):
         if xmlVal.get('id') == var:
             for xmlval in xmlVal.findall(".//{http://checklists.nist.gov/xccdf/1.1}value"):
                 if xmlval.get('selector') == val:
-                    return (None, xmlval.text)
+                    return xmlval.text
 
-    return (Exception("No value found for variable { var }!"), None)
-
-
-def print_xml_var(err, var, pval, tailor_doc):
-    if err is not None:
-        str_err = str(err)
-        print(f"<!-- Could not extract value from variable { var } ! Error: { str_err } -->")
-        sys.exit(1)
-    else:
-        root = tailor_doc.getroot()
-        for xmlProf in root.findall(".//{http://checklists.nist.gov/xccdf/1.1}Profile"):
-            value = etree.SubElement(xmlProf, '{%s}set-value' % root.nsmap['cdf-11-tailoring'])#{ pval }</xccdf:set-value>\n')
-            value.text = pval
-
-#        return f'<xccdf:set-value idref="{ var }">{ pval }</xccdf:set-value>\n'
+    raise Exception("No value found for variable { var }!")
 
 
 # If the raw rule name contains a '!' character, returns the name
 # without it and return flag select as False
 def process_rule(rule):
     if rule.startswith("!"):
-        return (rule.lstrip('!'), False)
-    return (rule, True)
+        return (rule.lstrip('!'), "false")
+    return (rule, "true")
 
 
-def print_xml_rule(rule, is_selected):
-    return f'<xccdf:select idref="{ rule }" selected="' + str(is_selected).lower() + '"/>\n'
-
-
-def create_tailoring_file(parsed_yaml, raw_yaml, xccdf_doc, tailor_doc):
-    yaml_sel = parsed_yaml["selections"]
-    prog = re.compile('^([^=]+)=(.*)$')  # Regexp to fetch variable lines
-    prev_linenum = -1
-    ret_buf = []
-    for i in range(len(yaml_sel)):
-        ret_item = ""
-        linenum = yaml_sel.lc.data[i][0]
-        # If it's the first linenum of a block, get the comment
-        if prev_linenum != (linenum - 1):
-            comment_line = search_comment(raw_yaml, linenum - 1)  # Start searching the previous line
-            pc = process_comment(comment_line)
-            if prev_linenum != -1:
-                ret_item += print_xml_comment(pc, True)
-            else:  # First line doesn't need spaces
-                ret_item += print_xml_comment(pc, False)
-
-        # Now line can be a variable assignment or a rule line
-        result = prog.match(yaml_sel[i])
-
-        if result:
-            # Real value must be extract from XCCDF file
-            var = result.group(1)
-            val = result.group(2)
-            err, pval = process_var(xccdf_doc, var, val)
-            ret_item += print_xml_var(err, var, pval, tailor_doc)
+def insert_into_xml(tailor_doc, elem, idref, text=None):
+    root = tailor_doc.getroot()
+    nsmap = root.nsmap['xccdf']
+    for xmlProf in root.findall(".//{http://checklists.nist.gov/xccdf/1.1}Profile"):
+        if elem == "set-value":
+            value = etree.SubElement(xmlProf, f"{{{nsmap}}}{elem}",
+                                     idref=idref)
+            value.text = text
+        elif elem == "select":
+            value = etree.SubElement(xmlProf, f"{{{nsmap}}}{elem}",
+                                     idref=idref, selected=text)
         else:
-            prule, is_selected = process_rule(yaml_sel[i])
-            ret_item += print_xml_rule(prule, is_selected)
-
-        prev_linenum = linenum
-        re_match = re.search('^[\n]?<!-- (.+?) ', ret_item)
-        if re_match is not None:
-            ret_buf.append(ret_item)
-        else:
-            ret_buf[len(ret_buf)-1] += ret_item
-
-    return ret_buf
+            value = etree.Comment(idref)
+            xmlProf.append(value)
 
 
-def process_profile_file(yaml_path):
-    parsed_yaml = None
-    raw_yaml = None
-    try:
-        with open(yaml_path, 'r') as yaml_file:
-            parsed_yaml = ruamel.yaml.round_trip_load(yaml_file)
-            yaml_file.seek(0)
-            raw_yaml = yaml_file.readlines()
+def create_tailoring_file(profile, xccdf_doc, tailor_doc):
+    for item in profile:
+        if item['rule'] or item['var']:
+            insert_into_xml(tailor_doc, "comment", item['comment'])
+
+            if item['var']:
+                for i in range(len(item['var'])):
+                    var = item['var'][i]
+                    val = item['var_value'][i]
+                    pval = process_var(xccdf_doc, var, val)
+                    insert_into_xml(tailor_doc, "set-value", var, pval)
+
+            for i in range(len(item['rule'])):
+                prule, is_selected = process_rule(item['rule'][i])
+                insert_into_xml(tailor_doc, "select", prule, is_selected)
+
+
 def get_parent_yaml_path(yaml_path, parent_profile):
     return yaml_path.rsplit(sep="/", maxsplit=1)[0] + \
         "/" + parent_profile + ".profile"
 
+
+def add_to_profile(profile, rule):
+    # check if rule was already added to profile,
+    # this means it is a child overwriting parent rule
+    for r in profile:
+        if r['comment'] == rule['comment']:
+            r.update(rule)
+            rule = {}
+            break
+    # this means the rule is not yet in the profile
+    if rule:
+        profile.append(rule)
+
+
+def process_profile_file(yaml_path):
+    fd = None
+    profile = []
+    rule = {}
+
+    try:
+        with open(yaml_path, 'r') as yaml_file:
+            fd = yaml_file.readlines()
     except OSError:
         print("Could not open profile file", file=sys.stderr)
         sys.exit(1)
 
-    return raw_yaml, parsed_yaml
+    for line in fd:
+        if "extends:" in line:
+            parent_profile = re.search(r"^extends:\s(.*)$", line).group(1).strip()
+            parent_path = get_parent_yaml_path(yaml_path, parent_profile)
+            profile = process_profile_file(parent_path)
 
+        comment = re.search(r"^\s*#+\s*([\d+|\.]+\s.*|UBTU-.*)$", line)
+        if comment:
+            if rule:
+                add_to_profile(profile, rule)
+                rule = {}
+            rule['comment'] = comment.group(1).strip()
+            rule['rule'] = list()
+            rule['var'] = list()
+            rule['var_value'] = list()
 
-def merge_tailoring_data(extended_data, parent_data):
-    extended_data_rules = []
-    # Gather the changed rules in the extended profile.
-    for i in range(len(extended_data)):
-        re_match = re.search('^[\n]?<!-- (.+?) ', extended_data[i])
-        if re_match is not None:
-            extended_data_rules.append(re_match.group(1))
+        rul = re.search(r"^\s*-\s(.*)$", line)
+        if rul:
+            # check if it is not a var instead:
+            var = re.search(r"^\s*-\s+(.*)\s*=\s*(.*)$", line)
+            if var:
+                rule['var'].append(var.group(1).strip())
+                rule['var_value'].append(var.group(2).strip())
+            else:
+                rule['rule'].append(rul.group(1).strip(" '"))
 
-    if len(extended_data) != len(extended_data_rules):
-        print("Error merging tailoring data: rule array lengths are different.", file=sys.stderr)
-        sys.exit(1)
+    if rule:
+        add_to_profile(profile, rule)
+        rule = {}
 
-    # Replace any changed rules in the parent profile.
-    for i in range(len(parent_data)):
-        current_rule = re.search('^[\n]?<!-- (.+?) ', parent_data[i]).group(1)
-        if current_rule in extended_data_rules:
-            # extended_data and extended_data_rules should align. This assumes that.
-            parent_data[i] = extended_data[extended_data_rules.index(current_rule)]
-
-    return parent_data
-
-
-def print_tailoring_array(tailoring_data):
-    for i in range(len(tailoring_data)):
-        print(tailoring_data[i])
+    return profile
 
 
 USAGE = f"Usage: python {sys.argv[0]} <Profile file path> <XCCDF file path>"
@@ -184,7 +170,7 @@ if __name__ == '__main__':
     tailoring_path = sys.argv[3]
     pkg_version = sys.argv[4]
 
-    raw_yaml, parsed_yaml = process_profile_file(yaml_path)
+    profile = process_profile_file(yaml_path)
 
     xccdf_doc = None
     tailor_doc = None
@@ -207,14 +193,12 @@ if __name__ == '__main__':
         print("Could not process template tailoring file", file=sys.stderr)
         sys.exit(1)
 
-    tailoring_data = create_tailoring_file(parsed_yaml, raw_yaml, xccdf_doc, tailor_doc)
+    create_tailoring_file(profile,
+                          xccdf_doc,
+                          tailor_doc)
 
-    if "extends" in parsed_yaml:
-        parent_yaml_path = yaml_path.rsplit(sep="/", maxsplit=1)[0] + "/" + parsed_yaml["extends"] + ".profile"
-        parent_raw_yaml, parent_parsed_yaml = process_profile_file(parent_yaml_path)
-        parent_tailoring_data = create_tailoring_file(parent_parsed_yaml, parent_raw_yaml, xccdf_doc, tailor_doc)
-        tailoring_data = merge_tailoring_data(tailoring_data, parent_tailoring_data)
-
-    print_tailoring_array(tailoring_data)
+    out_path = tailoring_path.replace("templates", ".")
+    tailor_doc.write(out_path, pretty_print=True,
+                     xml_declaration=True, encoding="utf-8")
 
     sys.exit(0)
