@@ -162,11 +162,16 @@ def gen_tailoring(cac_directory, usg_directory):
             exec_arg_2 = "%s/%s/%s" % \
                 (tools_directory, cac_directory, tailoring_file_info[i])
             exec_arg_3 = benchmark_xml
-            tailoring_data[i] = subprocess.check_output([sys.executable, exec_arg_1, exec_arg_2, exec_arg_3]).decode()
-        except:
-            exit_error("\
-                Executing `%s %s %s %s` failed."%(sys.executable, exec_arg_1, exec_arg_2, exec_arg_3))
-    
+            exec_arg_4 = "%s/%s/%s" % \
+                (tools_directory, usg_directory, tailoring_template[i])
+            exec_arg_5 = benchmark_version
+            tailoring_data[i] = subprocess.check_output([
+                sys.executable, exec_arg_1, exec_arg_2, exec_arg_3,
+                exec_arg_4, exec_arg_5]).decode()
+        except Exception:
+            exit_error("Executing `%s %s %s %s %s %s` failed." %
+                       (sys.executable, exec_arg_1, exec_arg_2, exec_arg_3, exec_arg_4, exec_arg_5))
+
     c1s_data = tailoring_data[0]
     c1w_data = tailoring_data[1]
     c2s_data = tailoring_data[2]
@@ -227,7 +232,12 @@ def build_files(rules_doc, vars_doc, c1s_data, c1w_data, c2s_data, c2w_data, sti
                        (tools_directory, usg_directory, specific_file_data[0]))
 
         template_data = template_file.read()
-        built_data = mass_replacer(specific_file_data[1], specific_file_data[2], package_version, alternative_version, current_timestamp, template_data)
+        built_data = mass_replacer(specific_file_data[1],
+                                   specific_file_data[2],
+                                   package_version,
+                                   alternative_version,
+                                   current_timestamp,
+                                   template_data)
         built_file.write(built_data)
         built_file.close()
         template_file.close()
