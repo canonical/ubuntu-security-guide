@@ -4,3 +4,4 @@ benchmarks/ComplianceAsCode-LICENSE
 doc/man7/*.7
 doc/man8/*.8
 debian/files
+tailoring/*.xml
