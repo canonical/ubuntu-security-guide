@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import ruamel.yaml
+
+import datetime
 import re
 import lxml.etree as etree
 import sys
@@ -58,12 +60,18 @@ def process_var(doc, var, val):
     return (Exception("No value found for variable { var }!"), None)
 
 
-def print_xml_var(err, var, pval):
+def print_xml_var(err, var, pval, tailor_doc):
     if err is not None:
         str_err = str(err)
         print(f"<!-- Could not extract value from variable { var } ! Error: { str_err } -->")
+        sys.exit(1)
     else:
-        return f'<xccdf:set-value idref="{ var }">{ pval }</xccdf:set-value>\n'
+        root = tailor_doc.getroot()
+        for xmlProf in root.findall(".//{http://checklists.nist.gov/xccdf/1.1}Profile"):
+            value = etree.SubElement(xmlProf, '{%s}set-value' % root.nsmap['cdf-11-tailoring'])#{ pval }</xccdf:set-value>\n')
+            value.text = pval
+
+#        return f'<xccdf:set-value idref="{ var }">{ pval }</xccdf:set-value>\n'
 
 
 # If the raw rule name contains a '!' character, returns the name
@@ -78,7 +86,7 @@ def print_xml_rule(rule, is_selected):
     return f'<xccdf:select idref="{ rule }" selected="' + str(is_selected).lower() + '"/>\n'
 
 
-def create_tailoring_file(parsed_yaml, raw_yaml, xccdf_doc):
+def create_tailoring_file(parsed_yaml, raw_yaml, xccdf_doc, tailor_doc):
     yaml_sel = parsed_yaml["selections"]
     prog = re.compile('^([^=]+)=(.*)$')  # Regexp to fetch variable lines
     prev_linenum = -1
@@ -103,7 +111,7 @@ def create_tailoring_file(parsed_yaml, raw_yaml, xccdf_doc):
             var = result.group(1)
             val = result.group(2)
             err, pval = process_var(xccdf_doc, var, val)
-            ret_item += print_xml_var(err, var, pval)
+            ret_item += print_xml_var(err, var, pval, tailor_doc)
         else:
             prule, is_selected = process_rule(yaml_sel[i])
             ret_item += print_xml_rule(prule, is_selected)
@@ -126,6 +134,9 @@ def process_profile_file(yaml_path):
             parsed_yaml = ruamel.yaml.round_trip_load(yaml_file)
             yaml_file.seek(0)
             raw_yaml = yaml_file.readlines()
+def get_parent_yaml_path(yaml_path, parent_profile):
+    return yaml_path.rsplit(sep="/", maxsplit=1)[0] + \
+        "/" + parent_profile + ".profile"
 
     except OSError:
         print("Could not open profile file", file=sys.stderr)
@@ -163,28 +174,45 @@ def print_tailoring_array(tailoring_data):
 
 USAGE = f"Usage: python {sys.argv[0]} <Profile file path> <XCCDF file path>"
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 5:
         print(USAGE, file=sys.stderr)
         sys.exit(1)
 
+    current_timestamp = datetime.datetime.utcnow().replace(microsecond=0)
     yaml_path = sys.argv[1]
     xccdf_path = sys.argv[2]
+    tailoring_path = sys.argv[3]
+    pkg_version = sys.argv[4]
 
     raw_yaml, parsed_yaml = process_profile_file(yaml_path)
 
     xccdf_doc = None
+    tailor_doc = None
     try:
         xccdf_doc = etree.parse(xccdf_path)
     except etree.XMLSyntaxError:
         print("Could not process XCCDF file", file=sys.stderr)
         sys.exit(1)
 
-    tailoring_data = create_tailoring_file(parsed_yaml, raw_yaml, xccdf_doc)
+    try:
+        parser = etree.XMLParser(remove_blank_text=True)
+        tailor_doc = etree.parse(tailoring_path, parser)
+        xml_bench = tailor_doc.find(".//{http://open-scap.org/page/Xccdf-1.1-tailoring}benchmark")
+        xml_bench.attrib["href"] = "/usr/share/ubuntu-scap-security-guides/" +\
+            pkg_version +\
+            "/benchmarks/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml"
+        xml_ver = tailor_doc.find(".//{http://open-scap.org/page/Xccdf-1.1-tailoring}version")
+        xml_ver.attrib["time"] = current_timestamp.isoformat()
+    except etree.XMLSyntaxError:
+        print("Could not process template tailoring file", file=sys.stderr)
+        sys.exit(1)
+
+    tailoring_data = create_tailoring_file(parsed_yaml, raw_yaml, xccdf_doc, tailor_doc)
 
     if "extends" in parsed_yaml:
         parent_yaml_path = yaml_path.rsplit(sep="/", maxsplit=1)[0] + "/" + parsed_yaml["extends"] + ".profile"
         parent_raw_yaml, parent_parsed_yaml = process_profile_file(parent_yaml_path)
-        parent_tailoring_data = create_tailoring_file(parent_parsed_yaml, parent_raw_yaml, xccdf_doc)
+        parent_tailoring_data = create_tailoring_file(parent_parsed_yaml, parent_raw_yaml, xccdf_doc, tailor_doc)
         tailoring_data = merge_tailoring_data(tailoring_data, parent_tailoring_data)
 
     print_tailoring_array(tailoring_data)
