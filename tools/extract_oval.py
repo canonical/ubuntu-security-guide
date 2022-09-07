@@ -7,7 +7,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,8 +22,10 @@ file into smaller portions more suitable for the ComplianceAsCode/content
 build system.
 """
 
+from lxml.etree import ElementTree as ET
+
 import sys
-import xml.etree.ElementTree as ET
+
 
 def find_entity_with_reference(oval, ref):
     """
@@ -46,6 +48,7 @@ def find_entity_with_reference(oval, ref):
         for element_id in find_entity_with_reference(element, ref):
             yield element_id
 
+
 def find_entity(oval, identifier):
     """
     There's probably a nice xpath we could use here, but I tried:
@@ -59,6 +62,7 @@ def find_entity(oval, identifier):
 
         for subelement in find_entity(element, identifier):
             yield subelement
+
 
 def extract_references(element):
     """
@@ -76,6 +80,7 @@ def extract_references(element):
 
         for reference in extract_references(child):
             yield reference
+
 
 def resolve_entry_set(oval, entries):
     visited = set()
@@ -97,9 +102,12 @@ def resolve_entry_set(oval, entries):
 
     return visited
 
+
 def print_def_group(oval, entities):
-    ET.register_namespace('', 'http://oval.mitre.org/XMLSchema/oval-definitions-5')
-    ET.register_namespace('oval', 'http://oval.mitre.org/XMLSchema/oval-common-5')
+    ET.register_namespace('',
+                          'http://oval.mitre.org/XMLSchema/oval-definitions-5')
+    ET.register_namespace('oval',
+                          'http://oval.mitre.org/XMLSchema/oval-common-5')
     ET.register_namespace('ds', 'http://scap.nist.gov/schema/scap/source/1.2')
     ET.register_namespace('ocil', 'http://scap.nist.gov/schema/ocil/2.0')
     ET.register_namespace('xccdf-1.1', 'http://checklists.nist.gov/xccdf/1.1')
@@ -107,15 +115,19 @@ def print_def_group(oval, entities):
     ET.register_namespace('xlink', 'http://www.w3.org/1999/xlink')
     ET.register_namespace('cpe-dict', 'http://cpe.mitre.org/dictionary/2.0')
     ET.register_namespace('cat', 'urn:oasis:names:tc:entity:xmlns:xml:catalog')
-    ET.register_namespace('ind', 'http://oval.mitre.org/XMLSchema/oval-definitions-5#independent')
-    ET.register_namespace('unix', 'http://oval.mitre.org/XMLSchema/oval-definitions-5#unix')
-    ET.register_namespace('linux', 'http://oval.mitre.org/XMLSchema/oval-definitions-5#linux')
+    ET.register_namespace('ind',
+                          'http://oval.mitre.org/XMLSchema/oval-definitions-5#independent')
+    ET.register_namespace('unix',
+                          'http://oval.mitre.org/XMLSchema/oval-definitions-5#unix')
+    ET.register_namespace('linux',
+                          'http://oval.mitre.org/XMLSchema/oval-definitions-5#linux')
     root = ET.Element('def-group')
     for entity in entities:
         element = list(find_entity(oval, entity))[0]
         root.append(element)
 
     ET.dump(root)
+
 
 def main():
     if len(sys.argv) != 3:
@@ -142,6 +154,7 @@ def main():
 
     resolved = resolve_entry_set(oval, [rule_id])
     print_def_group(oval, sorted(resolved))
+
 
 if __name__ == "__main__":
     main()
