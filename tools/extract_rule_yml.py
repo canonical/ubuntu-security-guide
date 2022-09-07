@@ -7,7 +7,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,16 +23,19 @@ build system -- rule.yml entries.
 """
 
 import sys
-import xml.etree.ElementTree as ET
 import textwrap
 
 from extract_oval import find_entity
 from extract_ruleset import hack_is_element
+from lxml.etree import ElementTree as ET
+
+
 
 def extract_rule_num(identifier):
     assert '_CIS-' in identifier
     index = identifier.index('_CIS-')
     return identifier[index + 5:]
+
 
 def get_child(parent, tag):
     for element in parent:
@@ -42,12 +45,14 @@ def get_child(parent, tag):
         for subelement in get_child(element, tag):
             yield subelement
 
+
 def get_child_text(parent, tag):
     child = list(get_child(parent, tag))
     assert child
     assert len(child) == 1
     child = child[0]
     return child.text
+
 
 def print_rule_yml(element):
     cis_id = extract_rule_num(element.attrib['id'])
@@ -73,6 +78,7 @@ references:
 
     print(string)
 
+
 def main():
     if len(sys.argv) != 3:
         print("Usage: extract_rule_yml.py /path/to/xccdf.xml some.rule_id")
@@ -94,6 +100,7 @@ def main():
     assert len(entity) == 1
     entity = entity[0]
     print_rule_yml(entity)
+
 
 if __name__ == "__main__":
     main()
