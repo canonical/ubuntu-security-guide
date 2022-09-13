@@ -16,31 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import ruamel.yaml
 
 import datetime
 import re
 import lxml.etree as etree
 import sys
-
-
-def search_comment(raw_yaml, linenum):
-    result = None
-    while result is None:
-        assert(linenum >= 0)
-        result = search_comment.prog.match(raw_yaml[linenum])
-        if result:
-            return raw_yaml[linenum]
-        else:
-            linenum -= 1
-
-
-search_comment.prog = re.compile("^\s*#+\s*((?:\d+\.)*\d+\.?|UBTU-.*)\s+")
-
-
-def process_comment(s):
-    # Remove newline chars and the shebang
-    return s.strip(' \n#')
 
 
 def process_var(doc, var, val):
