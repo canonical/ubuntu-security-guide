@@ -45,11 +45,11 @@ GENTAIL_CMD="generate-tailoring"
 umask 0077
 
 keys="${!PROFILES[*]}"
-prog_name=$(basename $0)
+prog_name=$(basename "$0")
 
 function echoerr()
 {
-    >&2 echo -e $@
+    >&2 echo -e "$@"
 }
 
 function usage_command()
@@ -405,7 +405,7 @@ case "${command}" in
 
         # Run the command
         echoerr "USG will execute the following command for generating fix: ${command}"
-        if eval $command; then
+        if eval "$command"; then
             echoerr "USG generate-fix command completed."
         else
             echoerr "USG generate-fix command failed!"
@@ -422,7 +422,7 @@ case "${command}" in
         command="cp $TAILORING_DIR/${PROFILES[${profile/#stig/disa_stig}]} ${2}" # HACK: disa_stig is the accepted profile by the script, while the XCCDF uses stig
 
         echoerr "USG will execute the following command for generating a new tailoring file: ${command}"
-        if eval $command; then
+        if eval "$command"; then
             echoerr "USG generate-tailoring command completed."
         else
             echoerr "USG generate-tailoring command failed!"
