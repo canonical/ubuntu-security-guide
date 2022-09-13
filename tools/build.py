@@ -147,7 +147,7 @@ def gen_tailoring(cac_directory, usg_directory):
         "products/ubuntu2004/profiles/cis_level1_server.profile",
         "products/ubuntu2004/profiles/cis_level1_workstation.profile",
         "products/ubuntu2004/profiles/cis_level2_server.profile",
-        "products/ubuntu2004/profiles/cis_level1_workstation.profile",
+        "products/ubuntu2004/profiles/cis_level2_workstation.profile",
         "products/ubuntu2004/profiles/stig.profile"]
 
     gen_tailoring_script = "%s/generate_tailoring_file.py" % (tools_directory)
