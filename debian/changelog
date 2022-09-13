@@ -1,3 +1,18 @@
+ubuntu-security-guides-enhanced (20.04.16) focal; urgency=medium
+
+  * Fix multiple issues in generate tailoring file script
+  * USG Tool: Add --debug flag and make all debug files available in
+    /var/lib/usg/
+  * CaC content: Multiple fixes
+    - Fix grub2 password related rules for UEFI-based systems
+    - Fix set maxpoll for chrony or ntpd
+    - Fix xattr audit rules to check for root user
+    - Improve ensure_pam_module_options to avoid breaking
+      pam_auth_update
+    - Add package_pam_pwquality_installed to cis_level1_server
+
+ -- Eduardo Barretto <eduardo.barretto@canonical.com>  Tue, 13 Sep 2022 14:42:07 +0200
+
 ubuntu-security-guides-enhanced (20.04.15) focal; urgency=medium
 
   * USG Tool: Add --oval-results flag to dump OVAL results
