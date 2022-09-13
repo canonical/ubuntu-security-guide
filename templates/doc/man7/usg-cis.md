@@ -1,5 +1,5 @@
 % USG-CIS(7) usg-benchmarks-<<USG_BENCHMARKS_ALTERNATIVE_PLACEHOLDER>> <<USG_BENCHMARKS_VERSION_PLACEHOLDER>>
-% Richard Maciel Costa <richard.maciel.costa@canonical.com>
+% Eduardo Barretto <eduardo.barretto@canonical.com>
 % <<DATE_PLACEHOLDER>>
 
 # NAME
@@ -16,7 +16,7 @@ Last, this man page explains the limitations of the CIS profiles.
 This section provides basic explanation on levels and targets, For a through explanation, refer to the CIS benchmark document.
 
 ## Profiles Levels
-The CIS benchmark and this implementation provides 2 levels of profiles: level 1 and level 2.  
+The CIS benchmark and this implementation provides 2 levels of profiles: level 1 and level 2.
 As stated in the CIS benchmark specification, level 2 rules "may negatively inhibit the utility or performance of the technology". On the
 other hand, level 1 rules are generally safe to use.
 
