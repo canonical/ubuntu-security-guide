@@ -141,6 +141,26 @@ def gen_documentation(cac_directory, usg_directory):
     return (doc_output[0], doc_output[1])
 
 
+def validate_tailoring_files(usg_directory):
+    tailoring_dir = os.path.join(tools_directory,
+                                 usg_directory + '/tailoring/')
+    for filename in os.listdir(tailoring_dir):
+        # skip .gitkeep or other hidden files
+        if not filename.startswith('.'):
+            f = os.path.join(tailoring_dir, filename)
+            try:
+                command = "oscap"
+                exec_arg_1 = "oval"
+                exec_arg_2 = "validate"
+                result = subprocess.run([command, exec_arg_1, exec_arg_2, f],
+                                        check=True)
+            except Exception:
+                exit_error("Executing `%s %s` failed." %
+                           (command, f))
+
+    print("Successfully validated tailoring files")
+
+
 def gen_tailoring(cac_directory, usg_directory, benchmark_version):
 
     # This is an array of profile paths (below cac_directory) in the order
@@ -180,6 +200,7 @@ def gen_tailoring(cac_directory, usg_directory, benchmark_version):
                        (sys.executable, exec_arg_1, exec_arg_2, exec_arg_3,
                         exec_arg_4, exec_arg_5))
 
+    validate_tailoring_files(usg_directory)
 
 
 def mass_replacer(the_meat, meat_placeholder, package_version,
