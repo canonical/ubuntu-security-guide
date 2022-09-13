@@ -1,5 +1,5 @@
 % USG(8) usg <<USG_BENCHMARKS_VERSION_PLACEHOLDER>>
-% Richard Maciel Costa <richard.maciel.costa@canonical.com>, Nikos Mavrogiannopoulos <nikos.mavrogiannopoulos@canonical.com>
+% Eduardo Barretto <eduardo.barretto@canonical.com>
 % <<DATE_PLACEHOLDER>>
 
 # NAME
@@ -98,7 +98,7 @@ This element sets a variable associated with a given **usg rule**. The variable 
 <xccdf:set-value idref="var_sshd_set_loglevel">VERBOSE</xccdf:set-value>
 ```
 
-For a list of rules and their descriptions, see the **usg-rules** man page.  
+For a list of rules and their descriptions, see the **usg-rules** man page.
 For a list of variables and their descriptions, see the **usg-variables** man page.
 
 ## Tailoring files and Benchmark rules
@@ -201,7 +201,7 @@ Benchmarks, like CIS, create sets of rules for specific environments (like serve
 
 ## Benchmark rules vs usg rules
 This man page will refer as **benchmark rules** for the rules described in their specific benchmark documents. For instance, Canonical Ubuntu 20.04 CIS 1.0.0 rule 5.6, which is a rule defined in the document of the CIS benchmark for Ubuntu 20.04 version 1.0.0.
-On the other hand, **usg rules** are sets of specific instructions, described in computer languages, used to audit and/or fix a system.  
+On the other hand, **usg rules** are sets of specific instructions, described in computer languages, used to audit and/or fix a system.
 A **benchmark rule is implemented by one or more usg rules**.
 
 ## What are Profiles?

@@ -1,5 +1,5 @@
 % USG-VARIABLES(7) usg-benchmarks-<<USG_BENCHMARKS_ALTERNATIVE_PLACEHOLDER>> <<USG_BENCHMARKS_VERSION_PLACEHOLDER>>
-% Richard Maciel Costa <richard.maciel.costa@canonical.com>
+% Eduardo Barretto <eduardo.barretto@canonical.com>
 % <<DATE_PLACEHOLDER>>
 
 # NAME
