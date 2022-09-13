@@ -35,6 +35,7 @@ DATE=$(date +%Y%m%d.%H%M)
 RESULTS_DIR="/var/lib/usg"
 RESULTS_FILE="$RESULTS_DIR/usg-results-$DATE.xml"
 HTML_FILE="$RESULTS_DIR/usg-report-$DATE.html"
+LOG_FILE="$RESULTS_DIR/usg-log-$DATE.log"
 DEFAULT_TAILORING="/etc/usg/default-tailoring.xml"
 
 AUDIT_CMD="audit"
@@ -66,7 +67,8 @@ function usage_common_options()
 {
     echo "	--html-file <path to file>          Overrides the HTML output file
 	--results-file <path to file>       Overrides the results file
-	--oval-results                      Dumps the OVAL results files into the CWD
+	--oval-results                      Dumps the OVAL results files into the $RESULTS_DIR
+	--debug                             Dumps more log files into the $RESULTS_DIR
 "
 }
 
@@ -279,7 +281,7 @@ command="$1"
 case "${command}" in
     $AUDIT_CMD|$FIX_CMD)
         shift
-        all_params=$(getopt -n ${prog_name} -oh --long tailoring-file:,html-file:,results-file:,oval-results,help -- "$@")
+        all_params=$(getopt -n ${prog_name} -oh --long tailoring-file:,html-file:,results-file:,oval-results,debug,help -- "$@")
         ;;
     $GENFIX_CMD)
         shift
@@ -314,9 +316,12 @@ while true ; do
         --html-file)
 	        HTML_FILE=$2; shift 2 ;;
         --results-file)
-            RESULTS_FILE=$2; shift 2;;
+            RESULTS_FILE=$2; shift 2 ;;
         --oval-results)
-            oval_results_flag="--oval-results"; shift;;
+            oval_results_flag="--oval-results"; shift ;;
+        --debug)
+            oval_results_flag=""
+            debug_flag="--verbose INFO --verbose-log-file $LOG_FILE --oval-results"; shift ;;
         -h|--help)
             usage "${command}"
             exit 0
@@ -340,10 +345,10 @@ if [ $? -gt 0 ]; then
 fi
 
 # If command-line contains no profile or tailoring file, try to use the default tailoring file
-if [ ! -v "$tailoring_file" ] && [ -z "$1" ];then
-    if [ -f $DEFAULT_TAILORING ];then
-	echo "Using the default tailoring file at $DEFAULT_TAILORING"
-	tailoring_file=$DEFAULT_TAILORING
+if [ ! -v "$tailoring_file" ] && [ -z "$1" ]; then
+    if [ -f $DEFAULT_TAILORING ]; then
+        echo "Using the default tailoring file at $DEFAULT_TAILORING"
+        tailoring_file=$DEFAULT_TAILORING
     fi
 fi
 
@@ -367,7 +372,7 @@ else
     # Attempts to validate tailoring file. Exits with an error message if unable.
     validate_tailoring_file
 
-    tailoring_flag="--tailoring-file ${tailoring_file}"
+    tailoring_flag="--tailoring-file $(realpath ${tailoring_file})"
 fi
 
 # Build the command based on the operation provided
@@ -376,18 +381,24 @@ if [ "${command}" == $FIX_CMD ]; then
 fi
 case "${command}" in
     $AUDIT_CMD|$FIX_CMD)
-        command="oscap xccdf eval --profile ${profile} --cpe $FOCAL_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${oval_results_flag} ${remediate_flag} $FOCAL_XCCDF_FILE"
+        command="oscap xccdf eval --profile ${profile} --cpe $FOCAL_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${debug_flag} ${oval_results_flag} ${remediate_flag} $FOCAL_XCCDF_FILE"
 
         # remove old results file
-	mkdir -p $RESULTS_DIR
-	rm -f $RESULTS_FILE
+        mkdir -p "$RESULTS_DIR"
+        rm -f "$RESULTS_FILE"
 
         # Run the command
         echoerr "USG will execute the following command for auditing: ${command}"
-        eval $command
+
+        # move to RESULTS_DIR so --oval-results generated files are together with
+        # the other files, as --oval-results creates the files in PWD/CWD
+        pushd "$RESULTS_DIR" > /dev/null
+        eval "$command"
+        popd > /dev/null
+
         if [ -e "${RESULTS_FILE}" ]; then
             ##Generate a html report
-            oscap xccdf generate report $RESULTS_FILE > $HTML_FILE
+            oscap xccdf generate report "$RESULTS_FILE" > "$HTML_FILE"
 
             if [ -n "${remediate_flag}" ]; then
                 echoerr "USG fix command completed."
