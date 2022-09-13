@@ -163,7 +163,6 @@ def gen_tailoring(cac_directory, usg_directory, benchmark_version):
     benchmark_xml = \
         "%s/%s/benchmarks/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml" % \
         (tools_directory, usg_directory)
-    tailoring_data = [""] * len(tailoring_file_info)
 
     for i in range(len(tailoring_file_info)):
         try:
@@ -174,19 +173,13 @@ def gen_tailoring(cac_directory, usg_directory, benchmark_version):
             exec_arg_4 = "%s/%s/%s" % \
                 (tools_directory, usg_directory, tailoring_template[i])
             exec_arg_5 = benchmark_version
-            tailoring_data[i] = subprocess.check_output([
-                sys.executable, exec_arg_1, exec_arg_2, exec_arg_3,
-                exec_arg_4, exec_arg_5]).decode()
+            subprocess.run([sys.executable, exec_arg_1, exec_arg_2, exec_arg_3,
+                            exec_arg_4, exec_arg_5], check=True)
         except Exception:
             exit_error("Executing `%s %s %s %s %s %s` failed." %
-                       (sys.executable, exec_arg_1, exec_arg_2, exec_arg_3, exec_arg_4, exec_arg_5))
+                       (sys.executable, exec_arg_1, exec_arg_2, exec_arg_3,
+                        exec_arg_4, exec_arg_5))
 
-    c1s_data = tailoring_data[0]
-    c1w_data = tailoring_data[1]
-    c2s_data = tailoring_data[2]
-    c2w_data = tailoring_data[3]
-    stig_data = tailoring_data[4]
-    return (c1s_data, c1w_data, c2s_data, c2w_data, stig_data)
 
 
 def mass_replacer(the_meat, meat_placeholder, package_version,
