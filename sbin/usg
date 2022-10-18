@@ -172,7 +172,7 @@ alternatives entry 'usg_current_benchmarks' is properly configured.
 <VERSION> is the version number of the benchmark bundle contained into the package." 1>&2
 }
 
-remediate_flag=""
+remediation_file=""
 output_flag=""
 tailoring_flag=""
 oval_results_flag=""
@@ -263,6 +263,21 @@ function validate_tailoring_file
     # Benchmark element inside tailoring file must point to an existing XCCDF file
     if [ -z "${tail_benchmark_elem}" ] || [ ! -f "${tail_benchmark_elem}" ]; then
         echoerr "Error: tailoring file '${tailoring_file}' must contain a benchmark element pointing to a valid XCCDF file"
+        exit 1
+    fi
+}
+
+function generate_fix_script
+{
+    remediation_file="$PWD/${profile}-$DATE.sh"
+    command="oscap xccdf generate --profile ${profile} fix --fix-type bash ${tailoring_flag} ${output_flag} $FOCAL_XCCDF_FILE > ${remediation_file}"
+
+    # Run the command
+    echoerr "USG will execute the following command for generating fix: ${command}"
+    if eval "$command"; then
+        echoerr "USG generate-fix command completed."
+    else
+        echoerr "USG generate-fix command failed!"
         exit 1
     fi
 }
@@ -376,33 +391,48 @@ else
 fi
 
 # Build the command based on the operation provided
-if [ "${command}" == $FIX_CMD ]; then
-    remediate_flag="--remediate"
-fi
 case "${command}" in
     $AUDIT_CMD|$FIX_CMD)
-        command="oscap xccdf eval --profile ${profile} --cpe $FOCAL_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${debug_flag} ${oval_results_flag} ${remediate_flag} $FOCAL_XCCDF_FILE"
+        audit_command="oscap xccdf eval --profile ${profile} --cpe $FOCAL_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${debug_flag} ${oval_results_flag} $FOCAL_XCCDF_FILE"
 
         # remove old results file
         mkdir -p "$RESULTS_DIR"
         rm -f "$RESULTS_FILE"
 
         # Run the command
-        echoerr "USG will execute the following command for auditing: ${command}"
+        echoerr "USG will execute the following command for auditing: ${audit_command}"
 
         # move to RESULTS_DIR so --oval-results generated files are together with
         # the other files, as --oval-results creates the files in PWD/CWD
         pushd "$RESULTS_DIR" > /dev/null
-        eval "$command"
+        eval "$audit_command"
+        # some oscap logs are generated automatically and we cannot specify their name
+        # therefore this is needed if we want to have historical logs. For now this is
+        # hardcoded
+        if [ -n "${debug_flag}" ]; then
+            mv "ssg-ubuntu2004-oval.xml.result.xml" "ssg-ubuntu2004-oval.xml.result-$DATE.xml"
+            mv "%2Fusr%2Fshare%2Fubuntu-scap-security-guides%2Fcurrent%2Fbenchmarks%2Fssg-ubuntu2004-cpe-oval.xml.result.xml" "ssg-ubuntu2004-cpe-oval.xml.result-$DATE.xml"
+        fi
         popd > /dev/null
 
         if [ -e "${RESULTS_FILE}" ]; then
             ##Generate a html report
             oscap xccdf generate report "$RESULTS_FILE" > "$HTML_FILE"
 
-            if [ -n "${remediate_flag}" ]; then
+            if [ "${command}" == $FIX_CMD ]; then
+                pushd "$RESULTS_DIR" > /dev/null
+                generate_fix_script
+                command="bash -x ${remediation_file} 2>&1 1>remediation-$DATE.log | tee -a remediation-$DATE.log"
+                echoerr "USG will execute the following command for remediating: ${command}"
+                exec 3>"remediation-$DATE.log"
+                export BASH_XTRACEFD=3
+                eval "$command"
+                exec 3>&-
+                unset BASH_XTRACEFD
+                popd > /dev/null
                 echoerr "USG fix command completed."
                 echoerr "A system reboot is required to complete the fix process."
+                echoerr "Please run usg audit after reboot."
             else
                 echoerr "USG audit scan command completed. The scan results are available in $HTML_FILE report or in $RESULTS_FILE."
             fi
@@ -412,16 +442,7 @@ case "${command}" in
         fi
         ;;
     $GENFIX_CMD)
-        command="oscap xccdf generate --profile ${profile} fix --fix-type bash ${tailoring_flag} ${output_flag} $FOCAL_XCCDF_FILE"
-
-        # Run the command
-        echoerr "USG will execute the following command for generating fix: ${command}"
-        if eval "$command"; then
-            echoerr "USG generate-fix command completed."
-        else
-            echoerr "USG generate-fix command failed!"
-            exit 1
-        fi
+        generate_fix_script
         ;;
     $GENTAIL_CMD)
         # generate-tailoring command is the only one which has 2 parameters after this. Check for them
