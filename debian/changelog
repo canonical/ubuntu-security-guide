@@ -1,8 +1,10 @@
 ubuntu-security-guides-enhanced (20.04.16) focal; urgency=medium
 
   * Fix multiple issues in generate tailoring file script
-  * USG Tool: Add --debug flag and make all debug files available in
-    /var/lib/usg/
+  * USG Tool: Improvements
+    - Add --debug flag and make all debug files available in
+      /var/lib/usg/
+    - Replace oscap fix command with bash and add logging
   * CaC content: Multiple fixes
     - Fix grub2 password related rules for UEFI-based systems
     - Fix set maxpoll for chrony or ntpd
