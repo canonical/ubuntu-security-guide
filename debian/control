@@ -7,7 +7,7 @@ Standards-Version: 3.9.7
 
 Package: usg
 Architecture: all
-Depends: libopenscap8, ${misc:Depends}
+Depends: libopenscap8, bsdmainutils, ${misc:Depends}
 Conflicts: usg-common
 Recommends: usg-benchmarks-1
 Description: usg tool application to work with Ubuntu Benchmarks
