@@ -1,5 +1,5 @@
 benchmarks/*.xml
-benchmarks/ubuntu2004/checks/sce/*.sh
+benchmarks/ubuntu*/
 benchmarks/ComplianceAsCode-LICENSE
 doc/man7/*.md
 doc/man8/*.md
