@@ -22,12 +22,13 @@ import re
 import lxml.etree as etree
 import sys
 
+XMLNS = "http://checklists.nist.gov/xccdf/1.2"
 
 def process_var(doc, var, val):
     root = doc.getroot()
-    for xmlVal in root.findall(".//{http://checklists.nist.gov/xccdf/1.1}Value"):
+    for xmlVal in root.findall(".//{%s}Value" % XMLNS):
         if xmlVal.get('id') == var:
-            for xmlval in xmlVal.findall(".//{http://checklists.nist.gov/xccdf/1.1}value"):
+            for xmlval in xmlVal.findall(".//{%s}value" % XMLNS):
                 if xmlval.get('selector') == val:
                     return xmlval.text
 
@@ -44,14 +45,13 @@ def process_rule(rule):
 
 def insert_into_xml(tailor_doc, elem, idref, text=None):
     root = tailor_doc.getroot()
-    nsmap = root.nsmap['xccdf']
-    for xmlProf in root.findall(".//{http://checklists.nist.gov/xccdf/1.1}Profile"):
+    for xmlProf in root.findall(".//{%s}Profile" % XMLNS):
         if elem == "set-value":
-            value = etree.SubElement(xmlProf, f"{{{nsmap}}}{elem}",
+            value = etree.SubElement(xmlProf, f"{elem}",
                                      idref=idref)
             value.text = text
         elif elem == "select":
-            value = etree.SubElement(xmlProf, f"{{{nsmap}}}{elem}",
+            value = etree.SubElement(xmlProf, f"{elem}",
                                      idref=idref, selected=text)
         else:
             value = etree.Comment(idref)
@@ -65,7 +65,7 @@ def create_tailoring_file(profile, xccdf_doc, tailor_doc):
 
             if item['var']:
                 for i in range(len(item['var'])):
-                    var = item['var'][i]
+                    var = 'xccdf_org.ssgproject.content_value_' + item['var'][i]
                     val = item['var_value'][i]
                     pval = process_var(xccdf_doc, var, val)
                     insert_into_xml(tailor_doc, "set-value", var, pval)
@@ -81,15 +81,9 @@ def get_parent_yaml_path(yaml_path, parent_profile):
 
 
 def add_to_profile(profile, rule):
-    # check if rule was already added to profile,
-    # this means it is a child overwriting parent rule
-    for r in profile:
-        if r['comment'] == rule['comment']:
-            r.update(rule)
-            rule = {}
-            break
-    # this means the rule is not yet in the profile
-    if rule:
+    # check if rule or variable was already added to profile
+    if not any(r['rule'] == rule['rule'] or
+               r['var'] == rule['var'] for r in profile):
         profile.append(rule)
 
 
@@ -163,11 +157,10 @@ if __name__ == '__main__':
     try:
         parser = etree.XMLParser(remove_blank_text=True)
         tailor_doc = etree.parse(tailoring_path, parser)
-        xml_bench = tailor_doc.find(".//{http://open-scap.org/page/Xccdf-1.1-tailoring}benchmark")
+        xml_bench = tailor_doc.find(".//{%s}benchmark" % XMLNS)
         xml_bench.attrib["href"] = "/usr/share/ubuntu-scap-security-guides/" +\
-            pkg_version +\
-            "/benchmarks/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml"
-        xml_ver = tailor_doc.find(".//{http://open-scap.org/page/Xccdf-1.1-tailoring}version")
+            pkg_version + "/benchmarks/" + xccdf_path.split('/')[-1]
+        xml_ver = tailor_doc.find(".//{%s}version" % XMLNS)
         xml_ver.attrib["time"] = current_timestamp.isoformat()
     except etree.XMLSyntaxError:
         print("Could not process template tailoring file", file=sys.stderr)

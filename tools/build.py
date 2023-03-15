@@ -74,11 +74,12 @@ def load_config():
     return package_version, alternative_version, target, usg_directory, cac_directory
 
 
-def run_ppb(tools_directory, cac_directory, usg_directory):
+def run_ppb(tools_directory, cac_directory, target, usg_directory):
     try:
         ppb_out = subprocess.check_output(
             ["%s/pre_package_build.sh" % (tools_directory),
              "%s/%s" % (tools_directory, cac_directory),
+             "%s" % (target),
              "%s/%s" % (tools_directory, usg_directory)])
     except subprocess.CalledProcessError:
         exit_error("pre_package_build.sh returned a non-zero status."
@@ -111,7 +112,7 @@ def update_alternative_version(usg_path, altver):
     control_file.close()
 
 
-def gen_documentation(cac_directory, usg_directory):
+def gen_documentation(cac_directory, usg_directory, target):
     # I'm opting to listen to the other module's outputs
     # rather than rebuilding the module.
     # This way the other module can still be used as it
@@ -124,11 +125,11 @@ def gen_documentation(cac_directory, usg_directory):
             exec_arg_1 = "%s/create_rule_and_variable_doc.py" % \
                 (tools_directory)
             exec_arg_2 = doc_gen_command[i]
-            exec_arg_3 = "%s/%s/products/ubuntu2004/profiles" % \
-                (tools_directory, cac_directory)
+            exec_arg_3 = "%s/%s/products/%s/profiles" % \
+                (tools_directory, cac_directory, target)
             exec_arg_4 =\
-                "%s/%s/benchmarks/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml"\
-                % (tools_directory, usg_directory)
+                "%s/%s/benchmarks/ssg-%s-xccdf.xml"\
+                % (tools_directory, usg_directory, target)
             doc_output[i] = subprocess.check_output([
                 sys.executable, exec_arg_1, exec_arg_2,
                 exec_arg_3, exec_arg_4]).decode()
@@ -161,16 +162,16 @@ def validate_tailoring_files(usg_directory):
     print("Successfully validated tailoring files")
 
 
-def gen_tailoring(cac_directory, usg_directory, benchmark_version):
+def gen_tailoring(cac_directory, usg_directory, target, benchmark_version):
 
     # This is an array of profile paths (below cac_directory) in the order
     # of c1s, c1w, c2s, c2w, stig
     tailoring_file_info = [
-        "products/ubuntu2004/profiles/cis_level1_server.profile",
-        "products/ubuntu2004/profiles/cis_level1_workstation.profile",
-        "products/ubuntu2004/profiles/cis_level2_server.profile",
-        "products/ubuntu2004/profiles/cis_level2_workstation.profile",
-        "products/ubuntu2004/profiles/stig.profile"]
+        "cis_level1_server.profile",
+        "cis_level1_workstation.profile",
+        "cis_level2_server.profile",
+        "cis_level2_workstation.profile",
+        "stig.profile"]
 
     tailoring_template = [
         "templates/tailoring/cis_level1_server-tailoring.xml",
@@ -181,14 +182,17 @@ def gen_tailoring(cac_directory, usg_directory, benchmark_version):
 
     gen_tailoring_script = "%s/generate_tailoring_file.py" % (tools_directory)
     benchmark_xml = \
-        "%s/%s/benchmarks/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml" % \
-        (tools_directory, usg_directory)
+        "%s/%s/benchmarks/ssg-%s-xccdf.xml" % \
+        (tools_directory, usg_directory, target)
 
     for i in range(len(tailoring_file_info)):
+        profile_path = "%s/%s/products/%s/profiles/%s" % \
+            (tools_directory, cac_directory, target, tailoring_file_info[i])
+        if not os.path.exists(profile_path):
+            continue
         try:
             exec_arg_1 = gen_tailoring_script
-            exec_arg_2 = "%s/%s/%s" % \
-                (tools_directory, cac_directory, tailoring_file_info[i])
+            exec_arg_2 = profile_path
             exec_arg_3 = benchmark_xml
             exec_arg_4 = "%s/%s/%s" % \
                 (tools_directory, usg_directory, tailoring_template[i])
@@ -277,16 +281,16 @@ def main(arg):
     package_version, alternative_version, target, usg_directory, cac_directory = load_config()
 
     # Run `pre_package_build.sh`
-    run_ppb(tools_directory, cac_directory, usg_directory)
+    run_ppb(tools_directory, cac_directory, target, usg_directory)
 
     # Update the alternative version number in debian/control
     update_alternative_version(usg_directory, alternative_version)
 
     # Generate the rules and variables documentation meat
-    rules_doc, vars_doc = gen_documentation(cac_directory, usg_directory)
+    rules_doc, vars_doc = gen_documentation(cac_directory, usg_directory, target)
 
     # Generate the tailoring data
-    gen_tailoring(cac_directory, usg_directory, alternative_version)
+    gen_tailoring(cac_directory, usg_directory, target, alternative_version)
 
     # Build the template files from all of the data that we've collected.
     build_files(rules_doc,
