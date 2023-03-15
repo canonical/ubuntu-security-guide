@@ -22,7 +22,7 @@ import os.path as path
 import re
 import sys
 
-XMLNS = "http://checklists.nist.gov/xccdf/1.1"
+XMLNS = "http://checklists.nist.gov/xccdf/1.2"
 
 
 class DocItem(object):
@@ -72,10 +72,12 @@ def create_item_dict_using_profiles(profile_path_list, is_variable=False):
                 # Remove everything just before the = sign.
                 # Including the = sign
                 id = result.group(1)
+                id = 'xccdf_org.ssgproject.content_value_' + id
                 item_dict[id] = DocItem(id)
             elif (result is None) and not is_variable:
                 # Remove leftmost '!' before adding to dict
                 id = id.lstrip('!')
+                id = 'xccdf_org.ssgproject.content_rule_' + id
                 item_dict[id] = DocItem(id)
 
     return item_dict
@@ -161,7 +163,11 @@ def main(args):
         print(usage, file=sys.stderr)
         sys.exit(1)
 
-    profile_paths = [path.join(profile_path, p) for p in profiles]
+    profile_paths = []
+    for p in profiles:
+        ppath = path.join(profile_path, p)
+        if path.exists(ppath):
+            profile_paths.append(ppath)
 
     item_dict = create_item_dict_using_profiles(profile_paths, is_variable)
     fill_item_dict_using_xccdf(xccdf_path, item_dict, is_variable)

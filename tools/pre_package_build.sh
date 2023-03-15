@@ -7,7 +7,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,34 +16,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-USAGE="$0 <path to CaC project> <path to usg package source>"
-if [ $# -ne 2 ]; then
-    echo $USAGE
+function cleanup() {
+    rm -rf "${usg_path:?}/"*
+    rm -rf "${tailoring_path:?}/"*.xml
+    rm -rf "${doc_path:?}/man7/"*.md
+    rm -rf "${doc_path:?}/man8/"*.md
+}
+
+USAGE="$0 <path to CaC project> <target> <path to usg package source>"
+if [ $# -ne 3 ]; then
+    echo "$USAGE"
     exit 1
 fi
 
 cac_path="$1/build"
-usg_path="$2/benchmarks"
-usg_doc_path="$2/doc"
+target="$2"
+usg_path="$3/benchmarks"
+tailoring_path="$3/tailoring"
+doc_path="$3/doc"
 
-usg_sce_path="${usg_path}/ubuntu2004/checks/sce"
+cleanup
+
+usg_sce_path="${usg_path}/$target/checks/sce"
+mkdir -p "${usg_sce_path}"
 
 # Copy XCCDF, OVAL, ocil and CPE dictionary files
 # The XCCDF and CPE files must have their name changed
-cp "${cac_path}/ssg-ubuntu2004-xccdf.xml" "${usg_path}/Canonical_Ubuntu_20.04_Benchmarks-xccdf.xml"
-cp "${cac_path}/ssg-ubuntu2004-xccdf-1.2.xml" "${usg_path}/Canonical_Ubuntu_20.04_Benchmarks-xccdf-1.2.xml"
-cp "${cac_path}/ssg-ubuntu2004-cpe-dictionary.xml" "${usg_path}/Canonical_Ubuntu_20.04_Benchmarks-cpe-dictionary.xml"
-cp "${cac_path}/ssg-ubuntu2004-oval.xml" "${usg_path}"
-cp "${cac_path}/ssg-ubuntu2004-ocil.xml" "${usg_path}"
-cp "${cac_path}/ssg-ubuntu2004-cpe-oval.xml" "${usg_path}"
-cp "${cac_path}/ssg-ubuntu2004-ds.xml" "${usg_path}"
-cp "${cac_path}/ssg-ubuntu2004-ds-1.2.xml" "${usg_path}"
+cp "${cac_path}/ssg-$target-xccdf.xml" "${usg_path}"
+cp "${cac_path}/ssg-$target-cpe-dictionary.xml" "${usg_path}"
+cp "${cac_path}/ssg-$target-oval.xml" "${usg_path}"
+cp "${cac_path}/ssg-$target-ocil.xml" "${usg_path}"
+cp "${cac_path}/ssg-$target-cpe-oval.xml" "${usg_path}"
+cp "${cac_path}/ssg-$target-ds.xml" "${usg_path}"
+cp "${cac_path}/ssg-$target-ds-1.2.xml" "${usg_path}"
 
 # Copy the license file
-cp $(dirname "${cac_path}")/LICENSE "${usg_path}"/ComplianceAsCode-LICENSE
+cp "$(dirname "${cac_path}")/LICENSE" "${usg_path}/ComplianceAsCode-LICENSE"
 
 # Copy the SCE check scripts
-cp "${cac_path}"/ubuntu2004/checks/sce/*.sh "${usg_sce_path}"
+cp "${cac_path}"/"$target"/checks/sce/*.sh "${usg_sce_path}"
 
 # Chmod the bash scripts
 chmod u+x "${usg_sce_path}"/*.sh
