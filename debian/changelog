@@ -1,3 +1,9 @@
+ubuntu-security-guides-enhanced (22.04.1~test1) jammy; urgency=medium
+
+  * Initial test Jammy version
+
+ -- Eduardo Barretto <eduardo.barretto@canonical.com>  Mon, 13 Mar 2023 16:59:17 +0100
+
 ubuntu-security-guides-enhanced (20.04.16) focal; urgency=medium
 
   * Fix multiple issues in generate tailoring file script
