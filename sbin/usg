@@ -29,8 +29,8 @@ declare -A PROFILES=( ["cis_level1_server"]="cis_level1_server-tailoring.xml" ["
 BASE_DIR="/usr/share/ubuntu-scap-security-guides/current"
 TAILORING_DIR="$BASE_DIR/tailoring"
 UBUNTU_VERSION="2204"
-FOCAL_CPE_DICTIONARY_FILE="$BASE_DIR/benchmarks/ssg-${UBUNTU_VERSION}-cpe-dictionary.xml"
-FOCAL_XCCDF_FILE="$BASE_DIR/benchmarks/ssg-${UBUNTU_VERSION}-xccdf.xml"
+UBUNTU_CPE_DICTIONARY_FILE="$BASE_DIR/benchmarks/ssg-ubuntu${UBUNTU_VERSION}-cpe-dictionary.xml"
+UBUNTU_XCCDF_FILE="$BASE_DIR/benchmarks/ssg-ubuntu${UBUNTU_VERSION}-xccdf.xml"
 DATE=$(date +%Y%m%d.%H%M)
 RESULTS_DIR="/var/lib/usg"
 RESULTS_FILE="$RESULTS_DIR/usg-results-$DATE.xml"
@@ -228,13 +228,13 @@ function validate_tailoring_file
     fi
 
     # Tailoring file must contain a profile
-    profile=$(grep -Po '<xccdf:Profile\b.*id="\w+"' ${tailoring_file} | grep -Po '(?<=id=")\w+(?=")')
+    profile=$(grep -Po 'Profile\b.*id=".*"\s+' ${tailoring_file} | grep -Po '(?<=id=").*(?=")')
     if [ -z "${profile}" ]; then
         echoerr "Error: tailoring file '${tailoring_file}' doesn't contain a profile"
         exit 1
     fi
 
-    local tail_benchmark_elem=$(grep -P '^\s+\<cdf-11-tailoring:benchmark\s+href=".*"\s*/\>' "${tailoring_file}" | grep -Po '(?<=href=").*(?="\s*/\>)')
+    local tail_benchmark_elem=$(grep -P '^\s+\<benchmark\s+href=".*"\s*/\>' "${tailoring_file}" | grep -Po '(?<=href=").*(?="\s*/\>)')
     local benchmark_path=$(realpath -e "${BASE_DIR}")
     local benchmark_vers_num=$(basename "${benchmark_path}")
     local tail_vers_num=$(basename $(dirname $(dirname "${tail_benchmark_elem}")))
@@ -270,7 +270,7 @@ function validate_tailoring_file
 function generate_fix_script
 {
     remediation_file="$PWD/${profile}-$DATE.sh"
-    command="oscap xccdf generate --profile ${profile} fix --fix-type bash ${tailoring_flag} ${output_flag} $FOCAL_XCCDF_FILE > ${remediation_file}"
+    command="oscap xccdf generate --profile ${profile} fix --fix-type bash ${tailoring_flag} ${output_flag} $UBUNTU_XCCDF_FILE > ${remediation_file}"
 
     # Run the command
     echoerr "USG will execute the following command for generating fix: ${command}"
@@ -393,7 +393,7 @@ fi
 # Build the command based on the operation provided
 case "${command}" in
     $AUDIT_CMD|$FIX_CMD)
-        audit_command="oscap xccdf eval --profile ${profile} --cpe $FOCAL_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${debug_flag} ${oval_results_flag} $FOCAL_XCCDF_FILE"
+        audit_command="oscap xccdf eval --profile ${profile} --cpe $UBUNTU_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${debug_flag} ${oval_results_flag} $UBUNTU_XCCDF_FILE"
 
         # remove old results file
         mkdir -p "$RESULTS_DIR"
@@ -410,8 +410,8 @@ case "${command}" in
         # therefore this is needed if we want to have historical logs. For now this is
         # hardcoded
         if [ -n "${debug_flag}" ]; then
-            mv "ssg-ubuntu2004-oval.xml.result.xml" "ssg-ubuntu2004-oval.xml.result-$DATE.xml"
-            mv "%2Fusr%2Fshare%2Fubuntu-scap-security-guides%2Fcurrent%2Fbenchmarks%2Fssg-ubuntu2004-cpe-oval.xml.result.xml" "ssg-ubuntu2004-cpe-oval.xml.result-$DATE.xml"
+            mv "ssg-$UBUNTU_VERSION-oval.xml.result.xml" "ssg-$UBUNTU_VERSION-oval.xml.result-$DATE.xml"
+            mv "%2Fusr%2Fshare%2Fubuntu-scap-security-guides%2Fcurrent%2Fbenchmarks%2Fssg-$UBUNTU_VERSION-cpe-oval.xml.result.xml" "ssg-$UBUNTU_VERSION-cpe-oval.xml.result-$DATE.xml"
         fi
         popd > /dev/null
 
