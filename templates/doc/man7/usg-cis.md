@@ -97,7 +97,7 @@ There is no fix implemented, so they must be fixed manually!
 See the benchmark reference on the *INTERNET RESOURCES* section for information on how to apply the fixes.
 
 # INTERNET RESOURCES
-Ubuntu 20.04 CIS Benchmark: https://workbench.cisecurity.org/benchmarks/5288
+Ubuntu 22.04 CIS Benchmark: https://workbench.cisecurity.org/benchmarks/10430
 
 # SEE ALSO
 **usg**(8), **usg-rules**(7), **usg-variables**(7)

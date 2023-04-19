@@ -50,23 +50,19 @@ Running **usg** without any command line parameters cause **usg** to display its
 : Sets the path to the tailoring-file, which contains a set of rules-selectors and value-customization elements, effectively letting the user customize the rules which will be applied. If that option is used, then the **profile** parameter is **ignored**! This option can be used for both commands. Check the **Tailoring Files** section for more info on them.
 
 # EXAMPLES
-1. audit system using DISA-STIG profile
-
-    `# usg audit stig`
-
-2. audit and remediate system using CIS Level 1 Server profile
+1. audit and remediate system using CIS Level 1 Server profile
 
     `# usg fix cis_level1_server`
 
-3. generate tailoring file based on profile cis\_level2\_workstation
+2. generate tailoring file based on profile cis\_level2\_workstation
 
     `# usg generate-tailoring cis_level2_workstation /root/cis_level2_workstation-tailoring.xml`
 
-4. generate fix script based on the previous tailoring file
+3. generate fix script based on the previous tailoring file
 
     `# usg generate-fix --output /root/usg_fix_script.sh --tailoring-file /root/cis_level2_workstation-tailoring.xml`
 
-5. generate a default tailoring file for the system based on cis\_level2\_workstation
+4. generate a default tailoring file for the system based on cis\_level2\_workstation
 
     `# usg generate-tailoring cis_level2_workstation /etc/usg/default-tailoring.xml`
 
@@ -123,8 +119,8 @@ So, if both *usg-benchmarks-1* and *usg-benchmarks-2* packages are installed, th
 
 ```
 $ dpkg -l 'usg-benchmarks*'
-ii  usg-benchmarks-1 20.04.10 all          SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
-ii  usg-benchmarks-2 20.04.10 all          SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
+ii  usg-benchmarks-1 22.04.10 all          SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
+ii  usg-benchmarks-2 22.04.10 all          SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
 ```
 
 As one may see, the benefit of using this approach is to allow installation of more than one Benchmark package. Next section explains how to select a specific Benchmarks package version
@@ -220,17 +216,12 @@ CIS Profiles (**cis_level1_server**, **cis_level2_server**, **cis_level1_worksta
 : Level 1 profiles have smaller usability impact than their level 2 counterparts.
 : Server profiles are made for Canonical Ubuntu Server images, while Workstation profiles are made for Workstation images, which generally implies the use of a graphical interface.
 
-Profiles for DISA-STIG (**stig**)
-: Sole profile for DISA-STIG provides the entire set of rules made for Canonical Ubuntu DISA-STIG benchmark.
-
-For more info on CIS and DISA-STIG, look at the respective benchmark documents.
+For more info on CIS, look at the respective benchmark documents.
 
 # INTERNET RESOURCES
 OpenScap: https://www.open-scap.org/
 
-Ubuntu 20.04 CIS Benchmark: https://workbench.cisecurity.org/benchmarks/5288
-
-Ubuntu 20.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_20-04\_LTS\_V1R1\_STIG.zip
+Ubuntu 20.04 CIS Benchmark: https://workbench.cisecurity.org/benchmarks/10430
 
 # SEE ALSO
 **usg-rules**(7), **usg-variables**(7), **usg-cis**(7), **usg-disa-stig**(7), **oscap**(8), **update-alternatives**(1)
