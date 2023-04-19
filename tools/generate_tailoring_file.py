@@ -72,6 +72,7 @@ def create_tailoring_file(profile, xccdf_doc, tailor_doc):
 
             for i in range(len(item['rule'])):
                 prule, is_selected = process_rule(item['rule'][i])
+                prule = 'xccdf_org.ssgproject.content_rule_' + prule
                 insert_into_xml(tailor_doc, "select", prule, is_selected)
 
 
@@ -80,17 +81,35 @@ def get_parent_yaml_path(yaml_path, parent_profile):
         "/" + parent_profile + ".profile"
 
 
-def add_to_profile(profile, rule):
-    # check if rule or variable was already added to profile
-    if not any(r['rule'] == rule['rule'] or
-               r['var'] == rule['var'] for r in profile):
-        profile.append(rule)
+def add_to_profile(profile, item):
+    # check if rule was already added to profile,
+    # this means it is a child overwriting parent rule
+    for i in profile:
+        if i['comment'] == item['comment']:
+            i.update(item)
+            item = {}
+            break
+    # this means the rule is not yet in the profile
+    if item:
+        profile.append(item)
+
+
+def update_variable_value(profile, var_name, value):
+    # this means it is a child overwriting parent variable value
+    for i in profile:
+        for v in i['var']:
+            if v == var_name:
+                idx = i['var'].index(v)
+                i['var_value'][idx] = value
+                break
 
 
 def process_profile_file(yaml_path):
     fd = None
     profile = []
-    rule = {}
+    item = {}
+    rules = []
+    variables = []
 
     try:
         with open(yaml_path, 'r') as yaml_file:
@@ -103,33 +122,43 @@ def process_profile_file(yaml_path):
         if "extends:" in line:
             parent_profile = re.search(r"^extends:\s(.*)$", line).group(1).strip()
             parent_path = get_parent_yaml_path(yaml_path, parent_profile)
-            profile = process_profile_file(parent_path)
+            profile, variables, rules = process_profile_file(parent_path)
 
         comment = re.search(r"^\s*#+\s*([\d+|\.]+\s.*|UBTU-.*)$", line)
         if comment:
-            if rule:
-                add_to_profile(profile, rule)
-                rule = {}
-            rule['comment'] = comment.group(1).strip()
-            rule['rule'] = list()
-            rule['var'] = list()
-            rule['var_value'] = list()
+            if item:
+                add_to_profile(profile, item)
+                item = {}
+            item['comment'] = comment.group(1).strip()
+            item['rule'] = list()
+            item['var'] = list()
+            item['var_value'] = list()
 
-        rul = re.search(r"^\s*-\s(.*)$", line)
-        if rul:
+        rule = re.search(r"^\s*-\s(.*)$", line)
+        if rule:
             # check if it is not a var instead:
             var = re.search(r"^\s*-\s+(.*)\s*=\s*(.*)$", line)
             if var:
-                rule['var'].append(var.group(1).strip())
-                rule['var_value'].append(var.group(2).strip())
+                var_name = var.group(1).strip()
+                var_value = var.group(2).strip()
+                if var_name not in variables:
+                    variables.append(var_name)
+                    item['var'].append(var_name)
+                    item['var_value'].append(var_value)
+                else:
+                    update_variable_value(profile, var_name, var_value)
             else:
-                rule['rule'].append(rul.group(1).strip(" '"))
+                rule_name = rule.group(1).strip(" '")
+                # avoid adding duplicated rules
+                if rule_name not in rules:
+                    rules.append(rule_name)
+                    item['rule'].append(rule_name)
 
-    if rule:
-        add_to_profile(profile, rule)
-        rule = {}
+    if item:
+        add_to_profile(profile, item)
+        item = {}
 
-    return profile
+    return profile, variables, rules
 
 
 USAGE = f"Usage: python {sys.argv[0]} <Profile file path> <XCCDF file path>"
@@ -144,7 +173,7 @@ if __name__ == '__main__':
     tailoring_path = sys.argv[3]
     pkg_version = sys.argv[4]
 
-    profile = process_profile_file(yaml_path)
+    profile, _, _ = process_profile_file(yaml_path)
 
     xccdf_doc = None
     tailor_doc = None
