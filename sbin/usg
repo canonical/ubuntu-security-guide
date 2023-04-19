@@ -24,7 +24,7 @@
 ###########################################################
 
 # PROFILES point to the tailoring files which mirrors the profiles
-declare -A PROFILES=( ["cis_level1_server"]="cis_level1_server-tailoring.xml" ["cis_level2_server"]="cis_level2_server-tailoring.xml" ["cis_level1_workstation"]="cis_level1_workstation-tailoring.xml" ["cis_level2_workstation"]="cis_level2_workstation-tailoring.xml" ["disa_stig"]="stig-tailoring.xml" )
+declare -A PROFILES=( ["cis_level1_server"]="cis_level1_server-tailoring.xml" ["cis_level2_server"]="cis_level2_server-tailoring.xml" ["cis_level1_workstation"]="cis_level1_workstation-tailoring.xml" ["cis_level2_workstation"]="cis_level2_workstation-tailoring.xml" )
 
 BASE_DIR="/usr/share/ubuntu-scap-security-guides/current"
 TAILORING_DIR="$BASE_DIR/tailoring"
@@ -207,6 +207,12 @@ function validate_profile
 
     if [ -z "$1" ];then
         echoerr "Error: a profile or a tailoring file must be provided."
+        usage "${command}"
+        exit 1
+    fi
+
+    if [ "$profile" == "disa_stig" ]; then
+        echoerr "disa_stig profile not yet available for Ubuntu 22.04!"
         usage "${command}"
         exit 1
     fi

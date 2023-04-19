@@ -30,11 +30,9 @@ override_dh_auto_build-indep:
 	pandoc doc/man7/usg-variables.md -s -t man -o doc/man7/usg-variables.7
 	pandoc doc/man7/usg-rules.md -s -t man -o doc/man7/usg-rules.7
 	pandoc doc/man7/usg-cis.md -s -t man -o doc/man7/usg-cis.7
-	pandoc doc/man7/usg-disa-stig.md -s -t man -o doc/man7/usg-disa-stig.7
 
 override_dh_install:
 	ln -sf usg-cis.7 doc/man7/usg-cis-$(BENCHMARK_VERSION).7
-	ln -sf usg-disa-stig.7 doc/man7/usg-disa-stig-$(BENCHMARK_VERSION).7
 	ln -sf usg-rules.7 doc/man7/usg-rules-$(BENCHMARK_VERSION).7
 	ln -sf usg-variables.7 doc/man7/usg-variables-$(BENCHMARK_VERSION).7
 	# Update links based on package name from debian/control
