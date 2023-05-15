@@ -416,8 +416,8 @@ case "${command}" in
         # therefore this is needed if we want to have historical logs. For now this is
         # hardcoded
         if [ -n "${debug_flag}" ]; then
-            mv "ssg-$UBUNTU_VERSION-oval.xml.result.xml" "ssg-$UBUNTU_VERSION-oval.xml.result-$DATE.xml"
-            mv "%2Fusr%2Fshare%2Fubuntu-scap-security-guides%2Fcurrent%2Fbenchmarks%2Fssg-$UBUNTU_VERSION-cpe-oval.xml.result.xml" "ssg-$UBUNTU_VERSION-cpe-oval.xml.result-$DATE.xml"
+            mv "ssg-ubuntu$UBUNTU_VERSION-oval.xml.result.xml" "ssg-ubuntu$UBUNTU_VERSION-oval.xml.result-$DATE.xml"
+            mv "%2Fusr%2Fshare%2Fubuntu-scap-security-guides%2Fcurrent%2Fbenchmarks%2Fssg-ubuntu$UBUNTU_VERSION-cpe-oval.xml.result.xml" "ssg-ubuntu$UBUNTU_VERSION-cpe-oval.xml.result-$DATE.xml"
         fi
         popd > /dev/null
 
