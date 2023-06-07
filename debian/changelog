@@ -1,3 +1,14 @@
+ubuntu-security-guides-enhanced (20.04.17) focal; urgency=medium
+
+  * CaC content: Improvements for CIS and DISA STIG
+    - Improve sce check for ufw_ensure_loopback_configured rules (LP: #1966992)
+    - Improve bash for wireless_disable_interfaces
+    - Improve bash for accounts_password_pam_pwhistory_remember (LP: #1989731)
+    - Improve bash for accounts_password_pam_unix_remember (LP: #1995892)
+  * Update debian/control: add bdsmainutils dependency
+
+ -- Eduardo Barretto <eduardo.barretto@canonical.com>  Wed, 07 Jun 2023 15:54:53 +0200
+
 ubuntu-security-guides-enhanced (20.04.16) focal; urgency=medium
 
   * Fix multiple issues in generate tailoring file script
