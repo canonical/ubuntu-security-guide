@@ -1,3 +1,14 @@
+ubuntu-security-guides-enhanced (22.04.2) jammy; urgency=medium
+
+  * CaC content: Various CIS improvements
+    - Improve bash for pam_faillock (LP: #2020230)
+    - Improve oval template for mount_option to avoid matching comments
+    - Improve sce check for set_ufw_loopback_traffic
+    - Improve bash for wireless_disable_interfaces (LP: #2021972)
+    - Improve jinja macro for aide_string
+
+ -- Eduardo Barretto <eduardo.barretto@canonical.com>  Wed, 07 Jun 2023 17:30:09 +0200
+
 ubuntu-security-guides-enhanced (22.04.1) jammy; urgency=medium
 
   * Initial Jammy version for CIS only
