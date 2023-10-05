@@ -1,3 +1,16 @@
+ubuntu-security-guides-enhanced (22.04.3) jammy; urgency=medium
+
+  * CaC content: Various CIS bug fixes
+    - Improve /var/log permissions remediation (LP: #2037053)
+    - Add a few missing mount platforms to correctly perform applicability
+    check
+    - Fix usb storage module remediation
+    - Fix a few audit checks
+    - Improve nftables rules remediations and checks (LP: #2032671)
+    - Add missing rule no_forward_files
+
+ -- Eduardo Barretto <eduardo.barretto@canonical.com>  Wed, 04 Oct 2023 12:41:16 +0200
+
 ubuntu-security-guides-enhanced (22.04.2) jammy; urgency=medium
 
   * CaC content: Various CIS improvements
