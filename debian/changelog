@@ -1,3 +1,14 @@
+ubuntu-security-guides-enhanced (22.04.4) jammy; urgency=medium
+
+  * CaC content: Bug fixes
+    - Improve regex for pam_faillock
+    - Fix remediation for set_nftables_loopback that caused DNS resolution
+    to fail (LP: #2039445)
+    - Add missing variable and fix default value of
+    var_nftables_base_chain_policies (LP: #2041270)
+
+ -- Eduardo Barretto <eduardo.barretto@canonical.com>  Thu, 11 Jan 2024 10:41:11 +0100
+
 ubuntu-security-guides-enhanced (22.04.3) jammy; urgency=medium
 
   * CaC content: Various CIS bug fixes
