@@ -1,3 +1,13 @@
+ubuntu-security-guides-enhanced (20.04.18) focal; urgency=medium
+
+  * CaC content:
+    - Update DISA STIG to V1R10
+    - Add missing variables to CIS Level 2 workstation profile
+  * USG Tool: Fix to correctly replace alternative version in control file
+  * Increase alt. version: usg-benchmarks-2
+
+ -- Miha Purg <miha.purg@canonical.com>  Mon, 15 Jan 2024 15:26:22 +0100
+
 ubuntu-security-guides-enhanced (20.04.17) focal; urgency=medium
 
   * CaC content: Improvements for CIS and DISA STIG
