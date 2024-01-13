@@ -108,6 +108,13 @@ def update_alternative_version(usg_path, altver):
         "Package: usg-benchmarks-%s" % (altver),
         control_data,
         flags=re.MULTILINE)
+
+    control_data_corrected = re.sub(
+        "Recommends: usg-benchmarks-*.$",
+        "Recommends: usg-benchmarks-%s" % (altver),
+        control_data_corrected,
+        flags=re.MULTILINE)
+
     control_file.write(control_data_corrected)
     control_file.close()
 
