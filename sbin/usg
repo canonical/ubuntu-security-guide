@@ -428,7 +428,7 @@ case "${command}" in
             if [ "${command}" == $FIX_CMD ]; then
                 pushd "$RESULTS_DIR" > /dev/null
                 generate_fix_script
-                command="bash -x ${remediation_file} 2>&1 1>remediation-$DATE.log | tee -a remediation-$DATE.log"
+                command="bash -x ${remediation_file} 2>&1 | tee -a remediation-$DATE.log"
                 echoerr "USG will execute the following command for remediating: ${command}"
                 exec 3>"remediation-$DATE.log"
                 export BASH_XTRACEFD=3
