@@ -8,3 +8,5 @@ update-alternatives --install "${path}/current" usg_benchmarks "${path}/${versio
     --slave /usr/share/man/man7/usg-disa-stig.gz usg-stig /usr/share/man/man7/usg-disa-stig-${version}.7.gz \
     --slave /usr/share/man/man7/usg-rules.gz usg-rules /usr/share/man/man7/usg-rules-${version}.7.gz \
     --slave /usr/share/man/man7/usg-variables.gz usg-variables /usr/share/man/man7/usg-variables-${version}.7.gz
+
+update-alternatives --set usg_benchmarks "${path}/${version}"
