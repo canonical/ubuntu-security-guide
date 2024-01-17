@@ -1,3 +1,17 @@
+ubuntu-security-guides-enhanced (22.04.5) jammy-security; urgency=medium
+
+  * CaC content: Bug fixes
+    - Improve regex for pam_faillock
+    - Fix remediation for set_nftables_loopback that caused DNS resolution
+    to fail (LP: #2039445)
+    - Add missing variable and fix default value of
+    var_nftables_base_chain_policies (LP: #2041270)
+    - Fix pam file list in pam_faillock
+  * USG Tool: Fix to correctly replace alternative version in control file
+
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 17 Jan 2024 11:24:56 +0100
+
 ubuntu-security-guides-enhanced (22.04.3) jammy; urgency=medium
 
   * CaC content: Various CIS bug fixes
