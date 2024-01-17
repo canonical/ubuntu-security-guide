@@ -8,9 +8,9 @@ ubuntu-security-guides-enhanced (22.04.5) jammy-security; urgency=medium
     var_nftables_base_chain_policies (LP: #2041270)
     - Fix pam file list in pam_faillock
   * USG Tool: Fix to correctly replace alternative version in control file
+  * Fix postinstall script: Set usg_benchmark to correct alternative version
 
-
- -- Miha Purg <miha.purg@canonical.com>  Wed, 17 Jan 2024 11:24:56 +0100
+ -- Miha Purg <miha.purg@canonical.com>  Mon, 17 Jan 2024 14:30:00 +0100
 
 ubuntu-security-guides-enhanced (22.04.3) jammy; urgency=medium
 
