@@ -93,7 +93,7 @@ A manual fix is required if the software is not available.
 ```
 
 # INTERNET RESOURCES
-Ubuntu 20.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_20-04\_LTS\_V1R1\_STIG.zip
+Ubuntu 20.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_20-04\_LTS\_V1R11\_STIG.zip
 
 # SEE ALSO
 **usg**(8), **usg-rules**(7), **usg-variables**(7)
