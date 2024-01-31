@@ -1,3 +1,16 @@
+ubuntu-security-guides-enhanced (20.04.19) focal; urgency=medium
+
+  * Minor fixes and improvements for CIS and DISA STIG:
+    - Update DISA STIG to V1R11
+    - Improve remediation for accounts_passwords_pam_faillock_* rules
+    - Fix remediation for pam_faildelay (LP: #2051976)
+    - Fix sudoers configuration parsing (LP: #2053238)
+    - Improve umask rule to check configs in /etc/profile.d/* (LP: #2053239)
+  * Fix postinstall and prerm scripts to not reset user preferences
+    in update-alternatives
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 28 Feb 2024 15:43:11 +0100
+
 ubuntu-security-guides-enhanced (20.04.18) focal; urgency=medium
 
   * CaC content:
