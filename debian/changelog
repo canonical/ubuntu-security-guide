@@ -1,3 +1,22 @@
+ubuntu-security-guides-enhanced (22.04.6) jammy; urgency=medium
+
+  * Minor fixes and improvements for CIS and DISA STIG:
+    - Improve remediation for accounts_passwords_pam_faillock_* rules
+    - Modify rules for disabling kernel modules to use /bin/false
+    - Fix remediation text for sshd_config MACs (LP: #2051884)
+    - Fix auditd rules for ssh-keysign and networkconfig (LP: #2052900)
+    - Improve sshd rules to check configs in /etc/ssh/sshd_config.d/*
+    - Fix remediation text for auditd_max_log_file_action (LP: #2052940)
+    - Fix sudoers configuration parsing (LP: #2053238)
+    - Improve umask rule to check configs in /etc/profile.d/* (LP: #2053239)
+    - Disable intrusive remediation for rule umask_interactive_users
+    - Fix logic for rules checking local interactive accounts
+    - Improve grub2 rules to check configs in /etc/default/grub.d/*
+  * Fix postinstall and prerm scripts to not reset user preferences
+    in update-alternatives
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 28 Feb 2024 15:00:51 +0100
+
 ubuntu-security-guides-enhanced (22.04.5) jammy-security; urgency=medium
 
   * CaC content: Bug fixes
