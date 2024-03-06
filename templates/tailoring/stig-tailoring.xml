@@ -4,6 +4,6 @@
   <cdf-11-tailoring:version time="PLACEHOLDER">1</cdf-11-tailoring:version>
   <xccdf:Profile id="stig_customized" extends="stig">
     <xccdf:title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">DISA-STIG Benchmark [CUSTOMIZED]</xccdf:title>
-    <xccdf:description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">This baseline aligns to the DISA-STIG v.1, rel.1, released 04-06-2021.</xccdf:description>
+    <xccdf:description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">This baseline aligns to the DISA-STIG V1R11, released 01-24-2024.</xccdf:description>
   </xccdf:Profile>
 </cdf-11-tailoring:Tailoring>

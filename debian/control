@@ -19,7 +19,7 @@ Architecture: all
 Depends: usg, ${misc:Depends}
 Description: SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
  This package contains SCAP content to support the automation of
- compliance evaluation for CIS v1.0.0 and DISA-STIG V1R10 Benchmarks.
+ compliance evaluation for CIS v1.0.0 and DISA-STIG V1R11 Benchmarks.
  This includes XCCDF, OVAL, CPE and tailoring files.
  .
  SCAP (Security Content Automation Protocol) is a set of standards to

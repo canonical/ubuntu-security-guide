@@ -116,7 +116,7 @@ The *usg* tool depends on one or more *usg-benchmarks-\<VERSION\>* packages to b
 ## Benchmark package version
 The \<VERSION\> suffix is used to provide information regarding changes to the benchmarks bundled into the Benchmarks package. So, the package starts with \<VERSION\> is initially
 set to 1 and this value is increased each time a bundled benchmark receives an upgrade. For instance, the package version 1 contains CIS benchmark version 1.0.0 and DISA-STIG version
-V1R1. Canonical may decide to update CIS benchmark to version 2.0.1, but keep DISA-STIG version V1R1, which will lead to an a new Benchmarks package version 2.
+V1R10. Canonical may decide to update CIS benchmark to version 2.0.1, but keep DISA-STIG version V1R10, which will lead to an a new Benchmarks package version 2.
 Note that the Benchmarks package version is not tied to the bundled benchmarks versions!
 
 So, if both *usg-benchmarks-1* and *usg-benchmarks-2* packages are installed, the system will output the following lines when listing the packages:
@@ -230,7 +230,7 @@ OpenScap: https://www.open-scap.org/
 
 Ubuntu 20.04 CIS Benchmark: https://workbench.cisecurity.org/benchmarks/5288
 
-Ubuntu 20.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_20-04\_LTS\_V1R1\_STIG.zip
+Ubuntu 20.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_20-04\_LTS\_V1R11\_STIG.zip
 
 # SEE ALSO
 **usg-rules**(7), **usg-variables**(7), **usg-cis**(7), **usg-disa-stig**(7), **oscap**(8), **update-alternatives**(1)

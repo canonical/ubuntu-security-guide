@@ -1,6 +1,19 @@
 #!/bin/sh
+set -e
 
 version=$(echo "${DPKG_MAINTSCRIPT_PACKAGE}" | grep -Po '(?<=usg-benchmarks-).*')
 path=$(dpkg -L ${DPKG_MAINTSCRIPT_PACKAGE} | grep -Po '(/.*)+'"(?=/${version}/benchmarks)" | uniq)
 
-update-alternatives --remove usg_benchmarks ${path}/${version}
+case "${1}" in
+    remove|deconfigure|failed-upgrade)
+        update-alternatives --remove usg_benchmarks ${path}/${version}
+    ;;
+    upgrade)
+    ;;
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0
