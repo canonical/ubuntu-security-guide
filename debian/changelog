@@ -1,3 +1,24 @@
+ubuntu-security-guides-enhanced (22.04.7) jammy; urgency=medium
+
+  * New benchmark STIG V1R1 for Ubuntu 22.04 LTS
+  * Minor fixes and improvements for CIS:
+    - Fix non-idempotent bash remediation for sysctl template (LP: #2056150)
+    - Add missing !package_cups_removed to cis_level1 profile (LP: #2057945)
+    - Fix handling of grub.d configs in grub2_bootloader_argument
+    - Fix check for accounts_user_dot_no_world_writable_programs
+    - Fix remediations on config files without trailing newlines (LP: #2061072)
+    - Modify dconf package name to fix false positives in dconf rules
+    - Enable dconf profiles in bash remediation of dconf rules
+    - Fix SCE check for iptables_open_ports (LP: #2061213)
+    - Fix SCE checks for iptables_loopback_traffic (LP: #2061215)
+    - Add missing rule package_pam_pwquality_installed (LP: #2065113)
+    - Disable all remediation languages except bash in compiled benchmarks
+    - Add a warning to sshd_limit_user_access
+    - Fix check for non-existing audispd in aide_check_audit_tools
+  * Update README to add how to report issues
+
+ -- Miha Purg <miha.purg@canonical.com>  Fri, 14 Jun 2024 12:06:30 +0200
+
 ubuntu-security-guides-enhanced (22.04.6) jammy; urgency=medium
 
   * Minor fixes and improvements for CIS and DISA STIG:
