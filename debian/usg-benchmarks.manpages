@@ -1,3 +1,4 @@
 doc/man7/usg-cis-${env:BENCHMARK_VERSION}.7
+doc/man7/usg-disa-stig-${env:BENCHMARK_VERSION}.7
 doc/man7/usg-rules-${env:BENCHMARK_VERSION}.7
 doc/man7/usg-variables-${env:BENCHMARK_VERSION}.7
