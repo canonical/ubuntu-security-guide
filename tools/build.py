@@ -177,13 +177,15 @@ def gen_tailoring(cac_directory, usg_directory, target, benchmark_version):
         "cis_level1_server.profile",
         "cis_level1_workstation.profile",
         "cis_level2_server.profile",
-        "cis_level2_workstation.profile"]
+        "cis_level2_workstation.profile",
+        "stig.profile"]
 
     tailoring_template = [
         "templates/tailoring/cis_level1_server-tailoring.xml",
         "templates/tailoring/cis_level1_workstation-tailoring.xml",
         "templates/tailoring/cis_level2_server-tailoring.xml",
-        "templates/tailoring/cis_level2_workstation-tailoring.xml"]
+        "templates/tailoring/cis_level2_workstation-tailoring.xml",
+        "templates/tailoring/stig-tailoring.xml"]
 
     gen_tailoring_script = "%s/generate_tailoring_file.py" % (tools_directory)
     benchmark_xml = \
@@ -243,6 +245,7 @@ def build_files(rules_doc, vars_doc,
     data_info = [
         ["doc/man8/usg.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-cis.md", "", "<<DOESNT_EXIST>>"],
+        ["doc/man7/usg-disa-stig.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-rules.md", rules_doc, "<<USG_MAN_RULES_PLACEHOLDER>>"],
         ["doc/man7/usg-variables.md", vars_doc,
          "<<USG_MAN_VARIABLE_PLACEHOLDER>>"]
