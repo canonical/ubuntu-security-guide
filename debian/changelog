@@ -1,3 +1,22 @@
+ubuntu-security-guides-enhanced (20.04.20) focal; urgency=medium
+
+  * CaC content: Multiple fixes and improvements
+    - Update DISA STIG to V1R12
+    - Change default value for var_set_apparmor_enforce_mode to 'true'
+    - Disable downgrading apparmor profiles to complain mode
+      (LP: #2080434, #2080435, #2073795)
+    - Improve template groupfile_owner and file_owner to follow symlinks
+    - Switch command to /bin/false in kernel_module_disabled template
+    - Fix edge case in remediation for accounts_no_uid_except_zero
+    - Fix chronyd_sync_clock remediation
+    - Add SCE check for ufw_rate_limit
+    - Modify dconf package name to fix false positives in dconf rules
+    - Enable dconf profiles in bash remediation of dconf rules
+    - Disable all remediation languages except bash in compiled benchmarks
+  * Update README to add how to report issues
+
+ -- Miha Purg <miha.purg@canonical.com>  Tue, 22 Oct 2024 13:41:59 +0200
+
 ubuntu-security-guides-enhanced (20.04.19) focal; urgency=medium
 
   * Minor fixes and improvements for CIS and DISA STIG:
