@@ -1,3 +1,13 @@
+ubuntu-security-guides-enhanced (20.04.20) focal; urgency=medium
+
+  * Minor fixes and improvements for CIS and DISA STIG:
+    - Modify dconf package name to fix false positives in dconf rules
+    - Enable dconf profiles in bash remediation of dconf rules
+    - Disable all remediation languages except bash in compiled benchmarks
+  * Update README to add how to report issues
+
+ -- Miha Purg <miha.purg@canonical.com>  Fri, 14 Jun 2024 11:32:59 +0200
+
 ubuntu-security-guides-enhanced (20.04.19) focal; urgency=medium
 
   * Minor fixes and improvements for CIS and DISA STIG:
