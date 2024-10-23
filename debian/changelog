@@ -1,3 +1,19 @@
+ubuntu-security-guides-enhanced (22.04.08) jammy; urgency=medium
+
+  * CaC content: Multiple fixes and improvements
+    - Update DISA STIG to V2R1
+    - Remove quotes from journald config parameters (LP: #2070288)
+    - Fix bash_package_installed macro (LP: #2080435)
+    - Switch command to /bin/false in kernel_module_disabled template
+    - Adjust bash template groupfile_owner to follow symlinks
+    - Avoid tmpfiles override (LP: #2073422)
+    - Remove ineffective flag "-L" for chgrp and chown
+    - Change default value for var_apparmor_mode from complain to enforce (LP: #2073795, #2080434, #2080435)
+    - Load all the profile if not loaded for Ubuntu without change the mode of loaded profiles
+    - Remove unnecessary apparmor-utils dependency in apparmor sce check scripts
+
+ -- Alan Moore <alan.moore@canonical.com>  Wed, 23 Oct 2024 17:05:24 +0100
+
 ubuntu-security-guides-enhanced (22.04.7) jammy; urgency=medium
 
   * New benchmark STIG V1R1 for Ubuntu 22.04 LTS
