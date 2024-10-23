@@ -1,14 +1,36 @@
 #!/bin/bash
 
-# This script builds CaC content, runs the USG build script,
-# and creates the deb package with umt
-#
-# It runs the CaC/USG build in a LXC container thus it requires
-# that LXD is installed and initialized.
-# $ sudo snap install lxd
-# $ sudo lxd init --minimal
-#
+help="
+This script builds CaC content, runs the USG build script,
+and creates the usg/usg-benchmarks-N deb packages with umt.
 
+It should be run in a directory which contains both
+ComplianceAsCode-content and ubuntu-security-guide repositories,
+both in correct respective branches (e.g. focal and 20.04.20-dev,
+focal and 20.04.21-dev, jammy and 22.04.8-dev, ...).
+
+Requirements:
+ - LXD installed and initialled
+   (sudo snap install lxd; sudo lxd init --mininal)
+ - ComplianceAsCode-Content repository in cwd
+ - ubuntu-security-guide repository in cwd
+ - umt (see Security Team BuildEnv instructions)
+ - access to github via ssh
+
+Usage: $0 usg_version build_product
+    
+Args:
+- usg_version: refers to the to-be-relased version of USG
+               (20.04.20 if 20.04.19 is the last release) and should
+               be the same as the version in the name of the
+               development branch of ubuntu-security-guide
+               (e.g. 20.04.20-dev).
+
+- build_product: CaC product that should be built
+                 (ubuntu2004, ubuntu2204, ...)
+"
+
+# 
 set -Eeuo pipefail
 
 CAC_DIR=ComplianceAsCode-content
@@ -62,7 +84,7 @@ check_status() {
 
 # script starts here
 if [[ $# != 2 ]]; then
-    echo "Usage: $0 usg_version build_product"
+    echo "$help"
     exit 1
 fi
 
@@ -80,7 +102,7 @@ fi
 if [[ ! -w "${CAC_DIR}" || ! -w "${USG_DIR}" || -e "${BUILD_DIR}" ]]; then
     err "\
 Build exists... To force rebuild:
-$ chmod +w -R $(realpath $(dirname ${BASH_SOURCE[0]}))
+$ chmod +w -R "${CAC_DIR}" "${USG_DIR}"
 $ rm -rf ${BUILD_DIR}
 "
 fi
@@ -115,7 +137,9 @@ popd >/dev/null
 
 h1 "Launching build host"
 build_host="usg-${cac_branch}"
-lxc rm --force "${build_host}" >/dev/null || true
+if lxc info "${build_host}" &>/dev/null; then
+    lxc rm --force "${build_host}"
+fi
 lxc launch "${LXD_BUILD_IMAGE}" "${build_host}"
 
 
