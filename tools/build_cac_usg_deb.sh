@@ -31,6 +31,7 @@ Args:
 "
 
 # 
+
 set -Eeuo pipefail
 
 CAC_DIR=ComplianceAsCode-content
@@ -141,10 +142,13 @@ if lxc info "${build_host}" &>/dev/null; then
     lxc rm --force "${build_host}"
 fi
 lxc launch "${LXD_BUILD_IMAGE}" "${build_host}"
+sleep 3
 
 
 h1 "Installing dependencies and setting up build user"
 lxc exec "${build_host}" -- bash <<EOF
+set -Eeuo pipefail
+
 apt update
 apt -y upgrade
 apt -y install ${CAC_DEPS} ${USG_DEPS}
@@ -184,10 +188,11 @@ EOF
 
 h1 "Fetching build data..."
 mkdir -p "${BUILD_DIR}"
-lxc file pull "${build_host}/tmp/builds.tar.gz" "${BUILD_DIR}/"
-tar -xf "${BUILD_DIR}/builds.tar.gz" -C "${BUILD_DIR}"
-sha256sum "${BUILD_DIR}/builds.tar.gz" | tee SHA256SUM
-echo ok
+pushd "${BUILD_DIR}" >/dev/null
+lxc file pull "${build_host}/tmp/builds.tar.gz" ./
+tar -xf builds.tar.gz
+sha256sum builds.tar.gz | tee SHA256SUM
+popd >/dev/null
 
 
 h1 "Building debian package (see ${LOGNAME}.umt)"
