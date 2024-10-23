@@ -162,7 +162,7 @@ h1 "Fetching build data..."
 mkdir -p "${BUILD_DIR}"
 lxc file pull "${build_host}/tmp/builds.tar.gz" "${BUILD_DIR}/"
 tar -xf "${BUILD_DIR}/builds.tar.gz" -C "${BUILD_DIR}"
-sha256sum builds.tar.gz | tee SHA256SUM
+sha256sum "${BUILD_DIR}/builds.tar.gz" | tee SHA256SUM
 echo ok
 
 
