@@ -42,7 +42,7 @@ CAC_DEPS="cmake make python3-jinja2 python3-yaml xsltproc expat libxml2-utils"
 USG_DEPS="python3-lxml python3-ruamel.yaml libopenscap8"
 ALLOWED_CAC_BRANCHES="focal jammy"
 
-LOG_NAME=log.$(date -Is)
+LOG_NAME=build_log.$(date -Is)
 
 confirm_last_commit() {
     echo
@@ -206,9 +206,9 @@ sha256sum builds.tar.gz | tee SHA256SUM
 popd >/dev/null
 
 
-h1 "Building debian package (see ${LOGNAME}.umt)"
+h1 "Building debian package"
 pushd "${BUILD_DIR}/${USG_DIR}" >/dev/null
-umt build -f -s --skip-maintainer >> "${LOGNAME}.umt"
+umt build -f -s --skip-maintainer
 popd >/dev/null
 # TODO create test script with the correct paths based on a template
 
