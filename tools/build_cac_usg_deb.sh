@@ -108,6 +108,16 @@ $ rm -rf ${BUILD_DIR}
 "
 fi
 
+v=$(grep "^version=" "${USG_DIR}/tools/build_config.ini" | awk -F= '{print $2}' || echo None)
+if [[ "${usg_version}" != "${v}" ]]; then
+    err "USG version in ${USG_DIR}/tools/build_config.ini is $v but should be '${usg_version}'"
+fi
+
+t=$(grep "^target=" "${USG_DIR}/tools/build_config.ini" | awk -F= '{print $2}' || echo None)
+if [[ "${build_product}" != "${t}" ]]; then
+    err "Build product (target) in ${USG_DIR}/tools/build_config.ini is $t but should be '${build_product}'"
+fi
+
 cac_branch=$(cd "${CAC_DIR}" && git rev-parse --abbrev-ref HEAD)
 usg_branch=$(cd "${USG_DIR}" && git rev-parse --abbrev-ref HEAD)
 
@@ -118,6 +128,7 @@ fi
 if [[ "${usg_branch}" != "${usg_version}-dev" ]]; then
     err "USG branch name is '${usg_branch}' but should be '${usg_version}-dev'"
 fi
+
 
 # log all output to file
 exec &> >(tee "${LOG_NAME}")
