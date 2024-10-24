@@ -1,4 +1,4 @@
-ubuntu-security-guides-enhanced (22.04.08) jammy; urgency=medium
+ubuntu-security-guides-enhanced (22.04.9) jammy; urgency=medium
 
   * CaC content: Multiple fixes and improvements
     - Update DISA STIG to V2R1
@@ -12,7 +12,7 @@ ubuntu-security-guides-enhanced (22.04.08) jammy; urgency=medium
     - Load all the profile if not loaded for Ubuntu without change the mode of loaded profiles
     - Remove unnecessary apparmor-utils dependency in apparmor sce check scripts
 
- -- Alan Moore <alan.moore@canonical.com>  Wed, 23 Oct 2024 17:05:24 +0100
+ -- Alan Moore <alan.moore@canonical.com>  Thu, 24 Oct 2024 20:12:24 +0100
 
 ubuntu-security-guides-enhanced (22.04.7) jammy; urgency=medium
 
