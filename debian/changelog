@@ -1,4 +1,4 @@
-ubuntu-security-guides-enhanced (20.04.20) focal; urgency=medium
+ubuntu-security-guides-enhanced (20.04.21) focal; urgency=medium
 
   * CaC content: Multiple fixes and improvements
     - Update DISA STIG to V1R12
@@ -15,7 +15,7 @@ ubuntu-security-guides-enhanced (20.04.20) focal; urgency=medium
     - Disable all remediation languages except bash in compiled benchmarks
   * Update README to add how to report issues
 
- -- Miha Purg <miha.purg@canonical.com>  Tue, 22 Oct 2024 13:41:59 +0200
+ -- Miha Purg <miha.purg@canonical.com>  Thu, 24 Oct 2024 21:07:15 +0200
 
 ubuntu-security-guides-enhanced (20.04.19) focal; urgency=medium
 
