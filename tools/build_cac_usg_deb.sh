@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# TODO: switch to running the script inside this directory and use
+# information from the build config to find CaC, correct target, and version.
+# TODO: add signing into the build
+# TODO: make sure to not lock the build/source directory because dput writes to it
+
 help="
 This script builds CaC content, runs the USG build script,
 and creates the usg/usg-benchmarks-N deb packages with umt.
@@ -227,9 +232,13 @@ Done!  Don't forget to:
 
 1. Sign the deb package
 2. Test the deb package
-3. Open a PR for next USG release, describing the changes:
+3. Open a PR for next USG release (to branch ${cac_branch}), describing the changes:
    https://github.com/canonical/ubuntu-security-guide/compare/${cac_branch}...${usg_branch}
-4. Push tags to internal CaC and USG:
+4. Upload the deb to staging PPA
+5. Test download from staging PPA (few hours after upload)
+6. Copy to production PPA
+7. Review and merge USG PR
+8. Push tags to internal CaC USG:
 
 cd ${CAC_DIR}
 git tag -f 'usg-${usg_version}'
