@@ -364,7 +364,7 @@ if [ $? -gt 0 ]; then
 fi
 
 # If command-line contains no profile or tailoring file, try to use the default tailoring file
-if [ ! -v "$tailoring_file" ] && [ -z "$1" ]; then
+if [ ! -v tailoring_file ] && [ -z "$1" ]; then
     if [ -f $DEFAULT_TAILORING ]; then
         echo "Using the default tailoring file at $DEFAULT_TAILORING"
         tailoring_file=$DEFAULT_TAILORING
