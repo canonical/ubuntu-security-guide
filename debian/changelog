@@ -1,3 +1,18 @@
+ubuntu-security-guides-enhanced (22.04.10) jammy; urgency=medium
+
+  * Add custom EC2 profile based on CIS Level 1 Server
+  * CaC content: Multiple fixes and improvements
+    - Disable unapplicable auditd rules on aarch64
+    - Ensure correct umask when creating sssd.conf
+    - Remove rule disable_ctrlaltdel_burstaction from STIG profile
+    - Fix rule auditd_rules_mac_modification to monitor apparmor directories
+    - Replace unmask with mask in socket_systemd-journal-remote_disabled
+  * USG tool: minor fixes
+    - fix invalid precedence for default tailoring file (LP: #2095162)
+    - align --tailoring-file usage documentation with the implementation
+
+ -- Miha Purg <miha.purg@canonical.com>  Thu, 30 Jan 2024 13:12:11 +0100
+
 ubuntu-security-guides-enhanced (22.04.9) jammy; urgency=medium
 
   * CaC content: Multiple fixes and improvements
