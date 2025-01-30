@@ -89,8 +89,8 @@ with either a provided profile or a provided tailoring file.
 
 Available options are:
 	--tailoring-file <path to file>     Provides a tailoring file
-					    instead of a profile. Any
-					    profile provided is ignored"
+					    instead of a profile.
+"
 usage_common_options
 
 echo "Unless the --tailoring-file flag is provided, a profile must be given." 1>&2
@@ -116,8 +116,8 @@ reliable report.
 
 Available options are:
 	--tailoring-file <path to file>     Provides a tailoring file
-					    instead of a profile. Any
-					    profile provided is ignored"
+					    instead of a profile.
+"
 
 usage_common_options
 
@@ -139,8 +139,7 @@ Available options are:
 					    to the provided path. Default
 					    is standard output.
 	--tailoring-file <path to file>     Provides a tailoring file
-					    instead of a profile. Any
-					    profile provided is ignored
+					    instead of a profile.
 "
 
 echo "Unless the --tailoring-file flag is provided, a profile must be given." 1>&2
