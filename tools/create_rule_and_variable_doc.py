@@ -145,6 +145,7 @@ def main(args):
                 'cis_level2_server.profile',
                 'cis_level1_workstation.profile',
                 'cis_level2_workstation.profile',
+                'cis_level1_server_ec2.profile',
                 'stig.profile']
     usage = f'Usage: {args[0]} [ rules | variables ] <profile path> <xccdf file path>'
 

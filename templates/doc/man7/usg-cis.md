@@ -6,7 +6,7 @@
 usg-cis - Information on CIS profiles implementation
 
 # INTRODUCTION
-As mentioned in the **usg-rules**(8) man page, five CIS profiles are available to be audited/applied: **cis_level1_server**, **cis_level2_server**, **cis_level1_workstation**, **cis_level2_workstation**, and **cis_level1_ec2**
+As mentioned in the **usg-rules**(8) man page, five CIS profiles are available to be audited/applied: **cis_level1_server**, **cis_level2_server**, **cis_level1_workstation**, **cis_level2_workstation**, and **cis_level1_server_ec2**
 
 This man page provides additional information on all four and explain how to customize some variables in order to properly match the CIS requirements.
 
