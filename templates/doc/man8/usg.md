@@ -16,7 +16,7 @@ usg - Audit and remediation tool for security benchmarks compliance automatizati
 
 **usg** **generate-tailoring** **profile** **filename**
 
-Available profiles: *cis_level1_server* | *cis_level2_server* | *cis_level1_workstation* | *cis_level2_workstation* | *stig*
+Available profiles: *cis_level1_server* | *cis_level2_server* | *cis_level1_workstation* | *cis_level2_workstation* | *stig* | *cis_level1_server_ec2*
 
 # DESCRIPTION
 **usg**, short for Ubuntu Security Guide, is a tool to audit and comply with security guides such as CIS and DISA-STIG.
@@ -212,7 +212,7 @@ Note, however, that if the **tailoring-file** option is not provided, the user *
 See more info on **Tailoring Files** on the same-name section.
 
 ### Additional Info on Profiles
-CIS Profiles (**cis_level1_server**, **cis_level2_server**, **cis_level1_workstation** and **cis_level2_workstation**)
+CIS Profiles (**cis_level1_server**, **cis_level2_server**, **cis_level1_workstation**, **cis_level2_workstation**, **cis_level1_server_ec2)
 : Level 1 profiles have smaller usability impact than their level 2 counterparts.
 : Server profiles are made for Canonical Ubuntu Server images, while Workstation profiles are made for Workstation images, which generally implies the use of a graphical interface.
 

@@ -79,8 +79,8 @@ update the documentation, without any manual intervention required.
 
 * STEP 3. Update the tailoring files
 All the current tailoring files are located into the tailoring subdirectory.
-Four are associated with CIS profiles (cis_level{1,2}_{server,workstation}-tailoring.xml)
-while a single one (stig-tailoring.xml) is associated with DISA-STIG.
+Five are associated with CIS profiles (cis_level{1,2}_{server,workstation}-tailoring.xml and 
+cis_level1_server_ec2-tailoring.xml) while a single one (stig-tailoring.xml) is associated with DISA-STIG.
 
 The tools/ directory provides the `generate_tailoring_file.py` script, which
 can be used to help update the aforementioned tailoring files. For
@@ -111,7 +111,7 @@ So, update the value to the same value used in Step 2:
 ...
 
 
-Repeat the aforementioned procedure for the other 3 CIS profiles and for the single DISA-STIG
+Repeat the aforementioned procedure for the other 4 CIS profiles and for the single DISA-STIG
 profile.
 
 ** When this step must be done?
