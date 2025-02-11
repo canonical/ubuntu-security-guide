@@ -48,7 +48,6 @@ cp "${cac_path}/ssg-$target-oval.xml" "${usg_path}"
 cp "${cac_path}/ssg-$target-ocil.xml" "${usg_path}"
 cp "${cac_path}/ssg-$target-cpe-oval.xml" "${usg_path}"
 cp "${cac_path}/ssg-$target-ds.xml" "${usg_path}"
-cp "${cac_path}/ssg-$target-ds-1.2.xml" "${usg_path}"
 
 # Copy the license file
 cp "$(dirname "${cac_path}")/LICENSE" "${usg_path}/ComplianceAsCode-LICENSE"
