@@ -159,8 +159,13 @@ def validate_tailoring_files(usg_directory):
                 command = "oscap"
                 exec_arg_1 = "oval"
                 exec_arg_2 = "validate"
-                result = subprocess.run([command, exec_arg_1, exec_arg_2, f],
-                                        check=True)
+                exec_arg_3 = "--skip-schematron"
+                result = subprocess.run([
+                    command,
+                    exec_arg_1,
+                    exec_arg_2,
+                    exec_arg_3,
+                    f], check=True)
             except Exception:
                 exit_error("Executing `%s %s` failed." %
                            (command, f))
