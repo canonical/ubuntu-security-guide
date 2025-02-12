@@ -177,7 +177,7 @@ def validate_tailoring_files(usg_directory):
 def gen_tailoring(cac_directory, usg_directory, target, benchmark_version):
 
     # This is an array of profile paths (below cac_directory) in the order
-    # of c1s, c1w, c2s, c2w, stig
+    # of c1s, c1w, c2s, c2w
     tailoring_file_info = [
         "cis_level1_server.profile",
         "cis_level1_workstation.profile",
