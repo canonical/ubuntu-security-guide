@@ -23,14 +23,19 @@ import re
 import subprocess
 import sys
 import traceback
+import logging
+from create_rule_and_variable_doc import generate_markdown_doc
+from generate_tailoring_file import generate_tailoring_file
+from cac_tools import CaCProfile
 
 # This is assumed to be in the same directory as this script.
 tools_directory = os.path.dirname(os.path.realpath(__file__))
 configfile = "%s/build_config.ini" % (tools_directory)
 
+logger = logging.getLogger(__name__)
 
 def exit_error(msg):
-    print(f"Build script exiting with error:\n{msg}\n")
+    logger.error(f"Build script exiting with error:\n{msg}\n")
     traceback.print_exc()
     sys.exit(1)
 
@@ -120,33 +125,16 @@ def update_alternative_version(usg_path, altver):
 
 
 def gen_documentation(cac_directory, usg_directory, target):
-    # I'm opting to listen to the other module's outputs
-    # rather than rebuilding the module.
-    # This way the other module can still be used as it
-    # was originally designed.
+    # generate docs for rules and variables
+    xccdf_path = "%s/%s/benchmarks/ssg-%s-xccdf.xml"\
+            % (tools_directory, usg_directory, target)
+    try:
+        rules_output = generate_markdown_doc(xccdf_path, 'rules')
+        vars_output = generate_markdown_doc(xccdf_path, 'variables')
+    except:
+        exit_error("Failed to generate documentation")
 
-    doc_gen_command = ["rules", "variables"]
-    doc_output = [""] * len(doc_gen_command)
-    for i in range(len(doc_gen_command)):
-        try:
-            exec_arg_1 = "%s/create_rule_and_variable_doc.py" % \
-                (tools_directory)
-            exec_arg_2 = doc_gen_command[i]
-            exec_arg_3 = "%s/%s/products/%s/profiles" % \
-                (tools_directory, cac_directory, target)
-            exec_arg_4 =\
-                "%s/%s/benchmarks/ssg-%s-xccdf.xml"\
-                % (tools_directory, usg_directory, target)
-            doc_output[i] = subprocess.check_output([
-                sys.executable, exec_arg_1, exec_arg_2,
-                exec_arg_3, exec_arg_4]).decode()
-        except subprocess.CalledProcessError:
-            exit_error("Executing `%s %s %s %s %s` failed." %
-                       (sys.executable, exec_arg_1, exec_arg_2,
-                        exec_arg_3, exec_arg_4))
-
-    # In order of [rules, variables]
-    return (doc_output[0], doc_output[1])
+    return (rules_output, vars_output)
 
 
 def validate_tailoring_files(usg_directory):
@@ -171,7 +159,7 @@ def validate_tailoring_files(usg_directory):
                 exit_error("Executing `%s %s` failed." %
                            (command, f))
 
-    print("Successfully validated tailoring files")
+    logger.info("Successfully validated tailoring files")
 
 
 def gen_tailoring(cac_directory, usg_directory, target, benchmark_version):
@@ -196,23 +184,24 @@ def gen_tailoring(cac_directory, usg_directory, target, benchmark_version):
         (tools_directory, usg_directory, target)
 
     for i in range(len(tailoring_file_info)):
-        profile_path = "%s/%s/products/%s/profiles/%s" % \
-            (tools_directory, cac_directory, target, tailoring_file_info[i])
-        if not os.path.exists(profile_path):
-            continue
         try:
-            exec_arg_1 = gen_tailoring_script
-            exec_arg_2 = profile_path
-            exec_arg_3 = benchmark_xml
-            exec_arg_4 = "%s/%s/%s" % \
+            # TODO clean up this path nonsense
+            profile_path = "%s/%s/products/%s/profiles/%s" % \
+                (tools_directory, cac_directory, target, tailoring_file_info[i])
+            tailoring_path = "%s/%s/%s" % \
                 (tools_directory, usg_directory, tailoring_template[i])
-            exec_arg_5 = benchmark_version
-            subprocess.run([sys.executable, exec_arg_1, exec_arg_2, exec_arg_3,
-                            exec_arg_4, exec_arg_5], check=True)
+
+            profile = CaCProfile.from_yaml(profile_path)
+            tailor_doc = generate_tailoring_file(profile, benchmark_xml,
+                                                 tailoring_path, benchmark_version)
+
+            out_path = str(tailoring_path).replace("templates", ".") # TODO whoa
+            tailor_doc.write(out_path, pretty_print=True,
+                             xml_declaration=True, encoding="utf-8")
         except Exception:
-            exit_error("Executing `%s %s %s %s %s %s` failed." %
-                       (sys.executable, exec_arg_1, exec_arg_2, exec_arg_3,
-                        exec_arg_4, exec_arg_5))
+            exit_error(f'Failed to generate tailoring file {tailoring_path}')
+
+        logger.info(f'Successfully generated tailoring file {tailoring_path}')
 
     validate_tailoring_files(usg_directory)
 
@@ -283,25 +272,27 @@ def build_files(rules_doc, vars_doc,
 
 
 def main(arg):
-    # Get the current timestamp
-    current_timestamp = datetime.datetime.utcnow().replace(microsecond=0)
+    logging.basicConfig(level=logging.INFO)
 
-    # Read configuration variables from config.ini
+    # Get the current timestamp
+    current_timestamp = datetime.datetime.now(datetime.UTC).replace(microsecond=0)
+
+    logger.info('Reading configuration variables from config.ini')
     package_version, alternative_version, target, usg_directory, cac_directory = load_config()
 
-    # Run `pre_package_build.sh`
+    logger.info('Running `pre_package_build.sh`')
     run_ppb(tools_directory, cac_directory, target, usg_directory)
 
-    # Update the alternative version number in debian/control
+    logger.info('Updating the alternative version number in debian/control')
     update_alternative_version(usg_directory, alternative_version)
 
-    # Generate the rules and variables documentation meat
+    logger.info('Generating the rules and variables documentation')
     rules_doc, vars_doc = gen_documentation(cac_directory, usg_directory, target)
 
-    # Generate the tailoring data
+    logger.info('Generating the tailoring data')
     gen_tailoring(cac_directory, usg_directory, target, alternative_version)
 
-    # Build the template files from all of the data that we've collected.
+    logger.info('Building the template files from all of the data that we\'ve collected.')
     build_files(rules_doc,
                 vars_doc,
                 package_version,
@@ -311,4 +302,5 @@ def main(arg):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(stream=sys.stderr, level=logging.INFO, format='%(levelname)s: %(message)s')
     main(sys.argv)
