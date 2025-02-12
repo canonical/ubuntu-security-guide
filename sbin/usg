@@ -211,7 +211,7 @@ function validate_profile
     fi
 
     if [ "$profile" == "disa_stig" ]; then
-        echoerr "disa_stig profile not yet available for Ubuntu 22.04!"
+        echoerr "disa_stig profile not yet available for Ubuntu 24.04!"
         usage "${command}"
         exit 1
     fi
