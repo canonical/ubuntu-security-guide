@@ -24,11 +24,14 @@
 ###########################################################
 
 # PROFILES point to the tailoring files which mirrors the profiles
-declare -A PROFILES=( ["cis_level1_server"]="cis_level1_server-tailoring.xml" ["cis_level2_server"]="cis_level2_server-tailoring.xml" ["cis_level1_workstation"]="cis_level1_workstation-tailoring.xml" ["cis_level2_workstation"]="cis_level2_workstation-tailoring.xml" )
+declare -A PROFILES=( ["cis_level1_server"]="cis_level1_server-tailoring.xml" \
+                      ["cis_level2_server"]="cis_level2_server-tailoring.xml" \
+                      ["cis_level1_workstation"]="cis_level1_workstation-tailoring.xml" \
+                      ["cis_level2_workstation"]="cis_level2_workstation-tailoring.xml" )
 
 BASE_DIR="/usr/share/ubuntu-scap-security-guides/current"
 TAILORING_DIR="$BASE_DIR/tailoring"
-UBUNTU_VERSION="2204"
+UBUNTU_VERSION="2404"
 UBUNTU_CPE_DICTIONARY_FILE="$BASE_DIR/benchmarks/ssg-ubuntu${UBUNTU_VERSION}-cpe-dictionary.xml"
 UBUNTU_XCCDF_FILE="$BASE_DIR/benchmarks/ssg-ubuntu${UBUNTU_VERSION}-xccdf.xml"
 DATE=$(date +%Y%m%d.%H%M)
@@ -365,7 +368,7 @@ if [ $? -gt 0 ]; then
 fi
 
 # If command-line contains no profile or tailoring file, try to use the default tailoring file
-if [ ! -v "$tailoring_file" ] && [ -z "$1" ]; then
+if [ ! -v tailoring_file ] && [ -z "$1" ]; then
     if [ -f $DEFAULT_TAILORING ]; then
         echo "Using the default tailoring file at $DEFAULT_TAILORING"
         tailoring_file=$DEFAULT_TAILORING
