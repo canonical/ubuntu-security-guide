@@ -119,8 +119,8 @@ So, if both *usg-benchmarks-1* and *usg-benchmarks-2* packages are installed, th
 
 ```
 $ dpkg -l 'usg-benchmarks*'
-ii  usg-benchmarks-1 22.04.10 all          SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
-ii  usg-benchmarks-2 22.04.10 all          SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
+ii  usg-benchmarks-1 24.04.10 all          SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
+ii  usg-benchmarks-2 24.04.10 all          SCAP content for CIS and DISA-STIG Ubuntu Benchmarks
 ```
 
 As one may see, the benefit of using this approach is to allow installation of more than one Benchmark package. Next section explains how to select a specific Benchmarks package version
@@ -221,8 +221,8 @@ For more info on CIS, look at the respective benchmark documents.
 # INTERNET RESOURCES
 OpenScap: https://www.open-scap.org/
 
-Ubuntu 20.04 CIS Benchmark: https://workbench.cisecurity.org/benchmarks/10430
-
+Ubuntu 24.04 CIS Benchmark v1.0.0: https://workbench.cisecurity.org/benchmarks/18959
+.
 # SEE ALSO
 **usg-rules**(7), **usg-variables**(7), **usg-cis**(7), **oscap**(8), **update-alternatives**(1)
 
