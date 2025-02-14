@@ -79,7 +79,6 @@ update the documentation, without any manual intervention required.
 
 * STEP 3. Update the tailoring files
 All the current tailoring files are located into the tailoring subdirectory.
-Four are associated with CIS profiles (cis_level{1,2}_{server,workstation}-tailoring.xml).
 
 The tools/ directory provides the `generate_tailoring_file.py` script, which
 can be used to help update the aforementioned tailoring files. For
