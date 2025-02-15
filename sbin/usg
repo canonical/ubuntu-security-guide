@@ -343,8 +343,8 @@ while true ; do
         --oval-results)
             oval_results_flag="--oval-results"; shift ;;
         --debug)
-            oval_results_flag=""
-            debug_flag="--verbose INFO --verbose-log-file $LOG_FILE --oval-results"; shift ;;
+            oval_results_flag="--oval-results"
+            debug_flag="--verbose INFO --verbose-log-file $LOG_FILE"; shift ;;
         -h|--help)
             usage "${command}"
             exit 0
@@ -401,7 +401,7 @@ fi
 # Build the command based on the operation provided
 case "${command}" in
     $AUDIT_CMD|$FIX_CMD)
-        audit_command="oscap xccdf eval --profile ${profile} --cpe $UBUNTU_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${debug_flag} ${oval_results_flag} $UBUNTU_XCCDF_FILE"
+        audit_command="oscap ${debug_flag} xccdf eval --profile ${profile} --cpe $UBUNTU_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${oval_results_flag} $UBUNTU_XCCDF_FILE"
 
         # remove old results file
         mkdir -p "$RESULTS_DIR"
