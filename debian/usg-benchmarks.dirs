@@ -1,5 +1,5 @@
 ${env:DESTDIR}/${env:BENCHMARK_VERSION}/benchmarks
-${env:DESTDIR}/${env:BENCHMARK_VERSION}/benchmarks/ubuntu2204/checks/sce
+${env:DESTDIR}/${env:BENCHMARK_VERSION}/benchmarks/ubuntu2404/checks/sce
 ${env:DESTDIR}/${env:BENCHMARK_VERSION}/tailoring
 var/lib/usg
 etc/usg
