@@ -34,46 +34,43 @@ Also, note that level 2 profiles are an extension of level 1 profiles: **all rul
 This is self-explanatory: server profiles are made for Canonical Ubuntu Server images, while Workstation profiles are made for Workstation images, which generally implies the use of a graphical interface. 
 
 # CUSTOMIZING VARIABLES AFFECTING THE CIS PROFILES IMPLEMENTATIONS
-Some rules can be fine-tuned by changing their variables. However, CIS benchmarks provides some variables with phony parameters which **must be customized** so the hardening scripts can be properly applied and the audit can properly check them.
+Some rules can be fine-tuned by changing their variables.
 
 For additional information on variables, check the **usg-variables**(7) man page.
 
 See the **usg**(8) man page to get information on how to use tailoring files to change the value of variables.
 
-## Rules that must be customized
-The list of variables below contains a brief explanation of the variables which *must be customized* and what rules they are related to.
+## Selecting a time synchronization daemon
 
-### Rule 1.5.1 - var\_grub2\_user, var\_grub2\_passwd\_hash
-Above variables are used to set the Grub2 user and password hash. Rule 1.5.1 uses that information to prevent changes to the grub2 entries during the bootloader execution.
+Use the XCCDF variable var\_timesync\_service to select which timesync daemon to install and configure.
+Available options are:
+- systemd-timesyncd
+- chronyd
 
-If the var\_grub2\_passwd\_hash value is left with the default value '\*', then no password will be set to the bootloader.
+## Selecting a firewall
 
-To generate the hash value, use the command `grub_mkpasswd_pbkdf2`
+Use the XCCDF variable var\_network\_filtering\_service to select which firewall to install and configure.
+Available options are:
+- nftables
+- iptables
+- ufw
 
-### Rule 1.5.3 - var\_root\_passwd\_hash
-This variable holds the hash which will be set into the /etc/shadow entry for the root user. In order to create this hash, use the command below:
+## Selecting a logging system
 
-`# openssl passwd -6`
-
-and type the password. Copy the generated hash to the value of the aforementioned variable.
-
-If that variable is left with the default value, the **usg** tool **will not set the root password** and the audit will fail if there is not a root password available.
-
-### Rule 5.2.17 - var\_sshd\_allow\_users\_valid, var\_sshd\_allow\_groups\_valid, var\_sshd\_deny\_users\_valid, var\_sshd\_deny\_groups\_valid
-These variables are used to set the ssh server parameters AllowUsers, AllowGroups, DenyUsers, DenyGroups, respectively, which allows an administrator to restrict user/group access to ssh remote access.
-
-The value must be a comma-separated list of users (or groups). If the variables are left with the default value, the **usg** too **will not include those parameters in the ssh server config file**, to avoid lockups.
-
-Check the ssh server man page to get more information on the parameters.
+The selection of a single logging systems is not controled using an XCCDF variable as with time synchronization
+and firewall. Instead, correct rules are selected based on the status of the rsyslog service,
+according to logic in CIS rule 6.1.1.4:
+- if rsyslog service is active: rsyslog is configured (section 6.1.3) and section 6.1.2 is ignored
+- if rsyslog service is inactive: systemd-journald is configured (section 6.1.2) and section 6.1.3 is ignored
 
 ## Some other interesting rules for customizing
 
-### Rule 2.2.1.3 - var\_multiple\_time\_servers
+### Rule 2.3.2.1 - var\_multiple\_time\_servers
 This variable contains the list of time servers which the chosen time service will synchronize to.
 
 The value must be a comma-separated list of servers. The default values are the safe ones used by Canonical on Ubuntu.
 
-### Rule 5.3.1 - var\_password\_pam\_minlen, var\_password\_pam\_minclass, var\_password\_pam\_dcredit, var\_password\_pam\_ucredit, var\_password\_pam\_ocredit, var\_password\_pam\_lcredit, var\_password\_pam\_retry
+### Rule 5.3.3.2.3 - var\_password\_pam\_minclass, var\_password\_pam\_dcredit, var\_password\_pam\_ucredit, var\_password\_pam\_ocredit, var\_password\_pam\_lcredit
 These variables are used to set the password creation parameters of the pam\_pwquality module. The names of the variables reflect those parameters.
 
 Default values are according to the CIS benchmark.
@@ -81,20 +78,70 @@ Default values are according to the CIS benchmark.
 Check the pam\_pwquality module man page for more information on the parameters.
 
 # RULES LIMITATIONS
-## Rule 1.1.10 - partition\_for\_var
-## Rule 1.1.11 - partition\_for\_var\_tmp
-## Rule 1.1.15 - partition\_for\_var\_log
-## Rule 1.1.16 - partition\_for\_var\_log\_audit
-## Rule 1.1.17 - partition\_for\_home
-## Rule 3.5.3.2.1 - iptables\_default\_deny
-## Rule 3.5.3.3.1 - ip6tables\_default\_deny
-## Rule 4.2.3 - all\_logfile\_permissions
-## Rule 4.4 - ensure\_logrotate\_permissions
-Current version of the benchmark only provides the audit check operation for those rules.
 
-There is no fix implemented, so they must be fixed manually!
+## Manual rules
 
-See the benchmark reference on the *INTERNET RESOURCES* section for information on how to apply the fixes.
+Rules listed in this section must be assessed manually according to
+instructions in the CIS Benchmark (see *INTERNET RESOURCES*).
+
+USG does not include an automated audit or remediation for these rules.
+
+- 1.1.1.10   Ensure unused filesystems kernel modules are not available
+- 1.2.1.1	   Ensure GPG keys are configured
+- 1.2.1.2	   Ensure package manager repositories are configured
+- 1.2.2.1	   Ensure updates, patches, and additional security software are installed
+- 2.1.22	   Ensure only approved services are listening on a network interface
+- 3.1.1	   Ensure IPv6 status is identified
+- 4.2.5	   Ensure ufw outbound connections are configured
+- 4.3.3	   Ensure iptables are flushed with nftables
+- 4.3.7	   Ensure nftables outbound and established connections are configured
+- 4.4.2.3	   Ensure iptables outbound and established connections are configured
+- 4.4.3.3	   Ensure ip6tables outbound and established connections are configured
+- 5.3.3.2.3  Ensure password complexity is configured
+- 5.4.1.2	   Ensure minimum password days is configured
+- 6.1.1.2	   Ensure journald log file access is configured
+- 6.1.1.3	   Ensure journald log file rotation is configured
+- 6.1.2.1.2  Ensure systemd-journal-upload authentication is configured
+- 6.1.3.5	   Ensure rsyslog logging is configured
+- 6.1.3.6	   Ensure rsyslog is configured to send logs to a remote log host
+- 6.1.3.8	   Ensure logrotate is configured
+- 6.2.3.21   Ensure the running and on disk configuration is the same
+- 7.1.13	   Ensure SUID and SGID files are reviewed
+
+## Rules with no remediation
+
+Rules listed in this section do not come with an automated remediation as it is
+either dependent on local site policy, or is considered too disruptive, possibly leading to system lockout.
+The remediations must be performed manually according to the instructions in the
+CIS benchmark (see *INTERNET RESOURCES*).
+
+
+- 1.1.2.3.1 	 Ensure separate partition exists for /home 	 (usg rules: partition_for_home)
+- 1.1.2.4.1 	 Ensure separate partition exists for /var 	 (usg rules: partition_for_var)
+- 1.1.2.5.1 	 Ensure separate partition exists for /var/tmp 	 (usg rules: partition_for_var_tmp)
+- 1.1.2.6.1 	 Ensure separate partition exists for /var/log 	 (usg rules: partition_for_var_log)
+- 1.1.2.7.1 	 Ensure separate partition exists for /var/log/audit 	 (usg rules: partition_for_var_log_audit)
+- 1.4.1 	 Ensure bootloader password is set 	 (usg rules: grub2_uefi_password)
+- 2.1.21 	 Ensure mail transfer agent is configured for local-only mode 	 (usg rules: has_nonlocal_mta)
+- 4.2.3 	 Ensure ufw service is enabled 	 (usg rules: check_ufw_active)
+- 4.2.6 	 Ensure ufw firewall rules exist for all open ports 	 (usg rules: ufw_rules_for_open_ports)
+- 4.2.7 	 Ensure ufw default deny firewall policy 	 (usg rules: set_ufw_default_rule)
+- 4.4.2.4 	 Ensure iptables firewall rules exist for all open ports 	 (usg rules: iptables_rules_for_open_ports)
+- 4.4.3.4 	 Ensure ip6tables firewall rules exist for all open ports 	 (usg rules: ip6tables_rules_for_open_ports)
+- 5.1.4 	 Ensure sshd access is configured 	 (usg rules: sshd_limit_user_access)
+- 5.4.1.6 	 Ensure all users last password change date is in the past 	 (usg rules: accounts_password_last_change_is_in_past)
+- 5.4.2.2 	 Ensure root is the only GID 0 account 	 (usg rules: accounts_root_gid_zero)
+- 5.4.2.4 	 Ensure root account access is controlled 	 (usg rules: ensure_root_access_controlled)
+- 5.4.2.5 	 Ensure root path integrity 	 (usg rules: root_path_all_dirs,no_dirs_unowned_by_root,root_path_no_dot,accounts_root_path_dirs_no_write)
+- 5.4.2.8 	 Ensure accounts without a valid login shell are locked 	 (usg rules: no_invalid_shell_accounts_unlocked)
+- 7.1.12 	 Ensure no files or directories without an owner and a group exist 	 (usg rules: no_files_unowned_by_user,file_permissions_ungroupowned)
+- 7.2.1 	 Ensure accounts in /etc/passwd use shadowed passwords 	 (usg rules: accounts_password_all_shadowed)
+- 7.2.3 	 Ensure all groups in /etc/passwd exist in /etc/group 	 (usg rules: gid_passwd_group_same)
+- 7.2.6 	 Ensure no duplicate GIDs exist 	 (usg rules: group_unique_id)
+- 7.2.7 	 Ensure no duplicate user names exist 	 (usg rules: account_unique_name)
+- 7.2.8 	 Ensure no duplicate group names exist 	 (usg rules: group_unique_name)
+- 7.2.10 	 Ensure local interactive user dot files access is configured 	 (usg rules: no_forward_files,no_netrc_files)
+
 
 # INTERNET RESOURCES
 Ubuntu 24.04 CIS Benchmark v1.0.0: https://workbench.cisecurity.org/benchmarks/18959
