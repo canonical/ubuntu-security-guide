@@ -1,3 +1,17 @@
+ubuntu-security-guides-enhanced (20.04.22) focal; urgency=medium
+
+  * CaC content: Multiple fixes
+    - Remove rule disable_ctrlaltdel_burstaction from STIG profile
+    - Prevent mount_option_* rules from adding invalid entries to fstab
+    - Exclude sgid binaries in rule file_groupownership_system_commands_dirs
+      to align with STIG (LP: #2098305)
+    - Modify rule chronyd_specify_remote_server to write trailing
+      newline to chrony.conf (LP: #2098303)
+    - Switch to using usernames instead of UIDs in
+      file_owner_* rules (LP: #2098304)
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 26 Feb 2025 07:12:00 +0100
+
 ubuntu-security-guides-enhanced (20.04.21) focal; urgency=medium
 
   * CaC content: Multiple fixes and improvements
