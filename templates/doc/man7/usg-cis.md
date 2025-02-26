@@ -44,24 +44,41 @@ See the **usg**(8) man page to get information on how to use tailoring files to 
 
 Use the XCCDF variable var\_timesync\_service to select which timesync daemon to install and configure.
 Available options are:
-- systemd-timesyncd
+
+- systemd-timesyncd (default)
 - chronyd
 
 ## Selecting a firewall
 
 Use the XCCDF variable var\_network\_filtering\_service to select which firewall to install and configure.
 Available options are:
-- nftables
+
+- nftables (default)
 - iptables
 - ufw
 
 ## Selecting a logging system
 
 The selection of a single logging systems is not controled using an XCCDF variable as with time synchronization
-and firewall. Instead, correct rules are selected based on the status of the rsyslog service,
+and firewall.
+
+Instead, correct rules are selected based on the status of the rsyslog service,
 according to logic in CIS rule 6.1.1.4:
+
 - if rsyslog service is active: rsyslog is configured (section 6.1.3) and section 6.1.2 is ignored
 - if rsyslog service is inactive: systemd-journald is configured (section 6.1.2) and section 6.1.3 is ignored
+
+## Apparmor mode
+
+CIS rule 1.3.1.3 requires that all Apparmor profiles are either in **enforce** or **complain** mode.
+Use the variable var\_apparmor\_mode to select one these values according to site requirements:
+
+ - enforce: set all Apparmor profiles in /etc/apparmor.d to enforce mode
+ - complain: set all Apparmor profiles in /etc/apparmor.d to complain mode
+ - keep_existing_mode: (default) Do not change existing modes of Apparmor profiles. See note below.
+
+**Important note:** On Ubuntu 24.04, changing the apparmor mode to enforce or complain on all profiles in /etc/apparmod.d can
+break certain applications which use unconfined profiles. See https://workbench.cisecurity.org/benchmarks/18959/tickets/23987
 
 ## Some other interesting rules for customizing
 
