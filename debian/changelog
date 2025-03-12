@@ -1,3 +1,17 @@
+ubuntu-security-guides-enhanced (22.04.11) jammy; urgency=medium
+
+  * CaC content: Multiple fixes and improvements
+    - Update DISA STIG to V2R3
+    - Fix package applicability checks in remediations (LP: #2097443)
+    - Fix variable name var_password_pam_unix_premember (LP: #2097448)
+    - Align file_groupownership_system_commands with STIG (LP: #2098305)
+    - Fix remediation for accounts_user_dot_user_ownership
+    - 
+  * USG tool: minor fixes
+    - fix mapping for ec2 tailoring file
+
+ -- Miha Purg <miha.purg@canonical.com>  Thu, 12 Mar 2025 13:58:00 +0100
+
 ubuntu-security-guides-enhanced (22.04.10) jammy; urgency=medium
 
   * Add custom EC2 profile based on CIS Level 1 Server
@@ -11,7 +25,7 @@ ubuntu-security-guides-enhanced (22.04.10) jammy; urgency=medium
     - fix invalid precedence for default tailoring file (LP: #2095162)
     - align --tailoring-file usage documentation with the implementation
 
- -- Miha Purg <miha.purg@canonical.com>  Thu, 30 Jan 2024 13:12:11 +0100
+ -- Miha Purg <miha.purg@canonical.com>  Thu, 30 Jan 2025 13:12:11 +0100
 
 ubuntu-security-guides-enhanced (22.04.9) jammy; urgency=medium
 
