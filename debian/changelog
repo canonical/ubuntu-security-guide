@@ -1,3 +1,10 @@
+ubuntu-security-guides-enhanced (20.04.23) focal; urgency=medium
+
+  * CaC content: Exclude system accounts in file_ownership_binary_dirs to
+      align with STIG rule UBTU-20-010457 (LP: #2103469)
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 19 Mar 2025 17:49:10 +0100
+
 ubuntu-security-guides-enhanced (20.04.22) focal; urgency=medium
 
   * CaC content: Multiple fixes
