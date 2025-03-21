@@ -5,6 +5,8 @@ ubuntu-security-guides-enhanced (20.04.23) focal; urgency=medium
       align with STIG rule UBTU-20-010457 (LP: #2103469)
     - Set file_permissions_var_log to NotApplicable if rsyslog
       is enabled
+    - Fix issue with missing libpam-pkcs11 configuration files
+      on AWS images by overriding dpkg --path-exclude
 
  -- Miha Purg <miha.purg@canonical.com>  Fri, 21 Mar 2025 12:38:10 +0100
 
