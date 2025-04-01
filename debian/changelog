@@ -15,10 +15,11 @@ ubuntu-security-guides-enhanced (22.04.11) jammy; urgency=medium
     - Fix accounts_user_dot_user/group_ownership to not dereference symlinks
     - Override the /etc/dpkg path-exclude option for some cloud provider's images
     - Fix applicability for file_permissions_var_log
+    - Disable remediation for file_ownership_binary_dirs
   * USG tool: minor fixes
     - fix mapping for ec2 tailoring file
 
- -- Alan Moore <alan.moore@canonical.com>  Mon, 31 Mar 2025 11:36:28 +0100
+ -- Alan Moore <alan.moore@canonical.com>  Tue, 01 Apr 2025 12:13:46 +0100
 
 ubuntu-security-guides-enhanced (22.04.10) jammy; urgency=medium
 
