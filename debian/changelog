@@ -1,3 +1,26 @@
+ubuntu-security-guides-enhanced (22.04.11) jammy; urgency=medium
+
+  [ Miha Purg ]
+  * CaC content: Multiple fixes and improvements
+    - Update DISA STIG to V2R3
+    - Fix package applicability checks in remediations (LP: #2097443)
+    - Fix variable name var_password_pam_unix_premember (LP: #2097448)
+    - Align file_groupownership_system_commands with STIG (LP: #2098305)
+    - Fix remediation for accounts_user_dot_user_ownership
+    - Remove non-compliant MACs
+    - Add Ubuntu 22.04 to the list of FIPS certified OS
+    - Fix dconf key for idle-delay lock on Ubuntu
+    - Disable remediations for set_iptables_default_rule and set_ip6tables_default_rule disable remediation iptables
+    - Align chronyd makestep value with Ubuntu STIGs
+    - Fix accounts_user_dot_user/group_ownership to not dereference symlinks
+    - Override the /etc/dpkg path-exclude option for some cloud provider's images
+    - Fix applicability for file_permissions_var_log
+    - Disable remediation for file_ownership_binary_dirs
+  * USG tool: minor fixes
+    - fix mapping for ec2 tailoring file
+
+ -- Alan Moore <alan.moore@canonical.com>  Tue, 01 Apr 2025 12:13:46 +0100
+
 ubuntu-security-guides-enhanced (22.04.10) jammy; urgency=medium
 
   * Add custom EC2 profile based on CIS Level 1 Server
@@ -11,7 +34,7 @@ ubuntu-security-guides-enhanced (22.04.10) jammy; urgency=medium
     - fix invalid precedence for default tailoring file (LP: #2095162)
     - align --tailoring-file usage documentation with the implementation
 
- -- Miha Purg <miha.purg@canonical.com>  Thu, 30 Jan 2024 13:12:11 +0100
+ -- Miha Purg <miha.purg@canonical.com>  Thu, 30 Jan 2025 13:12:11 +0100
 
 ubuntu-security-guides-enhanced (22.04.9) jammy; urgency=medium
 
