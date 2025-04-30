@@ -6,7 +6,7 @@
 usg-cis - Information on CIS profiles implementation
 
 # INTRODUCTION
-As mentioned in the **usg-rules**(8) man page, five CIS profiles are available to be audited/applied: **cis_level1_server**, **cis_level2_server**, **cis_level1_workstation**, and **cis_level2_workstation**.
+As mentioned in the **usg-rules**(8) man page, five CIS profiles are available to be audited/applied: **cis_level1_server**, **cis_level2_server**, **cis_level1_workstation**, **cis_level2_workstation**, and **cis_level1_ec2**.
 
 This man page provides additional information on all four and explain how to customize some variables in order to properly match the CIS requirements.
 
@@ -31,7 +31,7 @@ accessible, since, by default, the root user is locked in Ubuntu.
 Also, note that level 2 profiles are an extension of level 1 profiles: **all rules applied on level 1 are also applied on level 2**.
 
 ## Profiles Targets
-This is self-explanatory: server profiles are made for Canonical Ubuntu Server images, while Workstation profiles are made for Workstation images, which generally implies the use of a graphical interface. 
+This is self-explanatory: server profiles are made for Canonical Ubuntu Server images, while Workstation profiles are made for Workstation images, which generally implies the use of a graphical interface. The ec2 profile is a variant of the server profile that largely serves to remove some rules that do not apply to an ec2 environment.
 
 # CUSTOMIZING VARIABLES AFFECTING THE CIS PROFILES IMPLEMENTATIONS
 Some rules can be fine-tuned by changing their variables.

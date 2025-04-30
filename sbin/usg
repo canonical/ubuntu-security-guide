@@ -27,7 +27,8 @@
 declare -A PROFILES=( ["cis_level1_server"]="cis_level1_server-tailoring.xml" \
                       ["cis_level2_server"]="cis_level2_server-tailoring.xml" \
                       ["cis_level1_workstation"]="cis_level1_workstation-tailoring.xml" \
-                      ["cis_level2_workstation"]="cis_level2_workstation-tailoring.xml" )
+                      ["cis_level2_workstation"]="cis_level2_workstation-tailoring.xml" \
+                      ["cis_level1_server_ec2"]="cis_level1_server_ec2-tailoring.xml")
 
 BASE_DIR="/usr/share/ubuntu-scap-security-guides/current"
 TAILORING_DIR="$BASE_DIR/tailoring"
