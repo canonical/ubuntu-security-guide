@@ -59,15 +59,15 @@ class CaCProfile:
         elif selected != self.rules[rule_name].selected:
             # disable or enable existing rule
             logger.info(
-                f'Overriding rule selection to {rule_name}={selected} '
-                f'in control {control.control_id}'
+                f'Overriding rule selection to \'{rule_name}={selected}\' '
+                f'in control \'{control.control_id}\''
                 )
             self.rules[rule_name].selected = selected
         else:
             # ignore duplicate rules
             logger.debug(
-                f'Ignoring duplicate rule {rule_name} in '
-                f'control {control.control_id}'
+                f'Ignoring duplicate rule \'{rule_name}\' in '
+                f'control \'{control.control_id}\''
                 )
         return None
 
@@ -81,15 +81,15 @@ class CaCProfile:
         elif var_value != self.vars[var_name].value:
             # override
             logger.info(
-                    f'Overriding variable {var_name}={var_value} '
-                    f'in control {control.control_id}'
+                    f'Overriding variable \'{var_name}={var_value}\' '
+                    f'in control \'{control.control_id}\''
                     )
             self.vars[var_name].value = var_value
         else:
             # ignore duplicate rules
             logger.debug(
-                    f'Ignoring duplicate variable {var_name}={var_value}'
-                    f'in control {control.control_id}'
+                    f'Ignoring duplicate variable \'{var_name}={var_value}\' '
+                    f'in control \'{control.control_id}\''
                     )
         return None
 
@@ -103,7 +103,7 @@ class CaCProfile:
         else:
             raise CaCParsingException(
                     f'Duplicate controls not supported'
-                    f'(control id: {control_id}).'
+                    f'(control id: \'{control_id}\').'
                     )
 
     def _add_controls_from_file(self, controls_path, level_id):
@@ -154,8 +154,8 @@ class CaCProfile:
         # this control is for all rules and vars that are defined in the profile
         # and don't belong to any specific control
         profile_control = profile._add_control(
-                '_ProfileControl',
-                'Profile rules and variables not' \
+                '_Profile_Rules_And_Variables_',
+                'Profile rules and variables not ' \
                 'belonging to a specific control'
                 )
 
