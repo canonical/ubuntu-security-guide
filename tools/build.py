@@ -170,13 +170,17 @@ def gen_tailoring(cac_directory, usg_directory, target, benchmark_version):
         "cis_level1_server.profile",
         "cis_level1_workstation.profile",
         "cis_level2_server.profile",
-        "cis_level2_workstation.profile"]
+        "cis_level2_workstation.profile",
+        "cis_level1_server_ec2.profile",
+        ]
 
     tailoring_template = [
         "templates/tailoring/cis_level1_server-tailoring.xml",
         "templates/tailoring/cis_level1_workstation-tailoring.xml",
         "templates/tailoring/cis_level2_server-tailoring.xml",
-        "templates/tailoring/cis_level2_workstation-tailoring.xml"]
+        "templates/tailoring/cis_level2_workstation-tailoring.xml",
+        "templates/tailoring/cis_level1_server_ec2-tailoring.xml",
+        ]
 
     gen_tailoring_script = "%s/generate_tailoring_file.py" % (tools_directory)
     benchmark_xml = \
