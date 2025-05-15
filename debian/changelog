@@ -1,3 +1,11 @@
+ubuntu-security-guides-enhanced (24.04.4) noble; urgency=medium
+
+  * CaC content:
+    - Add cis level 1 server profile customized for EC2
+    - Fix priority of configuration for rule rsyslog_filecreatemode
+
+ -- Miha Purg <miha.purg@canonical.com>  Tue, 20 May 2025 09:32:41 +0200
+
 ubuntu-security-guides-enhanced (24.04.3) noble; urgency=medium
 
   * CaC content: Replace rule audit_rules_suid_privilege_function
