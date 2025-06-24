@@ -163,8 +163,8 @@ class CaCProfile:
             # controls
             if ':' in selection:
                 tags = selection.split(':')
+                controls_tag = tags[0]
                 if len(tags) == 3:
-                    controls_tag = tags[0]
                     level = tags[2]
                 else:
                     level = 'all'
