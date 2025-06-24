@@ -1,3 +1,19 @@
+ubuntu-security-guides-enhanced (24.04.5) noble; urgency=medium
+
+  * CaC content:
+    - Add STIG V1R1 profile
+    - Improve remediations in file_owner,file_groupowner,file_permissions templates
+    - Fix permission issue with landscape-client (LP: #2115444)
+    - Improve rsyslog_remote_loghost OVAL to check rainer script
+    - Fix regex in rules sudo_add_use_pty and sudo_custom_logfile to allow multiple options
+    - Improve bash_sudo_remove_config template to allow forward slashes
+    - Fix applicability for rules accounts_password_pam_*
+    - Improve regex in set_password_hashing_algorithm_systemauth
+  * USG tool:
+    - Add support for STIG profile (disa_stig) and update docs
+
+ -- Miha Purg <miha.purg@canonical.com>  Tue, 15 Jul 2025 18:34:16 +0200
+
 ubuntu-security-guides-enhanced (24.04.4) noble; urgency=medium
 
   * CaC content:
