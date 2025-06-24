@@ -16,7 +16,7 @@ usg - Audit and remediation tool for security benchmarks compliance automatizati
 
 **usg** **generate-tailoring** **profile** **filename**
 
-Available profiles: *cis_level1_server* | *cis_level2_server* | *cis_level1_workstation* | *cis_level2_workstation* | *cis_level1_server_ec2*
+Available profiles: *cis_level1_server* | *cis_level2_server* | *cis_level1_workstation* | *cis_level2_workstation* | *cis_level1_server_ec2* | *stig*
 
 # DESCRIPTION
 **usg**, short for Ubuntu Security Guide, is a tool to audit and comply with security guides such as CIS and DISA-STIG.
@@ -224,7 +224,7 @@ OpenScap: https://www.open-scap.org/
 Ubuntu 24.04 CIS Benchmark v1.0.0: https://workbench.cisecurity.org/benchmarks/18959
 .
 # SEE ALSO
-**usg-rules**(7), **usg-variables**(7), **usg-cis**(7), **oscap**(8), **update-alternatives**(1)
+**usg-rules**(7), **usg-variables**(7), **usg-cis**(7), **usg-disa-stig**(7), **oscap**(8), **update-alternatives**(1)
 
 # COPYRIGHT
 Copyright <<YEAR_PLACEHOLDER>> Canonical Limited. All rights reserved.
