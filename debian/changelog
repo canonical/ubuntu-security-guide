@@ -1,3 +1,16 @@
+ubuntu-security-guides-enhanced (22.04.12) jammy; urgency=medium
+
+  [Alan Moore]
+  * CaC content: Multiple fixes and improvements
+    - Avoid chgrp non-exist bin path `/sbin/audispd` of auditd package
+    - Fix architecture dependent path for pam_pkcs11
+    - Add oval check for rule prevent_direct_root_logins/UBTU-22-411010
+    - Fix priority of rsyslog configuation creation
+    - Remove UBTU-22-412015 in align with ubuntu 22.04 stig v2r3 and v2r4
+    - Switch to using hardcoded sshd Ciphers and MACs algorithms in Ubuntu STIGs (audit only)
+
+ -- Alan Moore <alan.moore@canonical.com>  Wed, 30 Jul 2025 11:02:26 +0100
+
 ubuntu-security-guides-enhanced (22.04.11) jammy; urgency=medium
 
   [ Miha Purg ]
