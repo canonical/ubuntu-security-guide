@@ -1,0 +1,4 @@
+Tests: usg-cli-e2e
+Depends: @
+Restrictions: needs-root, allow-stderr
+

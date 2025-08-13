@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "benchmarks": [
+    {
+      "backend": "openscap",
+      "benchmark_type": "CIS",
+      "product": "ubuntu2404",
+      "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
+      "version": "v1.0.0",
+      "profiles": {
+        "cis_level1_server": {},
+        "cis_level2_server": {},
+        "cis_level1_workstation": {},
+        "cis_level2_workstation": {}
+      },
+      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.\n",
+      "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "benchmark_id": "ubuntu2404_CIS_1",
+      "compatible_versions": [],
+      "breaking_upgrade_path": [
+        "v1.0.1",
+        "v2.0.0"
+      ],
+      "is_latest": false,
+      "data_files": {
+        "datastream_gz": {
+          "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-ds.xml.gz",
+          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+        }
+      },
+      "tailoring_files": {
+        "cis_level1_server": {
+          "file": "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml",
+          "sha256": "48dccd4d46072ea275f28564b04d867d203455fab6efcd07601d56f25f8646ef"
+        },
+        "cis_level2_server": {
+          "file": "ubuntu2404_CIS_1/tailoring/cis_level2_server-tailoring.xml",
+          "sha256": "9801a7dc68b3f35b3ccc3f0e6f7356762cc4fc7b8e7c8d62df898caa5946990f"
+        },
+        "cis_level1_workstation": {
+          "file": "ubuntu2404_CIS_1/tailoring/cis_level1_workstation-tailoring.xml",
+          "sha256": "49d71779bf83c6f88304474593e9acfa97226b99553eebc586a50d86455c390f"
+        },
+        "cis_level2_workstation": {
+          "file": "ubuntu2404_CIS_1/tailoring/cis_level2_workstation-tailoring.xml",
+          "sha256": "a906c61eb306b97c157845f02a6bf63c8324d64ddceea7a29f334bedc857f4d7"
+        }
+      }
+    },
+    {
+      "backend": "openscap",
+      "benchmark_type": "CIS",
+      "product": "ubuntu2404",
+      "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
+      "version": "v1.0.1",
+      "profiles": {
+        "cis_level1_server": {},
+        "cis_level2_server": {},
+        "cis_level1_workstation": {},
+        "cis_level2_workstation": {}
+      },
+      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.\n",
+      "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "benchmark_id": "ubuntu2404_CIS_2",
+      "compatible_versions": [
+        "v1.0.0.usg1"
+      ],
+      "breaking_upgrade_path": [
+        "v2.0.0"
+      ],
+      "is_latest": false,
+      "data_files": {
+        "datastream_gz": {
+          "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-ds.xml.gz",
+          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+        }
+      },
+      "tailoring_files": {
+        "cis_level1_server": {
+          "file": "ubuntu2404_CIS_2/tailoring/cis_level1_server-tailoring.xml",
+          "sha256": "4c83778fc3140be65602f0063d081e0ec90267212921af289358309ecfac9e61"
+        },
+        "cis_level2_server": {
+          "file": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
+          "sha256": "6cc687a61343177c4aa592f597003683d76951fa2411dbf0ed4a9baf5a4cd22f"
+        },
+        "cis_level1_workstation": {
+          "file": "ubuntu2404_CIS_2/tailoring/cis_level1_workstation-tailoring.xml",
+          "sha256": "449580a2af24b02438316e65fe55f4da91ae7ac602a08d2088ff968feab09314"
+        },
+        "cis_level2_workstation": {
+          "file": "ubuntu2404_CIS_2/tailoring/cis_level2_workstation-tailoring.xml",
+          "sha256": "ef97bbac22f604bb54c80dc8d23c6225bf3c071250ac9d92a63981c7e2505a15"
+        }
+      }
+    },
+    {
+      "backend": "openscap",
+      "benchmark_type": "CIS",
+      "product": "ubuntu2404",
+      "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
+      "version": "v2.0.0",
+      "profiles": {
+        "cis_level1_server": {},
+        "cis_level2_server": {},
+        "cis_level1_workstation": {},
+        "cis_level2_workstation": {}
+      },
+      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.\n",
+      "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "benchmark_id": "ubuntu2404_CIS_3",
+      "compatible_versions": [],
+      "breaking_upgrade_path": [],
+      "is_latest": true,
+      "data_files": {
+        "datastream_gz": {
+          "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-ds.xml.gz",
+          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+        }
+      },
+      "tailoring_files": {
+        "cis_level1_server": {
+          "file": "ubuntu2404_CIS_3/tailoring/cis_level1_server-tailoring.xml",
+          "sha256": "4425d5fe554cfc50332c446776c5dbcd78068c8e90fc845513890f1a362337a4"
+        },
+        "cis_level2_server": {
+          "file": "ubuntu2404_CIS_3/tailoring/cis_level2_server-tailoring.xml",
+          "sha256": "60b30845c2c19586b6c31e99aa5be758895bc85503f08aa8078a2a98aad80c03"
+        },
+        "cis_level1_workstation": {
+          "file": "ubuntu2404_CIS_3/tailoring/cis_level1_workstation-tailoring.xml",
+          "sha256": "890330fa100f384ec58719808f0db107211606ae4a5f2ff5e20f18e6a90bb4ed"
+        },
+        "cis_level2_workstation": {
+          "file": "ubuntu2404_CIS_3/tailoring/cis_level2_workstation-tailoring.xml",
+          "sha256": "aec0a0bd07fa849d4200778e04d7fd65545b051192e5b43362cc91ceb35c8ea4"
+        }
+      }
+    },
+    {
+      "backend": "openscap",
+      "benchmark_type": "STIG",
+      "product": "ubuntu2404",
+      "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
+      "version": "V1R1",
+      "profiles": {
+        "stig": {
+          "legacy_id": "disa_stig"
+        }
+      },
+      "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.\n",
+      "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
+      "reference_url": "https://public.cyber.mil/stigs/downloads/",
+      "benchmark_id": "ubuntu2404_STIG_1",
+      "compatible_versions": [],
+      "breaking_upgrade_path": [
+        "V1R3"
+      ],
+      "is_latest": false,
+      "data_files": {
+        "datastream_gz": {
+          "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-ds.xml.gz",
+          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+        }
+      },
+      "tailoring_files": {
+        "stig": {
+          "file": "ubuntu2404_STIG_1/tailoring/stig-tailoring.xml",
+          "sha256": "7dde0d9e9f90c02d8b0d1ff5b0fb7c450596ccc59d5e98ca552681c7010ccf31"
+        }
+      }
+    },
+    {
+      "backend": "openscap",
+      "benchmark_type": "STIG",
+      "product": "ubuntu2404",
+      "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
+      "version": "V1R3",
+      "profiles": {
+        "stig": {
+          "legacy_id": "disa_stig"
+        }
+      },
+      "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R3 benchmark.\n",
+      "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
+      "reference_url": "https://public.cyber.mil/stigs/downloads/",
+      "benchmark_id": "ubuntu2404_STIG_2",
+      "compatible_versions": [
+        "V1R2"
+      ],
+      "breaking_upgrade_path": [],
+      "is_latest": true,
+      "data_files": {
+        "datastream_gz": {
+          "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-ds.xml.gz",
+          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+        }
+      },
+      "tailoring_files": {
+        "stig": {
+          "file": "ubuntu2404_STIG_2/tailoring/stig-tailoring.xml",
+          "sha256": "3ec9824c3bfa74baea917c21e9159678ff0f72b3d014c8f505b943b473ca2b7d"
+        }
+      }
+    }
+  ]
+}
