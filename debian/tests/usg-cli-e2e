@@ -1,0 +1,88 @@
+#!/bin/bash
+
+set -Ee
+
+test_cmd() {
+    local cmd=$1
+    local exp_rc=$2
+    local exp_stdout=$3
+    local exp_stderr=$4
+
+    actual_stdout_file=$(mktemp)
+    actual_stderr_file=$(mktemp)
+
+    echo "Running $cmd. Expecting RC=$exp_rc, stdout='$exp_stdout', stderr='$exp_stderr'"
+    set +e
+    eval "$cmd" >"${actual_stdout_file}" 2>"${actual_stderr_file}"
+    actual_rc=$?
+    set -e
+
+    if [[ "${actual_rc}" -ne "${exp_rc}" ]] || \
+	    ([[ -n "${exp_stdout}" ]] && ! grep -qP "${exp_stdout}" "${actual_stdout_file}") || \
+	    ([[ -n "${exp_stderr}" ]] && ! grep -qP "${exp_stderr}" "${actual_stderr_file}"); then
+
+        echo "FAIL..."
+        echo "Actual RC=$actual_rc"
+	echo "--- stdout ---"
+	cat "${actual_stdout_file}"
+	echo "--- stderr ---"
+	cat "${actual_stderr_file}"
+	echo "--------------"
+	exit 1
+    fi
+    echo "OK"
+}
+
+# base usage
+test_cmd "usg"            2  "Available commands are"        ""
+test_cmd "usg --help"     0  "Available commands are"        ""
+test_cmd "usg --version"  0  "\d*\.\d*\.\d*"                 ""
+
+# cis_level1_server profile should exist
+test_cmd "usg list --all" 0  "cis_level1_server"             ""
+
+# info for profile should work
+test_cmd "usg info cis_level1_server"  0  "Benchmark.*CIS"   ""
+
+# generate tailoring file
+test_cmd "usg generate-tailoring cis_level1_server t1.xml -V v1.0.0"  0  "generate-tailoring command completed." ""
+test_cmd "grep href t1.xml"  0  "href=" "" 
+
+# customize tailoring file on the host for quick audit/fix
+sed -e 's/"true"/"false"/g' \
+    -e '/file_owner_etc_shadow\|disable_users_coredumps/ s/"false"/"true"/g' \
+    -i t1.xml
+
+
+# Audit with tailoring file, should be 1 pass, 1 fail
+test_cmd "usg audit -t t1.xml"  0  "^Fail:.*1$"  ""
+
+# Fix with tailoring file, only failed rules
+rm -f /var/lib/usg/xccdf*sh
+test_cmd "usg fix -t t1.xml --only-failed"  0  "fix command completed" ""
+# test only one rule is in remediation script
+test_cmd "grep -c BEGIN /var/lib/usg/xccdf*sh"  0  "^1$"  ""
+
+# Re-audit to confirm remediation
+test_cmd "usg audit -t t1.xml"  0  "^Fail:.*0$"  ""
+
+
+# Fix with tailoring file, all rules
+rm -f /var/lib/usg/xccdf*sh
+test_cmd "usg fix -t t1.xml"  0  "fix command completed" ""
+# test both rules are in remediation script
+test_cmd "grep -c BEGIN /var/lib/usg/xccdf*sh"  0  "^2$"  ""
+
+
+# generate-fix
+rm -f /var/lib/usg/cis_level1_server*sh
+test_cmd "usg generate-fix cis_level1_server"  0  "Wrote remediation script.*/var/lib/usg/cis_level1_server.*sh"  ""
+test_cmd "grep BEGIN /var/lib/usg/cis_level1_server*.sh"  0  "BEGIN"  ""
+
+# generate-fix with tailoring file
+test_cmd "usg generate-fix -t t1.xml -o fix.sh"  0  "Wrote remediation script.*fix.sh"  ""
+test_cmd "grep -c BEGIN fix.sh"  0  "^2$"  ""
+
+
+# test that audit starts when using profile (full run is too long and useless, timeout at 2s)
+test_cmd "timeout 2 usg audit cis_level1_server"  124  "Starting Evaluation"  ""

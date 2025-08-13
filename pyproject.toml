@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "usg"
+version = "24.04.5"
+requires-python = ">=3.12"
+authors = [
+    { name = "Miha Purg" },
+    { name = "Alan Moore" },
+    { name = "Eduardo Barretto" }
+]
+
+[project.urls]
+Homepage = "https://launchpad.net/usg"
+Tracker = "https://bugs.launchpad.net/usg"
+Source = "https://github.com/canonical/ubuntu-security-guide"
+
+[tool.pytest.ini_options]
+addopts = "--ignore=tests/test_cli_e2e -p no:cacheprovider"
+testpaths = [
+    "tests",
+    "tools/tests"
+]

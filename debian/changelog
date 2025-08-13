@@ -1,251 +1,57 @@
-ubuntu-security-guides-enhanced (22.04.13) jammy; urgency=medium
+ubuntu-security-guides-enhanced (24.04.5ubuntu1) noble; urgency=medium
+
+  * testing python rewrite of USG
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 13 Aug 2025 16:58:09 +0200
+
+ubuntu-security-guides-enhanced (24.04.5) noble; urgency=medium
 
   * CaC content:
-    - Use chrony instead of timesyncd in EC2 profile by default
-    - Fix maxdepth in file_owner and file_groupowner templates
+    - Add STIG V1R1 profile
+    - Improve remediations in file_owner,file_groupowner,file_permissions templates
+    - Fix permission issue with landscape-client (LP: #2115444)
+    - Improve rsyslog_remote_loghost OVAL to check rainer script
+    - Fix regex in rules sudo_add_use_pty and sudo_custom_logfile to allow multiple options
+    - Improve bash_sudo_remove_config template to allow forward slashes
+    - Fix applicability for rules accounts_password_pam_*
+    - Improve regex in set_password_hashing_algorithm_systemauth
+  * USG tool:
+    - Add support for STIG profile (disa_stig) and update docs
 
- -- Miha Purg <miha.purg@canonical.com>  Wed, 20 Aug 2025 09:41:57 +0200
+ -- Miha Purg <miha.purg@canonical.com>  Tue, 15 Jul 2025 18:34:16 +0200
 
-ubuntu-security-guides-enhanced (22.04.12) jammy; urgency=medium
+ubuntu-security-guides-enhanced (24.04.4) noble; urgency=medium
 
-  [Alan Moore]
-  * CaC content: Multiple fixes and improvements
-    - Avoid chgrp non-exist bin path `/sbin/audispd` of auditd package
-    - Fix architecture dependent path for pam_pkcs11
-    - Add oval check for rule prevent_direct_root_logins/UBTU-22-411010
-    - Fix priority of rsyslog configuation creation
-    - Remove UBTU-22-412015 in align with ubuntu 22.04 stig v2r3 and v2r4
-    - Switch to using hardcoded sshd Ciphers and MACs algorithms in Ubuntu STIGs (audit only)
+  * CaC content:
+    - Add cis level 1 server profile customized for EC2
+    - Fix priority of configuration for rule rsyslog_filecreatemode
 
- -- Alan Moore <alan.moore@canonical.com>  Wed, 30 Jul 2025 11:02:26 +0100
+ -- Miha Purg <miha.purg@canonical.com>  Tue, 20 May 2025 09:32:41 +0200
 
-ubuntu-security-guides-enhanced (22.04.11) jammy; urgency=medium
+ubuntu-security-guides-enhanced (24.04.3) noble; urgency=medium
 
-  [ Miha Purg ]
-  * CaC content: Multiple fixes and improvements
-    - Update DISA STIG to V2R3
-    - Fix package applicability checks in remediations (LP: #2097443)
-    - Fix variable name var_password_pam_unix_premember (LP: #2097448)
-    - Align file_groupownership_system_commands with STIG (LP: #2098305)
-    - Fix remediation for accounts_user_dot_user_ownership
-    - Remove non-compliant MACs
-    - Add Ubuntu 22.04 to the list of FIPS certified OS
-    - Fix dconf key for idle-delay lock on Ubuntu
-    - Disable remediations for set_iptables_default_rule and set_ip6tables_default_rule disable remediation iptables
-    - Align chronyd makestep value with Ubuntu STIGs
-    - Fix accounts_user_dot_user/group_ownership to not dereference symlinks
-    - Override the /etc/dpkg path-exclude option for some cloud provider's images
-    - Fix applicability for file_permissions_var_log
-    - Disable remediation for file_ownership_binary_dirs
-  * USG tool: minor fixes
-    - fix mapping for ec2 tailoring file
+  * CaC content: Replace rule audit_rules_suid_privilege_function
+    with audit_rules_suid_auid_privilege_function (LP: #2108014)
 
- -- Alan Moore <alan.moore@canonical.com>  Tue, 01 Apr 2025 12:13:46 +0100
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 23 Apr 2025 19:28:00 +0200
 
-ubuntu-security-guides-enhanced (22.04.10) jammy; urgency=medium
+ubuntu-security-guides-enhanced (24.04.2) noble; urgency=medium
 
-  * Add custom EC2 profile based on CIS Level 1 Server
-  * CaC content: Multiple fixes and improvements
-    - Disable unapplicable auditd rules on aarch64
-    - Ensure correct umask when creating sssd.conf
-    - Remove rule disable_ctrlaltdel_burstaction from STIG profile
-    - Fix rule auditd_rules_mac_modification to monitor apparmor directories
-    - Replace unmask with mask in socket_systemd-journal-remote_disabled
-  * USG tool: minor fixes
-    - fix invalid precedence for default tailoring file (LP: #2095162)
-    - align --tailoring-file usage documentation with the implementation
+  * CaC content: Fixes and improvements
+    - Fix dconf key in rule dconf_gnome_screensaver_idle_delay
+    - Disable remediation for set_iptables_default_rule and
+      set_ip6tables_default_rule (LP: #2100814)
+    - Improve rule descriptions containing chown/chgrp commands
+    - Switch to using usernames instead of UIDs in file_owner_* rules (LP: #2098304)
+    - Disable symlink derefernce in rules accounts_user_dot_user_ownership
+      and accounts_user_dot_group_ownership
 
- -- Miha Purg <miha.purg@canonical.com>  Thu, 30 Jan 2025 13:12:11 +0100
-
-ubuntu-security-guides-enhanced (22.04.9) jammy; urgency=medium
-
-  * CaC content: Multiple fixes and improvements
-    - Update DISA STIG to V2R1
-    - Remove quotes from journald config parameters (LP: #2070288)
-    - Fix bash_package_installed macro (LP: #2080435)
-    - Switch command to /bin/false in kernel_module_disabled template
-    - Adjust bash template groupfile_owner to follow symlinks
-    - Avoid tmpfiles override (LP: #2073422)
-    - Remove ineffective flag "-L" for chgrp and chown
-    - Change default value for var_apparmor_mode from complain to enforce (LP: #2073795, #2080434, #2080435)
-    - Load all the profile if not loaded for Ubuntu without change the mode of loaded profiles
-    - Remove unnecessary apparmor-utils dependency in apparmor sce check scripts
-
- -- Alan Moore <alan.moore@canonical.com>  Thu, 24 Oct 2024 20:12:24 +0100
-
-ubuntu-security-guides-enhanced (22.04.7) jammy; urgency=medium
-
-  * New benchmark STIG V1R1 for Ubuntu 22.04 LTS
-  * Minor fixes and improvements for CIS:
-    - Fix non-idempotent bash remediation for sysctl template (LP: #2056150)
-    - Add missing !package_cups_removed to cis_level1 profile (LP: #2057945)
-    - Fix handling of grub.d configs in grub2_bootloader_argument
-    - Fix check for accounts_user_dot_no_world_writable_programs
-    - Fix remediations on config files without trailing newlines (LP: #2061072)
-    - Modify dconf package name to fix false positives in dconf rules
-    - Enable dconf profiles in bash remediation of dconf rules
-    - Fix SCE check for iptables_open_ports (LP: #2061213)
-    - Fix SCE checks for iptables_loopback_traffic (LP: #2061215)
-    - Add missing rule package_pam_pwquality_installed (LP: #2065113)
-    - Disable all remediation languages except bash in compiled benchmarks
-    - Add a warning to sshd_limit_user_access
-    - Fix check for non-existing audispd in aide_check_audit_tools
-  * Update README to add how to report issues
-
- -- Miha Purg <miha.purg@canonical.com>  Fri, 14 Jun 2024 12:06:30 +0200
-
-ubuntu-security-guides-enhanced (22.04.6) jammy; urgency=medium
-
-  * Minor fixes and improvements for CIS and DISA STIG:
-    - Improve remediation for accounts_passwords_pam_faillock_* rules
-    - Modify rules for disabling kernel modules to use /bin/false
-    - Fix remediation text for sshd_config MACs (LP: #2051884)
-    - Fix auditd rules for ssh-keysign and networkconfig (LP: #2052900)
-    - Improve sshd rules to check configs in /etc/ssh/sshd_config.d/*
-    - Fix remediation text for auditd_max_log_file_action (LP: #2052940)
-    - Fix sudoers configuration parsing (LP: #2053238)
-    - Improve umask rule to check configs in /etc/profile.d/* (LP: #2053239)
-    - Disable intrusive remediation for rule umask_interactive_users
-    - Fix logic for rules checking local interactive accounts
-    - Improve grub2 rules to check configs in /etc/default/grub.d/*
-  * Fix postinstall and prerm scripts to not reset user preferences
-    in update-alternatives
-
- -- Miha Purg <miha.purg@canonical.com>  Wed, 28 Feb 2024 15:00:51 +0100
-
-ubuntu-security-guides-enhanced (22.04.5) jammy-security; urgency=medium
-
-  * CaC content: Bug fixes
-    - Improve regex for pam_faillock
-    - Fix remediation for set_nftables_loopback that caused DNS resolution
-    to fail (LP: #2039445)
-    - Add missing variable and fix default value of
-    var_nftables_base_chain_policies (LP: #2041270)
-    - Fix pam file list in pam_faillock
-  * USG Tool: Fix to correctly replace alternative version in control file
-  * Fix postinstall script: Set usg_benchmark to correct alternative version
-
- -- Miha Purg <miha.purg@canonical.com>  Mon, 17 Jan 2024 14:30:00 +0100
-
-ubuntu-security-guides-enhanced (22.04.3) jammy; urgency=medium
-
-  * CaC content: Various CIS bug fixes
-    - Improve /var/log permissions remediation (LP: #2037053)
-    - Add a few missing mount platforms to correctly perform applicability
-    check
-    - Fix usb storage module remediation
-    - Fix a few audit checks
-    - Improve nftables rules remediations and checks (LP: #2032671)
-    - Add missing rule no_forward_files
-
- -- Eduardo Barretto <eduardo.barretto@canonical.com>  Wed, 04 Oct 2023 12:41:16 +0200
-
-ubuntu-security-guides-enhanced (22.04.2) jammy; urgency=medium
-
-  * CaC content: Various CIS improvements
-    - Improve bash for pam_faillock (LP: #2020230)
-    - Improve oval template for mount_option to avoid matching comments
-    - Improve sce check for set_ufw_loopback_traffic
-    - Improve bash for wireless_disable_interfaces (LP: #2021972)
-    - Improve jinja macro for aide_string
-
- -- Eduardo Barretto <eduardo.barretto@canonical.com>  Wed, 07 Jun 2023 17:30:09 +0200
-
-ubuntu-security-guides-enhanced (22.04.1) jammy; urgency=medium
-
-  * Initial Jammy version for CIS only
-
- -- Eduardo Barretto <eduardo.barretto@canonical.com>  Wed, 19 Apr 2023 16:59:17 +0100
-
-ubuntu-security-guides-enhanced (20.04.16) focal; urgency=medium
-
-  * Fix multiple issues in generate tailoring file script
-  * USG Tool: Improvements
-    - Add --debug flag and make all debug files available in
-      /var/lib/usg/
-    - Replace oscap fix command with bash and add logging
-  * CaC content: Multiple fixes
-    - Fix grub2 password related rules for UEFI-based systems
-    - Fix set maxpoll for chrony or ntpd
-    - Fix xattr audit rules to check for root user
-    - Improve ensure_pam_module_options to avoid breaking
-      pam_auth_update
-    - Add package_pam_pwquality_installed to cis_level1_server
-
- -- Eduardo Barretto <eduardo.barretto@canonical.com>  Tue, 13 Sep 2022 14:42:07 +0200
-
-ubuntu-security-guides-enhanced (20.04.15) focal; urgency=medium
-
-  * USG Tool: Add --oval-results flag to dump OVAL results
-    - This flag was requested in LP#1966068.
-      It merely dumps the OVAL result files into the CWD.
-  * CaC Content: Avoid grep failure because of '[' character in PAM
-    - Issues reported in LP#1969479 and LP#1969480
-
- -- Adam Bell <adam.bell@canonical.com>  Tue, 28 Jun 2022 11:09:57 -0600
-
-ubuntu-security-guides-enhanced (20.04.14.1) focal; urgency=medium
-
-  * Tailoring file content update.
-
- -- Adam Bell <adam.bell@canonical.com>  Fri, 04 Mar 2022 10:54:08 -0700
-
-ubuntu-security-guides-enhanced (20.04.14) focal; urgency=medium
-
-  * Implements changes found at github.com/canonical/ubuntu-security-guide
-    (this repository was open-sourced since the 20.04.13 package).
-    - CaC-built Datastream files are now included in USG.
-    - New USG build tools, updated USG build instructions.
-  * CaC content: Correction of "obsecure" -> "obscure" typo
-    in accounts_password_pam_unix_remember rule.
-
- -- Adam Bell <adam.bell@canonical.com>  Fri, 18 Feb 2022 09:13:11 -0700
-
-ubuntu-security-guides-enhanced (20.04.13) focal; urgency=medium
-
-  * Updates benchmark data to modify HTML report footer. The footer
-    now links to the USG online documentation.
-
- -- Adam Bell <adam.bell@canonical.com>  Wed, 14 Jan 2022 08:10:22 -0700
-
-ubuntu-security-guides-enhanced (20.04.12) focal; urgency=medium
-
-  * New version of ubuntu-security-guides based on ComplianceAsCode project.
-    Source and binary names changed to reflect this.
-  * Replaces helper script usg-cis by usg, which includes additional features.
-    - Generation of a bash script bundle containing all the fixes
-    - Possibility of fixing the uncompliant rules after the audit process.
-  * Includes benchmarks and fix scripts for CIS (all profiles on version 1.0.0
-    for Focal) and for DISA-STIG.
-  * package name changed to reflect the addition of DISA-STIG benchmark (and
-    possible others in the future)
-  * Documentation broken in man pages for easier access
-  * Upgrades preserve old benchmarks versions
-  * Addition of tailoring files which allow users to easily customize which
-    rules will be audited/enforced
-  * Package isn't considered an upgrade to old ubuntu security guides packages
-    anymore. Albeit it conflicts with them.
-
- -- Richard Maciel Costa <richard.maciel.costa@canonical.com>  Wed, 06 Oct 2021 23:40:44 -0300
-
-ubuntu-security-guides (20.04.4) focal; urgency=medium
-
-  * Fixed usage displaying an error
-  * Rule 5.4.5 hardening now outputs a result similar to the used on STIG
-
- -- Richard Maciel Costa <richard.maciel.costa@canonical.com>  Thu, 06 May 2021 15:53:29 -0300
-
-ubuntu-security-guides (20.04.2) focal; urgency=medium
-
-  * Enhancement to rule 5.4.5
-
- -- Richard Maciel Costa <richard.maciel.costa@canonical.com>  Mon, 03 May 2021 22:16:51 -0300
-
-ubuntu-security-guides (20.04.1) focal; urgency=medium
+ -- Miha Purg <miha.purg@canonical.com>  Mon, 17 Mar 2025 11:07:24 +0100
 
 
-  * 20.04 Audit and Hardening tools release, based on CIS Benchmark version
-    1.0.0
+ubuntu-security-guides-enhanced (24.04.1) noble; urgency=medium
 
- -- Richard Maciel Costa <richard.maciel.costa@canonical.com>  Mon, 26 Apr 2021 15:20:29 -0300
+  * Initial release of USG for Ubuntu 24.04 with CIS v1.0.0 profiles
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 26 Feb 2025 13:21:17 +0100
 
