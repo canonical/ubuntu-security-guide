@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import yaml
 import logging
 from pathlib import Path
@@ -117,11 +116,11 @@ class CaCProfile:
         # special level keyword 'all' matches all levels.
         applicable_levels = set()
         def _parse_level(level_id):
-            levels = [l for l in yaml_data.get('levels', {})
-                      if l.get('id') == level_id or level_id == 'all']
-            for l in levels:
-                applicable_levels.add(l['id'])
-                for parent_level_id in l.get('inherits_from', []):
+            levels = [level for level in yaml_data.get('levels', {})
+                      if level.get('id') == level_id or level_id == 'all']
+            for level in levels:
+                applicable_levels.add(level['id'])
+                for parent_level_id in level.get('inherits_from', []):
                     if parent_level_id not in applicable_levels:
                         _parse_level(parent_level_id)
         _parse_level(level_id)

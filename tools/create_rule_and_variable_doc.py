@@ -21,22 +21,22 @@ import re
 import logging
 from pathlib import Path
 import lxml.etree as etree
-from cac_tools import CaCProfile
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
 XMLNS = "http://checklists.nist.gov/xccdf/1.2"
 
 class DocItem(object):
-    def __init__(self, id, title=None, description=None):
+    def __init__(self, id: str, title: str | None = None, description: str | None = None):
         self.id = id
         self.title = title
         self.description = description
 
-    def __hash__(self):
-        return hash(id)  # Only id must be unique
+    def __hash__(self) -> int:
+        return hash(self.id)  # Only id must be unique
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self.id == other.id
@@ -45,19 +45,19 @@ class DocItem(object):
         return f'{ self.id }, { self.title }, { self.description }'
 
 
-def _extract_data_from_xccdf(xccdf_path, items_type):
-    xccdf_doc = None
+def _extract_data_from_datastream(datastream_path: Path, items_type: str) -> Dict[str, DocItem]:
+    datastream_doc = None
     try:
-        xccdf_doc = etree.parse(xccdf_path)
+        datastream_doc = etree.parse(datastream_path)
     except OSError:
-        logger.error(f'Could not open XCCDF file { xccdf_path }')
+        logger.error(f'Could not open datastream file { datastream_path }')
         sys.exit(1)
-    except XMLSyntaxError:
-        logger.error(f'Could not parse XCCDF file { xccdf_path }')
+    except etree.XMLSyntaxError:
+        logger.error(f'Could not parse datastream file { datastream_path }')
         sys.exit(1)
 
     item_dict = {}
-    root = xccdf_doc.getroot()
+    root = datastream_doc.getroot()
     if items_type == 'variables':
         Elems = root.findall('.//{%s}Value' % XMLNS)
     else:
@@ -85,12 +85,12 @@ def _extract_data_from_xccdf(xccdf_path, items_type):
 
     return item_dict
 
-def generate_markdown_doc(xccdf_path, items_type):
+def generate_markdown_doc(datastream_path: Path, items_type: str) -> str:
 
     if items_type not in ['rules', 'variables']:
         raise ValueError('items_type must be either "rules" or "variables"')
-    
-    item_dict = _extract_data_from_xccdf(xccdf_path, items_type)
+
+    item_dict = _extract_data_from_datastream(datastream_path, items_type)
 
     md_escape = r"([<>_*\[\]#\\])"
 
@@ -101,8 +101,8 @@ def generate_markdown_doc(xccdf_path, items_type):
         lines.append("# List of rules")
 
     for it in item_dict.values():
-        lines.append(f"## Rule id: %s" % re.sub(md_escape, r"\\\1", it.id))
-        lines.append(f"### Title: %s" % re.sub(md_escape, r"\\\1", it.title))
+        lines.append("## Rule id: %s" % re.sub(md_escape, r"\\\1", it.id))
+        lines.append("### Title: %s" % re.sub(md_escape, r"\\\1", it.title))
         if it.description is not None and len(it.description) > 0 \
                 and it.description[0] != '\n':
             extra_char = '\n'
@@ -113,11 +113,11 @@ def generate_markdown_doc(xccdf_path, items_type):
 
 
 
-def main(args):
+def main(args: List[str]) -> None:
     usage = f'''
-Script for generating markdown docs based on rule and variable metadata in the XCCDF file. 
+Script for generating markdown docs based on rule and variable metadata in the datastream file. 
 
-Usage: {args[0]} [ rules | variables ] <xccdf file path> <out file>
+Usage: {args[0]} [ rules | variables ] <datastream file path> <out file>
 '''
 
     if len(args) != 4:
@@ -125,11 +125,11 @@ Usage: {args[0]} [ rules | variables ] <xccdf file path> <out file>
         sys.exit(1)
 
     command = args[1]
-    xccdf_path = Path(args[2])
+    datastream_path = Path(args[2])
     out_path = Path(args[3])
 
     try:
-        open(out_path, 'w').write(generate_markdown_doc(xccdf_path, command))
+        open(out_path, 'w').write(generate_markdown_doc(datastream_path, command))
         logger.info(f'Successfully wrote docs for {command} in {out_path}')
     except Exception as e:
         logger.error("Unknown exception:", e)
