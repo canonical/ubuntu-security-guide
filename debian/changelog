@@ -1,3 +1,11 @@
+ubuntu-security-guides-enhanced (22.04.13) jammy; urgency=medium
+
+  * CaC content:
+    - Use chrony instead of timesyncd in EC2 profile by default
+    - Fix maxdepth in file_owner and file_groupowner templates
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 20 Aug 2025 09:41:57 +0200
+
 ubuntu-security-guides-enhanced (22.04.12) jammy; urgency=medium
 
   [Alan Moore]
