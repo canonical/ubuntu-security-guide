@@ -11,7 +11,7 @@ import shutil
 import hashlib
 import logging
 
-from .exceptions import IntegrityError, PermValidationError
+from usg.exceptions import IntegrityError, PermValidationError
 
 logger = logging.getLogger(__name__)
 

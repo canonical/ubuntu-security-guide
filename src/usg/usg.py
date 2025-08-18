@@ -10,13 +10,13 @@ import tempfile
 import shutil
 import datetime
 
-from . import constants
-from . import config as usg_config
-from .utils import validate_perms, verify_integrity, gunzip_file
-from .results import AuditResults, BackendArtifacts
-from .backends import OpenscapBackend, BackendError
-from .models import TailoringFile, Profile, Benchmark, Benchmarks
-from .exceptions import USGError, ProfileNotFoundError, FileMoveError
+from usg import constants
+from usg import config as usg_config
+from usg.utils import validate_perms, verify_integrity, gunzip_file
+from usg.results import AuditResults, BackendArtifacts
+from usg.backends import OpenscapBackend, BackendError
+from usg.models import TailoringFile, Profile, Benchmark, Benchmarks
+from usg.exceptions import USGError, ProfileNotFoundError, FileMoveError
 
 logger = logging.getLogger(__name__)
 

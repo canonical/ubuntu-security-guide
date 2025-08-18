@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Mapping
 
-from .exceptions import (
+from usg.exceptions import (
     ProfileNotFoundError,
     BenchmarkError,
     TailoringFileError
