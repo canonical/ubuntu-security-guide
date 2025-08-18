@@ -10,12 +10,12 @@ from pathlib import Path
 import time
 import configparser
 
-from . import constants
-from .usg import USG
-from .models import Profile, Benchmark, TailoringFile
-from .exceptions import USGError
-from .config import load_config, override_config_with_cli_args
-from .version import __version__
+from usg import constants
+from usg.usg import USG
+from usg.models import Profile, Benchmark, TailoringFile
+from usg.exceptions import USGError
+from usg.config import load_config, override_config_with_cli_args
+from usg.version import __version__
 
 logger = logging.getLogger()
 

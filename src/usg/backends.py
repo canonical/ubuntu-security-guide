@@ -8,9 +8,9 @@ import subprocess
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-from .results import AuditResults, BackendArtifacts
-from .utils import validate_perms
-from .exceptions import PermValidationError, BackendError
+from usg.results import AuditResults, BackendArtifacts
+from usg.utils import validate_perms
+from usg.exceptions import PermValidationError, BackendError
 
 logger = logging.getLogger(__name__)
 
