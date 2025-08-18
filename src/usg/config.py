@@ -9,7 +9,7 @@ import logging
 from typing import Any, Mapping
 from pathlib import Path
 
-from . import constants
+from usg import constants
 
 logger = logging.getLogger()
 
