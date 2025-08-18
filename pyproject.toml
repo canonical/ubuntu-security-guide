@@ -17,6 +17,9 @@ Homepage = "https://launchpad.net/usg"
 Tracker = "https://bugs.launchpad.net/usg"
 Source = "https://github.com/canonical/ubuntu-security-guide"
 
+[project.scripts]
+usg = "usg.cli:main"
+
 [tool.pytest.ini_options]
 addopts = "--ignore=tests/test_cli_e2e -p no:cacheprovider"
 testpaths = [
