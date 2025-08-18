@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-from .usg import USG, USGError
-from .version import __version__
+from usg.usg import USG, USGError
+from usg.version import __version__
 
 __all__ = [
     "__version__",
