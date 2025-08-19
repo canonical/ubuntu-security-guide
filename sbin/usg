@@ -13,4 +13,4 @@ if [ ! -d "${USG_BASE_DIR}/usg" ]; then
   exit 1
 fi
 
-PYTHONPATH="$USG_BASE_DIR:$PYTHONPATH" "${PYTHON3}" -m usg "$@"
+PYTHONPATH="$USG_BASE_DIR" "${PYTHON3}" -m usg "$@"
