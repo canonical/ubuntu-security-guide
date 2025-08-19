@@ -25,6 +25,7 @@ OPENSCAP_SAVE_OVAL_RESULTS = False
 # Paths for sensitive data are hardcoded to system paths
 CONFIG_PATH = Path("/etc/usg.conf")
 BENCHMARK_METADATA_PATH = Path("/usr/share/usg-benchmarks/benchmarks.json")
+BENCHMARK_PKG = "usg-benchmarks"
 STATE_DIR = Path("/var/lib/usg")
 OPENSCAP_BIN_PATH = Path("/usr/bin/oscap")
 

@@ -16,7 +16,7 @@ from usg.utils import validate_perms, verify_integrity, gunzip_file
 from usg.results import AuditResults, BackendArtifacts
 from usg.backends import OpenscapBackend, BackendError
 from usg.models import TailoringFile, Profile, Benchmark, Benchmarks
-from usg.exceptions import USGError, ProfileNotFoundError, FileMoveError
+from usg.exceptions import USGError, ProfileNotFoundError, FileMoveError, MissingFileError
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +52,11 @@ class USG(object):
         # do sanity checks on important files
         try:
             validate_perms(constants.BENCHMARK_METADATA_PATH)
-        except PermValidationError:
-            k
+        except MissingFileError as e:
+            raise USGError(
+                f"Could not find benchmark data {constants.BENCHMARK_METADATA_PATH}. "
+                f"Please ensure the {constants.BENCHMARK_PKG} package is installed."
+            ) from e
         validate_perms(constants.STATE_DIR, True)
 
         self._benchmarks = Benchmarks.from_json(constants.BENCHMARK_METADATA_PATH)
