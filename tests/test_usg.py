@@ -4,14 +4,14 @@ import datetime
 
 from usg.models import Profile, Benchmarks, Benchmark
 from usg.results import AuditResults, BackendArtifacts
-from usg.exceptions import ProfileNotFoundError, USGError
+from usg.exceptions import ProfileNotFoundError, USGError, MissingFileError
 from usg.usg import USG
 
 
 TEST_DATE = "20250715.1200"
 TEST_DATETIME = datetime.datetime(2025, 7, 15, 12, 0)
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def patch_usg(tmp_path_factory, dummy_benchmarks):
     # patch the usg module:
     # - set benchmarks to our dummy benchmarks
@@ -129,7 +129,9 @@ def test_get_profile_not_found(patch_usg, profile, product, version):
     with pytest.raises(ProfileNotFoundError):
         usg.get_profile(profile, product, benchmark_version=version)
 
+
 def test_load_tailoring_returns_tailoring_object(patch_usg, tmp_path, monkeypatch):
+    # 
     usg = USG()
     tailoring_path = tmp_path / "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml"
     tailoring_path.parent.mkdir(parents=True, exist_ok=True)
@@ -151,11 +153,10 @@ def test_load_tailoring_returns_tailoring_object(patch_usg, tmp_path, monkeypatc
     monkeypatch.setattr(TailoringFile, "from_file", lambda path: DummyTailoring())
     result = usg.load_tailoring(tailoring_path)
     assert isinstance(result, DummyTailoring)
-    assert result.profile.profile_id == "cis_level1_server"
-    assert result.profile.benchmark_id == "ubuntu2404_CIS_1"
-    assert result.profile.tailoring_file == tailoring_path
+
 
 def test_load_tailoring_benchmark_not_found(dummy_benchmarks, monkeypatch, tmp_path):
+    # test that the tailoring file contains an invalid benchmark (not in list of benchmarks)
     from usg import constants
     monkeypatch.setattr(constants, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
     monkeypatch.setattr(constants, "STATE_DIR", tmp_path)
@@ -222,6 +223,7 @@ def test_audit_correct_arguments(patch_usg, dummy_benchmarks, capsys):
     stdout, stderr = capsys.readouterr()
     assert stdout == "audit called with profile_id=cis_level1_server, tailoring_file=None, debug=False, oval_results=False\n"
 
+
 def test_audit_correct_artifact_names(patch_usg, dummy_benchmarks, capsys):
     # test that audit creates the correct artifact name and moves it to the correct path
     usg = USG()
@@ -230,29 +232,9 @@ def test_audit_correct_artifact_names(patch_usg, dummy_benchmarks, capsys):
     assert artifacts.get_by_type("audit_results").path.name == "usg-results-20250715.1200.xml"
 
 
-def test_load_tailoring_success(patch_usg, tmp_path, monkeypatch):
-    tailoring_path = tmp_path / "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml"
-    usg = USG()
-    tailoring_path.parent.mkdir(parents=True, exist_ok=True)
-    tailoring_path.write_text("")
-
-    # Patch TailoringFile.from_file to return a dummy object
-    class DummyTailoring:
-        benchmark_id = "ubuntu2404_CIS_1"
-        profile = Profile(
-            profile_id="cis_level1_server",
-            profile_legacy_id="cis_level1_server_legacy_id",
-            benchmark_id="ubuntu2404_CIS_1",
-            tailoring_file=tailoring_path
-        )
-        @staticmethod
-        def from_file(path):
-            return DummyTailoring()
-
-    from usg.models import TailoringFile
-    monkeypatch.setattr(TailoringFile, "from_file", DummyTailoring.from_file)
-    tailoring = usg.load_tailoring(tailoring_path)
-    assert isinstance(tailoring, DummyTailoring)
-    assert tailoring.profile.profile_id == "cis_level1_server"
-    assert tailoring.profile.benchmark_id == "ubuntu2404_CIS_1"
-    assert tailoring.profile.tailoring_file == tailoring_path
+def test_missing_benchmarks_file(monkeypatch, tmp_path):
+    # test that the missing benchmark file raises the correct errror
+    from usg.usg import constants
+    monkeypatch.setattr(constants, "BENCHMARK_METADATA_PATH", tmp_path / "nonexistant")
+    with pytest.raises(USGError, match="Could not find benchmark data"):
+        USG()

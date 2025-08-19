@@ -11,7 +11,7 @@ import shutil
 import hashlib
 import logging
 
-from usg.exceptions import IntegrityError, PermValidationError
+from usg.exceptions import IntegrityError, PermValidationError, MissingFileError
 
 logger = logging.getLogger(__name__)
 
@@ -47,14 +47,16 @@ def validate_perms(filepath: Path | str, is_dir: bool = False):
     """
     Ensure file/dir exists and is not world-writable or a symlink.
 
-    Raises PermValidationError on issue
+    Raises:
+       - MissingFileError on missing file
+       - PermValidationError on other issues
     """
     logger.debug(f"Validating permissions of {filepath}.")
 
     filepath = Path(filepath)
 
     if not filepath.exists():
-        raise PermValidationError(f"'{filepath}' doesn't exist.")
+        raise MissingFileError(f"'{filepath}' doesn't exist.")
 
     if filepath.is_symlink():
         raise PermValidationError(f"'{filepath}' is a symlink.")
