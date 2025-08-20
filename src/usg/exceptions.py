@@ -1,5 +1,7 @@
+"""Custom exceptions."""
+
 class USGError(Exception):
-    """Base class for all user-visible USG exceptions"""
+    """Base class for all user-visible USG exceptions."""
 
 
 class ProfileNotFoundError(USGError):

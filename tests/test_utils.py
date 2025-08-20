@@ -1,8 +1,10 @@
 import os
+
 import pytest
 
 from usg import utils
 from usg.exceptions import IntegrityError, PermValidationError
+
 
 def test_verify_integrity_success(tmp_path):
     file = tmp_path / "testfile"
