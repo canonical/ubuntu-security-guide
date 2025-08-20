@@ -26,3 +26,14 @@ testpaths = [
     "tests",
     "tools/tests"
 ]
+
+[tool.ruff]
+extend-exclude = ["tests"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["COM", "TRY", "EM", "G004", "FBT", "T201"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
