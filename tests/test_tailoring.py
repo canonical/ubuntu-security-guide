@@ -1,5 +1,7 @@
 import pytest
+
 from usg.models import TailoringFile, TailoringFileError
+
 
 def test_tailoringfile_load(tmp_path):
     # Load minimal working tailoring file
@@ -17,7 +19,10 @@ def test_tailoringfile_load(tmp_path):
     assert tailoring is not None
     assert tailoring.tailoring_file == tailoring_path
     assert tailoring.profile.profile_id == "xccdf_org.ssgproject.content_profile_test"
-    assert tailoring.profile.profile_legacy_id == "xccdf_org.ssgproject.content_profile_test"
+    assert (
+        tailoring.profile.profile_legacy_id
+        == "xccdf_org.ssgproject.content_profile_test"
+    )
     assert tailoring.profile.benchmark_id == "ubuntu2404_CIS_1"
     assert tailoring.profile.tailoring_file == tailoring_path
     assert tailoring.benchmark_id == "ubuntu2404_CIS_1"
@@ -168,4 +173,3 @@ def test_tailoringfile_parse_malformed_benchmark_href():
 """
     with pytest.raises(TailoringFileError):
         TailoringFile._parse_tailoring_scap(tailoring_xml)
-

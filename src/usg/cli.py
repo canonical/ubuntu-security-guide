@@ -1,20 +1,20 @@
-"""
-Command line interface for USG.
-"""
+#!/usr/bin/env python3
+
+"""Command line interface for USG."""
 
 import argparse
+import configparser
 import logging
 import os
 import sys
-from pathlib import Path
 import time
-import configparser
+from pathlib import Path
 
 from usg import constants
-from usg.usg import USG
-from usg.models import Profile, Benchmark, TailoringFile
-from usg.exceptions import USGError
 from usg.config import load_config, override_config_with_cli_args
+from usg.exceptions import USGError
+from usg.models import Benchmark, Profile, TailoringFile
+from usg.usg import USG
 from usg.version import __version__
 
 logger = logging.getLogger()
@@ -32,54 +32,51 @@ Run 'usg list' to list avaiable profiles.
 """
 
 CMD_LIST_HELP = {
-            "description": "Lists available profiles.",
-            "epilog": "",
-            }
+    "description": "Lists available profiles.",
+    "epilog": "",
+}
 
 CMD_INFO_HELP = {
-            "description": """\
+    "description": """\
 The info command prints out metadata on specific profile or tailoring file.
 """,
-            "epilog": EPILOG_COMMON,
-            }
+    "epilog": EPILOG_COMMON,
+}
 
 CMD_AUDIT_HELP = {
-            "description": """\
+    "description": """\
 The audit command relies on the oscap command and the USG XCCDF and
 OVAL files to audit the system, verifying if the system is compliant
 with either a provided profile or a provided tailoring file.
 """,
-            "epilog": EPILOG_COMMON,
-            }
+    "epilog": EPILOG_COMMON,
+}
 
 CMD_FIX_HELP = {
-            "description": """\
+    "description": """\
 The fix command relies on the oscap command, the XCCDF and OVAL files
-to audit the system. It verifies if the system is compliant with either
-the set of rules of a provided profile or the set of rules of a provided
-tailoring file. Then, for every rule which has failed the audit stage,
-usg attempts to fix it.
+to audit the system and then fix all the rules associated with either
+a provided profile or a provided tailoring file.
 
-Note that the oscap tries to audit the fixed rules just after the fix
-process, but since many rules require a reboot in order to complete
-the fix process, usually this audit will fail with an error status.
-Reboot the system and run the audit command in order to fetch a
-reliable report.
+The optional flag --only-failed can be used to avoid fixing all the rules,
+but to fix only the rules which are marked as Failed during the initial audit.
+Note that due to rule dependencies, the command might need to be rerun
+for all rules to be fixed correctly.
 """,
-            "epilog": EPILOG_COMMON,
-            }
+    "epilog": EPILOG_COMMON,
+}
 
 CMD_GENERATE_FIX_HELP = {
-            "description": """\
+    "description": """\
 The generate-fix command relies on the oscap command, the XCCDF and
 OVAL files to create a bash script file containing all the fixes
 associated with either a provided profile or a provided tailoring file.
 """,
-            "epilog": EPILOG_COMMON,
-            }
+    "epilog": EPILOG_COMMON,
+}
 
 CMD_GENERATE_TAILORING_HELP = {
-            "description": """\
+    "description": """\
 The generate-tailoring command creates a tailoring file based on the
 provide profile and saves it to the provided output path. To make this
 tailoring file the default save it as /etc/usg/default-tailoring.xml
@@ -87,22 +84,22 @@ tailoring file the default save it as /etc/usg/default-tailoring.xml
 This command requires a profile upon which the tailoring file will be created.
 All rules present in the base profile will also be present in the tailoring file.
 """,
-            "epilog": "Run 'usg list' to list avaiable profiles."
-            }
+    "epilog": "Run 'usg list' to list avaiable profiles.",
+}
 
 
 CLI_CMD_HELP = {
-        "list": CMD_LIST_HELP,
-        "info": CMD_INFO_HELP,
-        "audit": CMD_AUDIT_HELP,
-        "fix": CMD_FIX_HELP,
-        "generate-fix": CMD_GENERATE_FIX_HELP,
-        "generate-tailoring": CMD_GENERATE_TAILORING_HELP,
-        }
+    "list": CMD_LIST_HELP,
+    "info": CMD_INFO_HELP,
+    "audit": CMD_AUDIT_HELP,
+    "fix": CMD_FIX_HELP,
+    "generate-fix": CMD_GENERATE_FIX_HELP,
+    "generate-tailoring": CMD_GENERATE_TAILORING_HELP,
+}
 
 
 CLI_USG_HELP = {
-        "description": """\
+    "description": """\
 Available commands are:
     list                Lists available profiles
     audit               Audits the current system
@@ -111,32 +108,25 @@ Available commands are:
     generate-tailoring  Create a tailoring file based on a profile
     info                Shows info on profile/tailoring file
 """,
-        "epilog": """\
+    "epilog": """\
 Use usg <command> --help for more information about a command.
-"""
+""",
 }
 
 
-def error_exit(msg, rc=1) -> None:
-    """
-    Write msg to standard error and exit with return code rc
-    """
+def error_exit(msg: str, rc: int = 1) -> None:
+    """Write msg to standard error and exit with return code rc."""
     if msg:
         sys.stderr.write(msg)
         sys.stderr.write("\n")
     sys.exit(rc)
 
 
-
 def command_list(usg: USG, args: argparse.Namespace) -> None:
-    """
-    Lists available profiles
-    """
+    """List available profiles."""
     logger.debug("Starting command_list")
     print("Listing available profiles...\n")
-    print(CLI_LIST_FORMAT.format(
-        "Profile", "Benchmark/Product", "Version\n"
-        ))
+    print(CLI_LIST_FORMAT.format("Profile", "Benchmark/Product", "Version\n"))
 
     profiles = [p for b in usg.benchmarks.values() for p in b.profiles.values()]
     for p in sorted(profiles, key=lambda p: p.profile_id):
@@ -146,11 +136,13 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
             continue
 
         depr = "" if latest else " **Deprecated**"
-        print(CLI_LIST_FORMAT.format(
+        print(
+            CLI_LIST_FORMAT.format(
                 p.profile_id,
                 f"{benchmark.benchmark_type}/{benchmark.product}",
-                benchmark.version + depr
-                ))
+                benchmark.version + depr,
+            )
+        )
 
     print("""
 
@@ -163,9 +155,7 @@ $ usg info -t my_tailoring.xml
 
 
 def command_info(usg: USG, args: argparse.Namespace) -> None:
-    """
-    Prints info about a specific profile or tailoring file.
-    """
+    """Print info about a specific profile or tailoring file."""
     logger.debug("Starting command_info")
     if hasattr(args, "tailoring_file"):
         tailoring = usg.load_tailoring(args.tailoring_file)
@@ -173,19 +163,15 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
         usg_profile = tailoring.profile
     else:
         usg_profile = usg.get_profile(
-            args.profile,
-            args.product,
-            args.benchmark_version
-            )
+            args.profile, args.product, args.benchmark_version
+        )
     print_info_profile(usg_profile)
     print_info_benchmark(usg.get_benchmark_by_id(usg_profile.benchmark_id))
     logger.debug("Finished command_info")
 
 
-def print_info_tailoring(tailoring: TailoringFile):
-    """
-    Print info on tailoring file.
-    """
+def print_info_tailoring(tailoring: TailoringFile) -> None:
+    """Print info about tailoring file."""
     print()
     for k, v in [
         ("Tailoring file", str(tailoring.tailoring_file.resolve())),
@@ -193,14 +179,15 @@ def print_info_tailoring(tailoring: TailoringFile):
         print(CLI_INFO_FORMAT.format(k, v))
 
 
-def print_info_profile(profile: Profile):
-    # TODO decide on formatting
+def print_info_profile(profile: Profile) -> None:
+    """Print info about profile."""
     print()
     for k, v in [("Profile name", profile.profile_id)]:
         print(CLI_INFO_FORMAT.format(k, v))
 
 
-def print_info_benchmark(benchmark: Benchmark):
+def print_info_benchmark(benchmark: Benchmark) -> None:
+    """Print info about benchmark."""
     profiles = "\n".join([f"- {p.profile_id}" for p in benchmark.profiles.values()])
 
     upgrade_path = ", ".join(benchmark.breaking_upgrade_path)
@@ -236,37 +223,38 @@ Available profiles:
     )
 
     if not benchmark.is_latest:
-        print(f"Note: This profile version is no longer maintained. \n"
-              f"Latest stable version is {benchmark.breaking_upgrade_path[-1]}")
+        print(
+            f"Note: This profile version is no longer maintained. \n"
+            f"Latest stable version is {benchmark.breaking_upgrade_path[-1]}"
+        )
+
 
 def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
-    """
-    Generates a tailoring file and writes it to disk
-    """
+    """Generate a tailoring file and writes it to disk."""
     logger.debug("Starting command_generate_tailoring")
     usg_profile = get_usg_profile_from_args(usg, args)
-    print(f"USG will extract the tailoring file for profile "
-          f"'{usg_profile.profile_id}' to '{args.output}'.")
+    print(
+        f"USG will extract the tailoring file for profile "
+        f"'{usg_profile.profile_id}' to '{args.output}'."
+    )
     contents = usg.generate_tailoring(usg_profile)
-    with open(args.output, "w") as f:
+    with Path(args.output).open("w") as f:
         f.write(contents)
     print("USG generate-tailoring command completed.")
     logger.debug("Finished command_generate_tailoring")
 
+
 def command_generate_fix(usg: USG, args: argparse.Namespace) -> None:
-    """
-    Processes args for generate-fix command and runs usg.
-    """
+    """Process args for generate-fix command and runs usg."""
     logger.debug("Starting command_generate_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
     artifacts = usg.generate_fix(usg_profile)
     print(f"Wrote remediation script to '{artifacts.get_by_type('fix_script').path}'")
     logger.debug("Finished command_generate_fix")
 
+
 def command_fix(usg: USG, args: argparse.Namespace) -> None:
-    """
-    Processes args and runs USG audit and USG fix
-    """
+    """Process args and runs USG audit and USG fix."""
     logger.debug("Starting command_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
     print("Running audit and remediation script...")
@@ -278,21 +266,20 @@ def command_fix(usg: USG, args: argparse.Namespace) -> None:
     )
     logger.debug("Finished command_fix")
 
+
 def command_audit(usg: USG, args: argparse.Namespace) -> None:
-    """
-    Processes args and runs USG audit
-    """
+    """Process args and runs USG audit."""
     logger.debug("Starting command_audit")
     usg_profile = get_usg_profile_from_args(usg, args)
-    results, output_files = usg.audit(usg_profile, debug=args.debug, oval_results=args.oval_results)
+    results, output_files = usg.audit(
+        usg_profile, debug=args.debug, oval_results=args.oval_results
+    )
     print(results.get_summary())
     logger.debug("Finished command_audit")
 
 
 def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
-    """
-    Returns a Profile object based on the provided args.
-    """
+    """Return a Profile object based on the provided args."""
     if hasattr(args, "profile"):
         profile = usg.get_profile(args.profile, args.product, args.benchmark_version)
     else:
@@ -302,8 +289,7 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
 
 
 def init_logging(log_path: Path, debug: bool) -> None:
-    """
-    Initialize logging.
+    """Initialize logging.
 
     Logs are written to file, fallback to stderr.
     Warning logs are always written to stderr.
@@ -313,25 +299,23 @@ def init_logging(log_path: Path, debug: bool) -> None:
         debug: Whether to enable debug logging
 
     """
-
     if logger.hasHandlers():
         logger.handlers.clear()
 
     try:
-        log_handler : logging.Handler = logging.FileHandler(log_path)
-    except Exception:
+        log_handler: logging.Handler = logging.FileHandler(log_path)
+    except Exception:  # noqa: BLE001
         sys.stderr.write(
-                f"Error: cannot open '{log_path}' for writing. "
-                f"Writing logs to stderr.\n"
-                )
+            f"Error: cannot open '{log_path}' for writing. Writing logs to stderr.\n"
+        )
         log_handler = logging.StreamHandler()
     else:
         # warning logs go to console always
         warning_handler = logging.StreamHandler()
         warning_handler.setLevel(logging.WARNING)
-        warning_handler.setFormatter(logging.Formatter(
-            "\n%(levelname)s: %(message)s\n"
-            ))
+        warning_handler.setFormatter(
+            logging.Formatter("\n%(levelname)s: %(message)s\n")
+        )
         logger.addHandler(warning_handler)
 
     if debug:
@@ -349,132 +333,140 @@ def init_logging(log_path: Path, debug: bool) -> None:
     logger.info(f"Initialized logging on {time.ctime()}")
 
 
-def parse_args(
-        config_defaults: configparser.ConfigParser
-        ):
-    """
-    Parses args for all subcommands.
+def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace:
+    """Parse args for all subcommands.
 
     The arguments are mostly the same across subcommands thus
     all of the logic is contained in this one parsing function.
 
     Returns:
         - args: argparse Namespace
+
     """
     parser = argparse.ArgumentParser(
-            allow_abbrev=False,
-            description=CLI_USG_HELP["description"],
-            epilog=CLI_USG_HELP["epilog"],
-            formatter_class=argparse.RawTextHelpFormatter,
-            prog="usg"
+        allow_abbrev=False,
+        description=CLI_USG_HELP["description"],
+        epilog=CLI_USG_HELP["epilog"],
+        formatter_class=argparse.RawTextHelpFormatter,
+        prog="usg",
     )
 
-    parser.add_argument("-v", "--version", action="version",
-                        version=__version__)
+    parser.add_argument("-v", "--version", action="version", version=__version__)
 
     subparsers = parser.add_subparsers(dest="command", required=False)
     cmd_parsers = {}
 
     for command in CLI_CMD_HELP:
-
         cmd_parser = subparsers.add_parser(
             name=command,
             description=CLI_CMD_HELP[command]["description"],
             epilog=CLI_CMD_HELP[command]["epilog"],
             formatter_class=argparse.RawTextHelpFormatter,
             prog="usg",
-            argument_default=argparse.SUPPRESS
-            )
+            argument_default=argparse.SUPPRESS,
+        )
 
         if command in ["info", "audit", "fix", "generate-fix"]:
             cmd_parser.add_argument(
-                    "profile", nargs="?", type=str,
-                    help="Profile name (see 'usg list' for list of profiles)"
-                    )
+                "profile",
+                nargs="?",
+                type=str,
+                help="Profile name (see 'usg list' for list of profiles)",
+            )
             cmd_parser.add_argument(
-                    "-t", "--tailoring-file", type=Path,
-                    help="Path to tailoring file"
-                    )
+                "-t", "--tailoring-file", type=Path, help="Path to tailoring file"
+            )
 
-        if command in ["info", "audit", "fix",
-                       "generate-fix", "generate-tailoring"]:
+        if command in ["info", "audit", "fix", "generate-fix", "generate-tailoring"]:
             # Not useful until multiple products exist.
             # Avoid polluting the CLI and hardcode it to the default for now.
             # cmd_parser.add_argument("-p", "--product", type=str,
-            #                         help="Target product",
+            #                         help="Target product",  # noqa: ERA001
             #                         default=default_product)
             cmd_parser.set_defaults(
-                    product=config_defaults.get(
-                        "cli", "product", fallback=constants.DEFAULT_PRODUCT
-                        )
-                    )
+                product=config_defaults.get(
+                    "cli", "product", fallback=constants.DEFAULT_PRODUCT
+                )
+            )
             cmd_parser.add_argument(
-                    "-V", "--benchmark-version", type=str,
-                    help="Pin to specific benchmark version",
-                    default=config_defaults.get(
-                        "cli", "benchmark_version", fallback=constants.DEFAULT_BENCHMARK_VERSION
-                        )
-                    )
+                "-V",
+                "--benchmark-version",
+                type=str,
+                help="Pin to specific benchmark version",
+                default=config_defaults.get(
+                    "cli",
+                    "benchmark_version",
+                    fallback=constants.DEFAULT_BENCHMARK_VERSION,
+                ),
+            )
 
         if command in ["audit", "fix"]:
             cmd_parser.add_argument(
-                    "--html-file", type=Path,
-                    help="Override the HTML output file",
-                    default=argparse.SUPPRESS
-                    )
+                "--html-file",
+                type=Path,
+                help="Override the HTML output file",
+                default=argparse.SUPPRESS,
+            )
             cmd_parser.add_argument(
-                    "--results-file", type=Path,
-                    help="Override the results file",
-                    default=argparse.SUPPRESS
-                    )
+                "--results-file",
+                type=Path,
+                help="Override the results file",
+                default=argparse.SUPPRESS,
+            )
             cmd_parser.add_argument(
-                    "--oval-results", action="store_true",
-                    default=config_defaults.getboolean(
-                        "openscap_backend",
-                        "save_oval_results",
-                        fallback=constants.OPENSCAP_SAVE_OVAL_RESULTS
-                        ),
-                    help="Write the OVAL results files"
-                    )
+                "--oval-results",
+                action="store_true",
+                default=config_defaults.getboolean(
+                    "openscap_backend",
+                    "save_oval_results",
+                    fallback=constants.OPENSCAP_SAVE_OVAL_RESULTS,
+                ),
+                help="Write the OVAL results files",
+            )
 
         if command in ["generate-fix"]:
             cmd_parser.add_argument(
-                    "-o", "--output", type=Path,
-                    help="Output file",
-                    default=argparse.SUPPRESS
-                    )
+                "-o",
+                "--output",
+                type=Path,
+                help="Output file",
+                default=argparse.SUPPRESS,
+            )
 
         if command in ["generate-tailoring"]:
             cmd_parser.add_argument(
-                    "profile", type=str,
-                    help="Profile name (see 'usg list' for list of profiles)"
-                    )
-            cmd_parser.add_argument(
-                    "output", type=Path,
-                    help="Output file"
-                    )
+                "profile",
+                type=str,
+                help="Profile name (see 'usg list' for list of profiles)",
+            )
+            cmd_parser.add_argument("output", type=Path, help="Output file")
 
         if command in ["fix"]:
             cmd_parser.add_argument(
-                    "--only-failed", action="store_true",
-                    default=config_defaults.getboolean(
-                        "cli",
-                        "fix_only_failed",
-                        fallback=constants.DEFAULT_FIX_ONLY_FAILED
-                        ),
-                    help="Fix only failed rules"
-                    )
+                "--only-failed",
+                action="store_true",
+                default=config_defaults.getboolean(
+                    "cli", "fix_only_failed", fallback=constants.DEFAULT_FIX_ONLY_FAILED
+                ),
+                help="Fix only failed rules",
+            )
 
         if command in ["list"]:
             cmd_parser.add_argument(
-                    "-a", "--all", action="store_true", default=False,
-                    help="List deprecated profiles"
-                    )
+                "-a",
+                "--all",
+                action="store_true",
+                default=False,
+                help="List deprecated profiles",
+            )
 
         cmd_parser.add_argument(
-                "-d", "--debug", action="store_true", default=False,
-                help="Enable debug logging",
-                )
+            "-d",
+            "--debug",
+            action="store_true",
+            default=False,
+            help="Enable debug logging",
+        )
 
         cmd_parsers[command] = cmd_parser
 
@@ -484,7 +476,7 @@ def parse_args(
     # print help if no command is provided (as legacy USG)
     if args.command is None:
         parser.print_help()
-        error_exit(None, rc=2)
+        error_exit("", rc=2)
 
     # additional check for profile/tailoring file
     if args.command in ["info", "audit", "fix", "generate-fix"]:
@@ -500,10 +492,10 @@ def parse_args(
     # benchmark_version/product are not compatible with tailoring-file
     if hasattr(args, "tailoring_file"):
         if args.benchmark_version != config_defaults["cli"]["benchmark_version"]:
-            error_exit((
-                "Error: --benchmark-version cannot be used "
-                "with a tailoring file."
-                ), rc=2)
+            error_exit(
+                ("Error: --benchmark-version cannot be used with a tailoring file."),
+                rc=2,
+            )
         if args.product != config_defaults["cli"]["product"]:
             error_exit("Error: --product cannot be used with a tailoring file.", rc=2)
 
@@ -511,14 +503,9 @@ def parse_args(
 
 
 def cli() -> None:
-    """
-    Main CLI logic. Loads configuration, parses args, runs USG commands.
-    """
+    """Load configuration, parse args, run USG commands."""
     if os.geteuid() != 0:
-       error_exit(
-               "Error: this script must be run "
-               "with super-user privileges."
-               )
+        error_exit("Error: this script must be run with super-user privileges.")
 
     # load config from defaults or file if exists
     config = load_config(constants.CONFIG_PATH)
@@ -544,30 +531,27 @@ def cli() -> None:
     # run commands
     try:
         command_func = {
-                "list": command_list,
-                "info": command_info,
-                "generate-tailoring": command_generate_tailoring,
-                "generate-fix": command_generate_fix,
-                "audit": command_audit,
-                "fix": command_fix
-                }
+            "list": command_list,
+            "info": command_info,
+            "generate-tailoring": command_generate_tailoring,
+            "generate-fix": command_generate_fix,
+            "audit": command_audit,
+            "fix": command_fix,
+        }
         logger.info(f"Running command: {args.command}")
-        command_func[args.command](usg, args)
+        command_func[args.command](usg, args)  # pyright: ignore[reportPossiblyUnboundVariable]
 
     except USGError as e:
         error_exit(f"Error: '{args.command}' command failed: {e}")
 
 
 def main() -> None:
-    """
-    CLI entry point. Calls cli() and catches runtime errors.
-    """
-
+    """CLI entry point. Call cli() and catch runtime errors."""
     try:
         cli()
     except KeyboardInterrupt:
         error_exit("Caught keyboard interrupt. Exiting USG...")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.info(e)
         error_exit(
             "\nUSG encountered an unknown error. "
