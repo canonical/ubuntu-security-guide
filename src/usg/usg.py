@@ -1,45 +1,49 @@
-"""
-Core logic for USG.
-"""
+"""Core logic for USG."""
 
 import configparser
+import datetime
 import logging
 import os
-from pathlib import Path
-import tempfile
 import shutil
-import datetime
+import tempfile
+from pathlib import Path
 
-from usg import constants
 from usg import config as usg_config
-from usg.utils import validate_perms, verify_integrity, gunzip_file
+from usg import constants
+from usg.backends import BackendError, OpenscapBackend
+from usg.exceptions import (
+    FileMoveError,
+    MissingFileError,
+    ProfileNotFoundError,
+    USGError,
+)
+from usg.models import Benchmark, Benchmarks, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
-from usg.backends import OpenscapBackend, BackendError
-from usg.models import TailoringFile, Profile, Benchmark, Benchmarks
-from usg.exceptions import USGError, ProfileNotFoundError, FileMoveError, MissingFileError
+from usg.utils import gunzip_file, validate_perms, verify_integrity
 
 logger = logging.getLogger(__name__)
 
-class USG(object):
-    """
-    Main class implementing the core logic for USG.
+
+class USG:
+    """Main class implementing the core logic for USG.
 
     Responsibilities include:
     - Managing the loading, storage, and retrieval of benchmark metadata
     - Performing operations related to tailoring files
     - Initializing backends and handling extraction of required data files
-    - Providing methods for auditing, remediation, tailoring file creation, and related operations
+    - Providing methods for auditing, remediation, and tailoring file creation
 
     Args:
         config: (optional) A ConfigParser instance to override backend settings.
                 If not provided, defaults from config.py are used.
+
     """
 
     def __init__(
-            self,
-            config: configparser.ConfigParser | None = None,
-            ):
-
+        self,
+        config: configparser.ConfigParser | None = None,
+    ) -> None:
+        """Initialize USG with optional config."""
         # load default config if none given
         if config is None:
             self._config = usg_config.load_config(constants.CONFIG_PATH)
@@ -53,22 +57,23 @@ class USG(object):
         try:
             validate_perms(constants.BENCHMARK_METADATA_PATH)
         except MissingFileError as e:
-            raise USGError(
+            msg = (
                 f"Could not find benchmark data {constants.BENCHMARK_METADATA_PATH}. "
                 f"Please ensure the {constants.BENCHMARK_PKG} package is installed."
-            ) from e
-        validate_perms(constants.STATE_DIR, True)
+            )
+            raise USGError(msg) from e
+        validate_perms(constants.STATE_DIR, is_dir=True)
 
         self._benchmarks = Benchmarks.from_json(constants.BENCHMARK_METADATA_PATH)
-        self._timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")
+        self._timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")  # noqa: DTZ005
 
     @property
     def benchmarks(self) -> Benchmarks:
+        """Getter for benchmarks."""
         return self._benchmarks
 
     def get_benchmark_by_id(self, benchmark_id: str) -> Benchmark:
-        """
-        Returns benchmark object by benchmark id
+        """Return benchmark object by benchmark id.
 
         Args:
             benchmark_id: ID of the benchmark to return (e.g. ubuntu2404_CIS_1)
@@ -83,16 +88,13 @@ class USG(object):
         try:
             return self.benchmarks[benchmark_id]
         except KeyError as e:
-            raise KeyError(f"Benchmark {benchmark_id} not found") from e
+            msg = f"Benchmark {benchmark_id} not found"
+            raise KeyError(msg) from e
 
     def get_profile(
-            self,
-            profile_id: str,
-            product: str,
-            benchmark_version: str = "latest"
-            ) -> Profile:
-        """
-        Returns benchmark profile based on the given criteria
+        self, profile_id: str, product: str, benchmark_version: str = "latest"
+    ) -> Profile:
+        """Return benchmark profile based on the given criteria.
 
         Args:
             profile_id: benchmark profile id (e.g. cis_level1_server)
@@ -107,26 +109,22 @@ class USG(object):
             ValueError: when no match is found
 
         """
-        logger.debug(
-                f"Getting profile: {profile_id},"
-                f"{product},{benchmark_version}"
-                )
+        logger.debug(f"Getting profile: {profile_id},{product},{benchmark_version}")
 
         results = []
         for benchmark in self.benchmarks.values():
             for profile in benchmark.profiles.values():
                 logger.debug(f"Checking profile {profile}")
 
-                if profile_id in [profile.profile_id, profile.profile_legacy_id] and \
-                        product == benchmark.product:
-
+                if (
+                    profile_id in [profile.profile_id, profile.profile_legacy_id]
+                    and product == benchmark.product
+                ):
                     # return latest version by default
-                    if benchmark_version == "latest" and \
-                            benchmark.is_latest:
+                    if benchmark_version == "latest" and benchmark.is_latest:
                         logger.debug(
-                            f"Found latest version of "
-                            f"{profile_id} for {product}"
-                            )
+                            f"Found latest version of {profile_id} for {product}"
+                        )
                         results.append(profile)
 
                     # return specific version if exists
@@ -134,23 +132,21 @@ class USG(object):
                         logger.debug(
                             f"Found version {benchmark_version} of "
                             f"{profile_id} for {product}"
-                            )
+                        )
                         logger.warning(
                             f"Version {benchmark.version} of the benchmark profile "
                             f"{profile_id} is deprecated and no longer maintained."
-                            )
+                        )
                         results.append(profile)
 
                     # return compatible (non-breaking) version if exists
-                    compatible_versions = []
-                    for cv in benchmark.compatible_versions:
-                        compatible_versions.append(cv)
+                    compatible_versions = list(benchmark.compatible_versions)
 
                     if benchmark_version in compatible_versions:
                         logger.debug(
                             f"Found compatible version {benchmark.version} of "
                             f"{profile_id} for {product}"
-                            )
+                        )
                         logger.info(
                             f"Version {benchmark_version} is superseded by "
                             f"{benchmark.version}. "
@@ -174,14 +170,13 @@ class USG(object):
         return results[0]
 
     def load_tailoring(
-            self,
-            tailoring_file_path: Path | str,
-            ) -> TailoringFile:
-        """
-        Parse tailoring file and return tailoring file object
+        self,
+        tailoring_file_path: Path | str,
+    ) -> TailoringFile:
+        """Parse tailoring file and return tailoring file object.
 
         Args:
-            tailoring_file: path to tailoring file
+            tailoring_file_path: path to tailoring file
 
         Raises:
             USGError: permission issues or failure to parse
@@ -203,10 +198,8 @@ class USG(object):
             benchmark = self.benchmarks[benchmark_id]
         except KeyError as e:
             raise USGError(
-                f"Could not find benchmark "
-                f"referenced in tailoring file: "
-                f"{benchmark_id}"
-                ) from e
+                f"Could not find benchmark referenced in tailoring file: {benchmark_id}"
+            ) from e
         if not benchmark.is_latest:
             logger.warning(
                 f"The version of the benchmark profile found in tailoring file "
@@ -216,12 +209,11 @@ class USG(object):
             )
         return tailoring
 
-
     def _init_openscap_backend(
-            self,
-            benchmark: Benchmark,
-            work_dir: Path | str,
-            )-> OpenscapBackend:
+        self,
+        benchmark: Benchmark,
+        work_dir: Path | str,
+    ) -> OpenscapBackend:
         # initializes and returns the backend object
         work_dir = Path(work_dir).resolve()
         logger.debug(f"Initializing Openscap backend for {benchmark.id}")
@@ -238,18 +230,16 @@ class USG(object):
         gunzip_file(ds_gz_path, ds_path)
 
         backend = OpenscapBackend(
-                ds_path,
-                work_dir,
-                constants.OPENSCAP_BIN_PATH,
-                )
+            ds_path,
+            work_dir,
+            constants.OPENSCAP_BIN_PATH,
+        )
         logger.debug(f"Initialized OpenscapBackend for {benchmark.id}")
 
         return backend
 
- 
     def generate_tailoring(self, profile: Profile) -> str:
-        """
-        Generates tailoring file contents
+        """Generate tailoring file contents.
 
         Args:
             profile: Profile object
@@ -261,30 +251,33 @@ class USG(object):
         logger.info(f"Generating tailoring file for profile {profile.profile_id}")
         benchmark = self.benchmarks[profile.benchmark_id]
         tailoring_rel_path = benchmark.get_tailoring_file_relative_path(
-                profile.profile_id
-                )
-        tailoring_abs_path = constants.BENCHMARK_METADATA_PATH.parent / tailoring_rel_path
+            profile.profile_id
+        )
+        tailoring_abs_path = (
+            constants.BENCHMARK_METADATA_PATH.parent / tailoring_rel_path
+        )
         logger.info(f"Tailoring file generated at {tailoring_abs_path}")
 
         return tailoring_abs_path.read_text()
 
-    def _move_artifacts(self, artifacts: BackendArtifacts, profile_id: str, product: str) -> None:
-        """
-        Moves artifacts to the final destination path as resolved by get_artifact_destination_path()
-        """
-        timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")
+    def _move_artifacts(
+        self, artifacts: BackendArtifacts, profile_id: str, product: str
+    ) -> None:
+        # Move artifacts to the final destination path
+        # as resolved by get_artifact_destination_path()
+
+        timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")  # noqa: DTZ005
         try:
             for artifact in artifacts:
                 artifact_path = usg_config.get_artifact_destination_path(
-                    self._config, artifact.type, timestamp, profile_id, product
-                    )
+                    self._config, artifact.kind, timestamp, profile_id, product
+                )
                 artifact.move(artifact_path)
         except FileMoveError as e:
             raise USGError(f"Error moving files: {e}") from e
 
     def generate_fix(self, profile: Profile) -> BackendArtifacts:
-        """
-        Generates a fix script
+        """Generate a fix script.
 
         Args:
             profile: Profile object
@@ -294,6 +287,7 @@ class USG(object):
 
         Raises:
             USGError: if the backend operation fails
+
         """
         logger.info(f"Generating fix script for profile {profile.profile_id}")
 
@@ -315,14 +309,12 @@ class USG(object):
 
         logger.info("Fix script generated.")
         for file in artifacts:
-            logger.info(f"'{file.type}' file written to {file.path}")
+            logger.info(f"'{file.kind}' file written to {file.path}")
 
         return artifacts
 
-
     def fix(self, profile: Profile, only_failed: bool = False) -> BackendArtifacts:
-        """
-        Prepares environment and backend and remediates profile.
+        """Prepare environment and backend and remediates profile.
 
         Args:
             profile: Profile object
@@ -333,6 +325,7 @@ class USG(object):
 
         Raises:
             USGError: if the backend operation fails
+
         """
         logger.info(f"Remediating profile {profile.profile_id}")
 
@@ -340,8 +333,10 @@ class USG(object):
         work_dir = tempfile.mkdtemp(dir=constants.STATE_DIR, prefix="fix_")
         backend = self._init_openscap_backend(benchmark, work_dir)
         try:
-            results, artifacts = backend.audit(profile.profile_id, profile.tailoring_file)
- 
+            results, artifacts = backend.audit(
+                profile.profile_id, profile.tailoring_file
+            )
+
             # pass audit results to fix operation to only remediated failed rules
             if only_failed:
                 audit_results_file = artifacts.get_by_type("audit_results").path
@@ -356,7 +351,7 @@ class USG(object):
             artifacts = backend.fix(
                 profile.profile_id,
                 profile.tailoring_file,
-                audit_results_file=audit_results_file
+                audit_results_file=audit_results_file,
             )
         except BackendError as e:
             raise USGError(f"Failed to run backend operation: {e}") from e
@@ -368,23 +363,21 @@ class USG(object):
 
         logger.info("Remediation finished.")
         for file in artifacts:
-            logger.info(f"'{file.type}' file written to {file.path}")
+            logger.info(f"'{file.kind}' file written to {file.path}")
         return artifacts
 
-
     def audit(
-            self,
-            profile: Profile,
-            debug: bool = False,
-            oval_results: bool = False,
-            ) -> tuple[AuditResults, BackendArtifacts]:
-        """
-        Prepares environment and backend and audits a profile.
+        self,
+        profile: Profile,
+        debug: bool = False,
+        oval_results: bool = False,
+    ) -> tuple[AuditResults, BackendArtifacts]:
+        """Prepare environment and backend and audits a profile.
 
         Args:
             profile: Profile object
             report_filename: filename for report file (defaults to value in config file)
-            results_filename: filename for results file (defaults to value in config file)
+            results_filename: filename for results file (defaults to value in config)
             log_filename: filename for log file (defaults to value in config file)
             debug: if True, run in debug mode
             oval_results: if True, include oval results in the audit
@@ -394,6 +387,7 @@ class USG(object):
 
         Raises:
             USGError: if the backend operation fails
+
         """
         logger.info(f"Auditing profile {profile.profile_id}")
 
@@ -417,7 +411,6 @@ class USG(object):
 
         logger.info("Audit completed.")
         for file in artifacts:
-            logger.info(f"'{file.type}' file written to {file.path}")
+            logger.info(f"'{file.kind}' file written to {file.path}")
 
         return results, artifacts
-
