@@ -125,8 +125,9 @@ def error_exit(msg: str, rc: int = 1) -> None:
 def command_list(usg: USG, args: argparse.Namespace) -> None:
     """List available profiles."""
     logger.debug("Starting command_list")
-    print("Listing available profiles...\n")
-    print(CLI_LIST_FORMAT.format("Profile", "Benchmark/Product", "Version\n"))
+    if not args.names_only:
+        print("Listing available profiles...\n")
+        print(CLI_LIST_FORMAT.format("PROFILE", "BENCHMARK/PRODUCT", "VERSION"))
 
     profiles = [p for b in usg.benchmarks.values() for p in b.profiles.values()]
     for p in sorted(profiles, key=lambda p: p.profile_id):
@@ -135,16 +136,19 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
         if not latest and not args.all:
             continue
 
-        depr = "" if latest else " **Deprecated**"
-        print(
-            CLI_LIST_FORMAT.format(
-                p.profile_id,
-                f"{benchmark.benchmark_type}/{benchmark.product}",
-                benchmark.version + depr,
+        if args.names_only:
+            print(p.profile_id)
+        else:
+            depr = "" if latest else " **Deprecated**"
+            print(
+                CLI_LIST_FORMAT.format(
+                    p.profile_id,
+                    f"{benchmark.benchmark_type}/{benchmark.product}",
+                    benchmark.version + depr,
+                )
             )
-        )
-
-    print("""
+    if not args.names_only:
+        print("""
 
 Use 'usg info' to print information about a specific profile or tailoring file:
 
@@ -458,6 +462,13 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
                 action="store_true",
                 default=False,
                 help="List deprecated profiles",
+            )
+            cmd_parser.add_argument(
+                "-n",
+                "--names-only",
+                action="store_true",
+                default=False,
+                help="Show only profiles names",
             )
 
         cmd_parser.add_argument(
