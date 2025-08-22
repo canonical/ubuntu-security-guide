@@ -1,0 +1,133 @@
+#!/bin/bash
+
+_usg_completions() {
+
+    # Filter out options already in COMP_LINE
+    # args:
+    #  - opt_string ("--debug --help --html-file")
+    filter_existing_opts() {
+        set -f
+        local opts=($1)
+        filtered=()
+        for opt in "${opts[@]}"; do
+            if ! grep -Fqw -- "$opt" <<<"${COMP_LINE}"; then filtered+=("$opt"); fi
+        done
+        echo "${filtered[*]}"
+    }
+
+    # Count number of positional args in COMP_WORDS
+    count_num_positional_args() {
+        local count=0
+        for opt in "${COMP_WORDS[@]}"; do
+            if [[ -z "${COMP_WORDS[COMP_CWORD]}" || "$opt" != -* ]]; then
+                count=$((count+1));
+            fi
+        done
+        echo "$count"
+    }
+
+    # Get list of available profiles
+    usg_profile_list() {
+        usg list --names-only 2>/dev/null | xargs
+    }
+
+    # Add mutually exclusive args --tailoring-file (optional) and <profile> (1st positional)
+    # args:
+    #   - opt_string ("--debug --help --html-file")
+    add_profile_and_or_tailoring() {
+        local opts=$1
+        local num_pos=$(count_num_positional_args)
+        if [[ "$num_pos" -eq 2 || "$COMP_CWORD" -eq 2 ]]; then
+             # if no profile was specified, add tailoring-file option
+             opts="$opts --tailoring-file"
+        fi
+        if [[ "$num_pos" -eq 3 ]]; then
+             # if no profile or tailoring file was specified, add profile suggestions
+             if ! grep -Pqw -- "-t|--tailoring-file" <<<"${COMP_LINE}"; then
+                 opts="$opts $(usg_profile_list)"
+             fi
+        fi
+        echo "$opts"
+    }
+
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    if [ $COMP_CWORD -eq 1 ]; then
+        opts="list info audit fix generate-fix generate-tailoring --help --version"
+        COMPREPLY=($(compgen -W "$opts" -- $cur))
+    else
+        cmd=${COMP_WORDS[1]}
+        case "${prev}" in
+            --html-file)
+                COMPREPLY=()
+                return
+                ;;
+            --tailoring-file)
+                COMPREPLY=()
+                return
+                ;;
+            --results-file)
+                COMPREPLY=()
+                return
+                ;;
+            --benchmark-version)
+                # only suggest latest
+                COMPREPLY=($(compgen -W "latest" -- $cur))
+                return
+                ;;
+        esac
+        case "$cmd" in
+            list)
+                opts="--help --all"
+                opts=$(filter_existing_opts "$opts")
+                COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+                ;;
+            info)
+                opts="--help"
+                opts="$(add_profile_and_or_tailoring "$opts")"
+                opts=$(filter_existing_opts "$opts")
+                COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+                ;;
+            audit)
+                opts="--help --benchmark-version --html-file \
+                      --results-file --oval-results --debug"
+                opts="$(add_profile_and_or_tailoring "$opts")"
+                opts=$(filter_existing_opts "$opts")
+                COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+                return
+                ;;
+            fix)
+                opts="--help --benchmark-version --html-file \
+                      --results-file --oval-results --only-failed --debug"
+                opts="$(add_profile_and_or_tailoring "$opts")"
+                opts=$(filter_existing_opts "$opts")
+                COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+                ;;
+            generate-fix)
+                opts="--help --benchmark-version --debug --output"
+                opts="$(add_profile_and_or_tailoring "$opts")"
+                opts=$(filter_existing_opts "$opts")
+                COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+                ;;
+            generate-tailoring)
+                opts="--help --benchmark-version"
+                opts=$(filter_existing_opts "$opts")
+                num_pos=$(count_num_positional_args)
+                if [[ "${num_pos}" -eq 3 ]]; then
+                    opts="$opts $(usg_profile_list)"
+                    COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+                else
+                    COMPREPLY=($(compgen -o default -W "$opts" -- "$cur"))
+                fi
+                ;;
+            *)
+                return
+        esac
+    fi
+    return
+}
+
+complete -o default -o nosort -F _usg_completions usg
+
+
