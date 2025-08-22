@@ -93,6 +93,5 @@ def validate_perms(filepath: Path | str, is_dir: bool = False) -> None:
 def gunzip_file(gzipped_file: Path, unzipped_file: Path) -> None:
     """Gunzip the file to the output path."""
     logger.debug(f"Gunzipping file {gzipped_file} to {unzipped_file}")
-    unzipped_file.parent.mkdir(parents=True, exist_ok=True)
     with gzip.open(gzipped_file, "rb") as f_gz, Path(unzipped_file).open("wb") as f_out:
             shutil.copyfileobj(f_gz, f_out)
