@@ -26,7 +26,8 @@ COPY ./ /root/usg/
 RUN cp -r /root/usg/tools/tests/data/expected/benchmarks/ /usr/share/usg-benchmarks/
 
 # install usg
-RUN cd /root/usg && pybuild --install-dir /usr/share/usg --dest-dir / && \
+RUN cd /root/usg && rm -rf .pybuild && \
+    pybuild --install-dir /usr/share/usg --dest-dir / && \
     cp /root/usg/sbin/usg /sbin/usg && \
     mkdir -p /var/lib/usg && \
     chmod 0700 /var/lib/usg && \
