@@ -7,7 +7,8 @@ Build-Depends:  pandoc (>= 2.5-3build2),
                 dh-python,
                 pybuild-plugin-pyproject,
                 python3-pytest,
-                python3-all
+                python3-all,
+                dh-sequence-bash-completion
 Standards-Version: 3.9.7
 
 Package: usg
