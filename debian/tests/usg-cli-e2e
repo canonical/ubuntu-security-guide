@@ -39,7 +39,12 @@ test_cmd "usg --help"     0  "Available commands are"        ""
 test_cmd "usg --version"  0  "\d*\.\d*\.\d*"                 ""
 
 # cis_level1_server profile should exist
-test_cmd "usg list --all" 0  "cis_level1_server"             ""
+test_cmd "usg list --all"                            0  "cis_level1_server"             ""
+test_cmd "usg list --all | grep 'Listing available'" 0  "Listing available profiles"             ""
+
+# only names should exist with --names-only
+test_cmd "usg list --names-only"                            0  "cis_level1_server"             ""
+test_cmd "usg list --names-only | grep 'Listing available'" 1  ""                              ""
 
 # info for profile should work
 test_cmd "usg info cis_level1_server"  0  "Benchmark.*CIS"   ""
