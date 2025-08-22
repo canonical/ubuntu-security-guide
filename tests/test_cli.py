@@ -120,6 +120,7 @@ def test_cli_non_root_user(monkeypatch, capsys):
         (["list"], "Listing available profiles...", None, None),
         (["list", "asd"], None, "unrecognized arguments: asd", 2),
         (["list", "--all"], "v1.0.0", None, None),
+        (["list", "--names-only"], "cis_level1_server", None, None),        
         (["list"], "v2.0.0", None, None),
         # successfulcommands with profile argument
         (["info", "cis_level1_server"], "ubuntu2404_CIS_3", None, None),
