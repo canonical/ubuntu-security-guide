@@ -306,6 +306,9 @@ def init_logging(log_path: Path, debug: bool) -> None:
     if logger.hasHandlers():
         logger.handlers.clear()
 
+    if debug:
+        sys.stderr.write(f"Debug logging enabled. Writing to {log_path}.\n")
+
     try:
         log_handler: logging.Handler = logging.FileHandler(log_path)
     except Exception:  # noqa: BLE001
