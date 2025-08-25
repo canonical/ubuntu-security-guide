@@ -133,10 +133,11 @@ class USG:
                             f"Found version {benchmark_version} of "
                             f"{profile_id} for {product}"
                         )
-                        logger.warning(
-                            f"Version {benchmark.version} of the benchmark profile "
-                            f"{profile_id} is deprecated and no longer maintained."
-                        )
+                        if not benchmark.is_latest:
+                            logger.warning(
+                                f"Version {benchmark.version} of the benchmark profile "
+                                f"{profile_id} is deprecated and no longer maintained."
+                            )
                         results.append(profile)
 
                     # return compatible (non-breaking) version if exists
