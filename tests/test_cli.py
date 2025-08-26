@@ -135,20 +135,10 @@ def test_cli_non_root_user(monkeypatch, capsys):
         (["fix", "cis_level1_server"], "ubuntu2404_CIS_3", None, None),
         (["generate-fix", "cis_level1_server"], "ubuntu2404_CIS_3", None, None),
         # successfulcommands with profile and version
-        (["info", "cis_level1_server", "-V", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
-        (
-            ["audit", "cis_level1_server", "-V", "v1.0.0"],
-            "ubuntu2404_CIS_1",
-            None,
-            None,
-        ),
-        (["fix", "cis_level1_server", "-V", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
-        (
-            ["generate-fix", "cis_level1_server", "-V", "v1.0.0"],
-            "ubuntu2404_CIS_1",
-            None,
-            None,
-        ),
+        (["info", "cis_level1_server", "-b", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
+        (["audit", "cis_level1_server", "-b", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
+        (["fix", "cis_level1_server", "-b", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
+        (["generate-fix", "cis_level1_server", "-b", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
         # successfulommands with tailoring file
         (["info", "-t", "tailoring.xml"], "ubuntu2404_CIS_1", None, None),
         (["audit", "-t", "tailoring.xml"], "ubuntu2404_CIS_1", None, None),
@@ -158,84 +148,24 @@ def test_cli_non_root_user(monkeypatch, capsys):
         (["info"], None, "Error: a profile or a tailoring file must be provided.", 2),
         (["audit"], None, "Error: a profile or a tailoring file must be provided.", 2),
         (["fix"], None, "Error: a profile or a tailoring file must be provided.", 2),
-        (
-            ["generate-fix"],
-            None,
-            "Error: a profile or a tailoring file must be provided.",
-            2,
-        ),
+        (["generate-fix"], None, "Error: a profile or a tailoring file must be provided.", 2),
         # failed commands with both a profile and a tailoring file
-        (
-            ["info", "cis_level1_server", "-t", "tailoring.xml"],
-            None,
-            "You cannot provide both a tailoring file and a profile!",
-            2,
-        ),
-        (
-            ["audit", "cis_level1_server", "-t", "tailoring.xml"],
-            None,
-            "You cannot provide both a tailoring file and a profile!",
-            2,
-        ),
-        (
-            ["fix", "cis_level1_server", "-t", "tailoring.xml"],
-            None,
-            "You cannot provide both a tailoring file and a profile!",
-            2,
-        ),
-        (
-            ["generate-fix", "cis_level1_server", "-t", "tailoring.xml"],
-            None,
-            "You cannot provide both a tailoring file and a profile!",
-            2,
-        ),
+        (["info", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
+        (["audit", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
+        (["fix", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
+        (["generate-fix", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         # failed commands with both a tailoring file and a version
-        (
-            ["info", "-V", "v1.0.0", "-t", "tailoring.xml"],
-            None,
-            "--benchmark-version cannot be used with a tailoring file.",
-            2,
-        ),
-        (
-            ["audit", "-V", "v1.0.0", "-t", "tailoring.xml"],
-            None,
-            "--benchmark-version cannot be used with a tailoring file.",
-            2,
-        ),
-        (
-            ["fix", "-V", "v1.0.0", "-t", "tailoring.xml"],
-            None,
-            "--benchmark-version cannot be used with a tailoring file.",
-            2,
-        ),
-        (
-            ["generate-fix", "-V", "v1.0.0", "-t", "tailoring.xml"],
-            None,
-            "--benchmark-version cannot be used with a tailoring file.",
-            2,
-        ),
+        (["info", "-b", "v1.0.0", "-t", "tailoring.xml"], None, "--benchmark-version cannot be used with a tailoring file.", 2),
+        (["audit", "--benchmark-version", "v1.0.0", "-t", "tailoring.xml"], None, "--benchmark-version cannot be used with a tailoring file.", 2),
+        (["fix", "-b", "v1.0.0", "-t", "tailoring.xml"], None, "--benchmark-version cannot be used with a tailoring file.", 2),
+        (["generate-fix", "-b", "v1.0.0", "-t", "tailoring.xml"], None, "--benchmark-version cannot be used with a tailoring file.", 2),
         # audit command with extra arguments
-        (
-            ["audit", "cis_level1_server", "--oval-results"],
-            "oval_results=True",
-            None,
-            None,
-        ),
+        (["audit", "cis_level1_server", "--oval-results"], "oval_results=True", None, None),
         (["audit", "cis_level1_server", "--debug"], "debug=True", None, None),
-        (
-            ["audit", "cis_level1_server", "--debug", "--oval-results"],
-            "debug=True,oval_results=True",
-            None,
-            None,
-        ),
+        (["audit", "cis_level1_server", "--debug", "--oval-results"], "debug=True,oval_results=True", None, None),
         # generate-tailoring without required arguments
         (["generate-tailoring"], None, "following arguments are required:", 2),
-        (
-            ["generate-tailoring", "cis_level1_server"],
-            None,
-            "following arguments are required:",
-            2,
-        ),
+        (["generate-tailoring", "cis_level1_server"], None, "following arguments are required:", 2),
         # fix command with extra arguments
         (["fix", "cis_level1_server"], "only_failed=False", None, None),
         (["fix", "cis_level1_server", "--only-failed"], "only_failed=True", None, None),
@@ -275,7 +205,7 @@ def test_cli_invocation(
             "ubuntu2404_CIS_3",
         ),
         (
-            ["generate-tailoring", "cis_level1_server", "gen-tail-out.xml", "-V", "v1.0.0",],
+            ["generate-tailoring", "cis_level1_server", "gen-tail-out.xml", "-b", "v1.0.0",],
             "ubuntu2404_CIS_1",
         ),
     ],
@@ -420,7 +350,7 @@ def test_benchmark_version_state_integration(patch_usg_and_cli, capsys, monkeypa
     assert load_benchmark_version_state("cis_level1_server") == "v2.0.0"
 
     # re-set to v1.0.1
-    sys.argv = ["usg", "audit", "cis_level1_server", "-V", "v1.0.1"]
+    sys.argv = ["usg", "audit", "cis_level1_server", "-b", "v1.0.1"]
     cli.cli()
     assert load_benchmark_version_state("cis_level1_server") == "v1.0.1"
 
@@ -440,6 +370,6 @@ def test_benchmark_version_state_integration(patch_usg_and_cli, capsys, monkeypa
     assert load_benchmark_version_state("cis_level1_server") == "v1.0.1"
 
     # re-set to latest
-    sys.argv = ["usg", "generate-fix", "cis_level1_server", "-V", "latest"]
+    sys.argv = ["usg", "generate-fix", "cis_level1_server", "--benchmark-version", "latest"]
     cli.cli()
     assert load_benchmark_version_state("cis_level1_server") == "v2.0.0"
