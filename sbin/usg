@@ -1,13 +1,22 @@
 #!/bin/sh
 # Wrapper for USG module in /usr/share/usg
 
+USG_BASE_DIR="/usr/share/usg"
 PYTHON3=/usr/bin/python3
+
 if [ ! -x "${PYTHON3}" ]; then
-  echo "Fatal! Could not find python executable at ${PYTHON3}."
-  exit 1
+  echo
+  echo "********************* WARNING *********************"
+  echo "Could not find python interpreter at ${PYTHON3}."
+  echo
+  echo "Using legacy USG and outdated benchmarks as fallback."
+  echo "Some functionality might not be available."
+  echo "***************************************************"
+  echo
+  $USG_BASE_DIR/legacy/usg "$@"
+  exit $?
 fi
 
-USG_BASE_DIR="/usr/share/usg"
 if [ ! -d "${USG_BASE_DIR}/usg" ]; then
   echo "Fatal! Could not find usg module in ${USG_BASE_DIR}. Please reinstall the usg package."
   exit 1
