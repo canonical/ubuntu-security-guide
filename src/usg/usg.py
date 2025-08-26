@@ -136,7 +136,7 @@ class USG:
                         if not benchmark.is_latest:
                             logger.warning(
                                 f"Version {benchmark.version} of the benchmark profile "
-                                f"{profile_id} is deprecated and no longer maintained."
+                                f"{profile_id} is deprecated."
                             )
                         results.append(profile)
 
@@ -204,9 +204,7 @@ class USG:
         if not benchmark.is_latest:
             logger.warning(
                 f"The version of the benchmark profile found in tailoring file "
-                f"({benchmark.version}) is deprecated and no longer maintained. "
-                f"To use the latest version of the benchmark profile, "
-                f"create a new tailoring file with 'usg generate-tailoring'."
+                f"({benchmark.version}) is deprecated. "
             )
         return tailoring
 

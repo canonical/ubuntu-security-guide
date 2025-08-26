@@ -25,10 +25,6 @@ product = testproduct
     cfg = usg_config.load_config(str(config_file))
     assert cfg.get("cli", "log_file") == "/tmp/test.log"
     assert cfg.get("cli", "product") == "testproduct"
-    # Should still have other defaults
-    assert cfg.get("cli", "benchmark_version") == str(
-        usg_config.DEFAULT_CONFIG["cli"]["benchmark_version"]
-    )
 
 
 def test_load_config_file_not_exist(tmp_path, caplog):

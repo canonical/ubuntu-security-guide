@@ -14,7 +14,6 @@ logger = logging.getLogger()
 DEFAULT_CONFIG: Mapping[str, Mapping[str, Any]] = {
     "cli": {
         "log_file": constants.CLI_LOG_FILE,
-        "benchmark_version": constants.DEFAULT_BENCHMARK_VERSION,
         "product": constants.DEFAULT_PRODUCT,
         "fix_only_failed": constants.DEFAULT_FIX_ONLY_FAILED,
     },
