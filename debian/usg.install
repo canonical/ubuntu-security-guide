@@ -1,3 +1,4 @@
 usr/lib/*/dist-packages/*                   ${env:USG_MODULE_DIR}/
 sbin/usg                                    usr/sbin/
 etc/usg.conf
+src/legacy/usg                              ${env:USG_MODULE_DIR}/legacy/

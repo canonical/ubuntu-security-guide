@@ -91,3 +91,21 @@ test_cmd "grep -c BEGIN fix.sh"  0  "^2$"  ""
 
 # test that audit starts when using profile (full run is too long and useless, timeout at 2s)
 test_cmd "timeout 2 usg audit cis_level1_server"  124  "Starting Evaluation"  ""
+
+
+# test that the legacy usg fallback runs ok and fails due to missing benchmark bundle
+mv /usr/bin/python3 /root/
+test_cmd "usg generate-fix cis_level1_server"   1   "legacy USG"  "Error: could not find any benchmark bundle installed"
+
+# mock the benchmark bundle (usg-benchmarks-1) which would is normally installed as recommended pkg from esm
+# (create dir, copy first datastream, decompress and unpack, rename some files...)
+bdir=/usr/share/ubuntu-scap-security-guides/current/benchmarks
+mkdir -p $bdir
+pushd $bdir >/dev/null
+cp /usr/share/usg-benchmarks/ubuntu*CIS_1/ssg*ds.xml.gz ./
+gunzip ssg*gz
+oscap ds sds-split ssg*ds.xml ./
+for f in scap_org.*xml; do mv $f ${f/scap_org.open-scap_cref_/}; done
+popd >/dev/null
+test_cmd "usg generate-fix cis_level1_server"   0   "legacy USG" "USG generate-fix command completed."
+

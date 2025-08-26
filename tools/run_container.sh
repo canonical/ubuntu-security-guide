@@ -11,7 +11,7 @@ FROM ubuntu:24.04
 RUN apt update > /dev/null
 
 # runtime deps
-RUN apt install -y openscap-scanner python3 bash-completion > /dev/null
+RUN apt install -y openscap-scanner python3 bash-completion bsdextrautils > /dev/null
 
 # built/testing deps
 RUN apt install -y python3-pytest python3-yaml python3-coverage python3-lxml python3-requests pybuild-plugin-pyproject
@@ -29,11 +29,11 @@ RUN cp -r /root/usg/tools/tests/data/expected/benchmarks/ /usr/share/usg-benchma
 RUN cd /root/usg \
     && rm -rf .pybuild \
     && pybuild --install-dir /usr/share/usg --dest-dir / \
+    && cp -r /root/usg/src/legacy /usr/share/usg \
     && cp /root/usg/sbin/usg /sbin/usg \
     && mkdir -p /var/lib/usg \
     && chmod 0700 /var/lib/usg \
     && cp /root/usg/etc/usg.conf /etc/usg.conf \
-    && mkdir -p /etc/bash_completion.d \
     && cp /root/usg/debian/usg.bash-completion /usr/share/bash-completion/completions/usg
     
 WORKDIR /root/usg
