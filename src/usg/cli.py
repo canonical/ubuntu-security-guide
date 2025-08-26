@@ -491,7 +491,7 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
         prog="usg",
     )
 
-    parser.add_argument("-v", "--version", action="version", version=__version__)
+    parser.add_argument("-V", "--version", action="version", version=__version__)
 
     subparsers = parser.add_subparsers(dest="command", required=False)
     cmd_parsers = {}
@@ -526,7 +526,7 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
                 )
             )
             cmd_parser.add_argument(
-                "-V",
+                "-b",
                 "--benchmark-version",
                 type=str,
                 help="Select specific benchmark version",

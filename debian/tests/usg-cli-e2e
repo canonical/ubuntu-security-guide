@@ -50,7 +50,7 @@ test_cmd "usg list --names-only | grep 'Listing available'" 1  ""               
 test_cmd "usg info cis_level1_server"  0  "Benchmark.*CIS"   ""
 
 # generate tailoring file
-test_cmd "usg generate-tailoring cis_level1_server t1.xml -V v1.0.0"  0  "generate-tailoring command completed." ""
+test_cmd "usg generate-tailoring cis_level1_server t1.xml -b v1.0.0"  0  "generate-tailoring command completed." ""
 test_cmd "grep href t1.xml"  0  "href=" "" 
 
 # customize tailoring file on the host for quick audit/fix
