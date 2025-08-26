@@ -5,7 +5,6 @@ from pathlib import Path
 # CLI configurable options
 CLI_LOG_FILE = "/var/lib/usg/usg.log"
 DEFAULT_PRODUCT = "ubuntu2404"
-DEFAULT_BENCHMARK_VERSION = "latest"
 DEFAULT_FIX_ONLY_FAILED = False
 
 # Openscap backend options
@@ -25,4 +24,5 @@ CONFIG_PATH = Path("/etc/usg.conf")
 BENCHMARK_METADATA_PATH = Path("/usr/share/usg-benchmarks/benchmarks.json")
 BENCHMARK_PKG = "usg-benchmarks"
 STATE_DIR = Path("/var/lib/usg")
+CLI_STATE_FILE = STATE_DIR / "state.json"
 OPENSCAP_BIN_PATH = Path("/usr/bin/oscap")

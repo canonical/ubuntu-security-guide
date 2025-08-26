@@ -4,17 +4,20 @@
 
 import argparse
 import configparser
+import json
 import logging
 import os
 import sys
+import tempfile
 import time
 from pathlib import Path
 
 from usg import constants
 from usg.config import load_config, override_config_with_cli_args
-from usg.exceptions import USGError
+from usg.exceptions import StateFileError, USGError
 from usg.models import Benchmark, Profile, TailoringFile
 from usg.usg import USG
+from usg.utils import validate_perms
 from usg.version import __version__
 
 logger = logging.getLogger()
@@ -113,7 +116,6 @@ Use usg <command> --help for more information about a command.
 """,
 }
 
-
 def error_exit(msg: str, rc: int = 1) -> None:
     """Write msg to standard error and exit with return code rc."""
     if msg:
@@ -139,7 +141,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
         if args.names_only:
             print(p.profile_id)
         else:
-            depr = "" if latest else " **Deprecated**"
+            depr = "" if latest else " *deprecated*"
             print(
                 CLI_LIST_FORMAT.format(
                     p.profile_id,
@@ -166,8 +168,11 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
         print_info_tailoring(tailoring)
         usg_profile = tailoring.profile
     else:
+        benchmark_version = load_benchmark_version_state(args.profile)
+        if hasattr(args, "benchmark_version"):
+            benchmark_version = args.benchmark_version
         usg_profile = usg.get_profile(
-            args.profile, args.product, args.benchmark_version
+            args.profile, args.product, benchmark_version
         )
     print_info_profile(usg_profile)
     print_info_benchmark(usg.get_benchmark_by_id(usg_profile.benchmark_id))
@@ -227,10 +232,13 @@ Available profiles:
     )
 
     if not benchmark.is_latest:
-        print(
-            f"Note: This profile version is no longer maintained. \n"
-            f"Latest stable version is {benchmark.breaking_upgrade_path[-1]}"
-        )
+        latest_version = benchmark.breaking_upgrade_path[-1]
+        print(f"""
+Note:
+This benchmark version is no longer supported. To upgrade to the latest version use the flag
+'--benchmark-version {latest_version}' when running 'audit,fix,generate-fix' commands.
+If using a tailoring file, create a new file with 'usg generate-tailoring --benchmark-version {latest_version}.
+""")  # noqa: E501
 
 
 def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
@@ -242,9 +250,13 @@ def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
         f"'{usg_profile.profile_id}' to '{args.output}'."
     )
     contents = usg.generate_tailoring(usg_profile)
-    with Path(args.output).open("w") as f:
-        f.write(contents)
-    print("USG generate-tailoring command completed.")
+    try:
+        with Path(args.output).open("w") as f:
+            f.write(contents)
+    except OSError as e:
+        print(f"Failed to write file {args.output}: {e}")
+    else:
+        print("USG generate-tailoring command completed.")
     logger.debug("Finished command_generate_tailoring")
 
 
@@ -282,10 +294,131 @@ def command_audit(usg: USG, args: argparse.Namespace) -> None:
     logger.debug("Finished command_audit")
 
 
+def load_benchmark_version_state(profile_id: str) -> str:
+    """Load USG CLI state file and return benchmark version used in previous run.
+
+    Args:
+        profile_id: profile id (cis_level1_server, stig, ...)
+
+    Returns:
+        benchmark version: returns "latest" if no state file exists or version was
+                           not yet set for this profile
+
+    Raises:
+        StateFileError if state file is corrupted
+
+    """
+    logger.debug(f"Loading benchmark version for profile {profile_id} from state file")
+    cli_state_file = Path(constants.CLI_STATE_FILE)
+    json_data = {}
+    if cli_state_file.exists():
+        try:
+            validate_perms(cli_state_file)
+            with cli_state_file.open("r") as f:
+                json_data.update(json.load(f))
+            versions = json_data["benchmark_versions"]
+        except (OSError, json.JSONDecodeError, KeyError) as e:
+            raise StateFileError(
+                f"Corrupted state file {cli_state_file}: {e}. "
+                f"Remove the file to re-initialize USG."
+                ) from e
+
+        logger.debug(f"State file successfully loaded: {json_data}.")
+        # get value from state file if it exists
+        try:
+            prev_benchmark_version = versions[profile_id]
+            logger.debug(
+                f"Found state benchmark version: {prev_benchmark_version}"
+                )
+        except KeyError:
+            logger.debug("Benchmark version not found. Using 'latest'.")
+            prev_benchmark_version = "latest"
+    else:
+        logger.debug("State file doesn't exist. Using 'latest' version.")
+        prev_benchmark_version = "latest"
+
+    return prev_benchmark_version
+
+
+def save_benchmark_version_state(profile_id: str, benchmark_version: str) -> None:
+    """Save the benchmark version to the USG state file.
+
+    Args:
+        profile_id: profile id (cis_level1_server, stig, ...)
+        benchmark_version: version to save
+
+    Raises:
+        StateFileError if state file is corrupted or cannot be written to
+
+    """
+    logger.debug(f"Saving version {benchmark_version} for profile {profile_id}")
+
+    cli_state_file = Path(constants.CLI_STATE_FILE)
+    json_data = {
+        "benchmark_versions": {}
+    }
+
+    # load existing state if exists
+    if cli_state_file.exists():
+        try:
+            with cli_state_file.open("r") as f:
+                json_data.update(json.load(f))
+        except (OSError, json.JSONDecodeError) as e:
+            raise StateFileError(
+                f"Corrupted state file {cli_state_file}: {e}. "
+                f"Remove the file to re-initialize USG."
+                ) from e
+        logger.debug(f"State file successfully loaded: {json_data}.")
+
+    # update state if changed
+    if json_data["benchmark_versions"].get(profile_id, "latest") == benchmark_version:
+        logger.debug("Version is same, not writing to state file.")
+        return
+
+    logger.debug(f"Writing changes to state file {cli_state_file}")
+    json_data["benchmark_versions"][profile_id] = benchmark_version
+    try:
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            json.dump(json_data, f)
+            f.flush()
+            os.fsync(f.fileno())
+            f.close()
+            Path(f.name).replace(cli_state_file)
+    except OSError as e:
+        raise StateFileError(
+            f"Failed to write to state file {cli_state_file}: {e}"
+        ) from e
+    logger.debug(f"Benchmark version updated to {benchmark_version} successfully.")
+
+
 def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
     """Return a Profile object based on the provided args."""
     if hasattr(args, "profile"):
-        profile = usg.get_profile(args.profile, args.product, args.benchmark_version)
+
+        # get previously used benchmark version if defined in state file
+        stored_benchmark_version = load_benchmark_version_state(args.profile)
+
+        # override with CLI argument if provided
+        if hasattr(args, "benchmark_version"):
+            logger.debug(
+                f"Overriding stored/default benchmark version "
+                f"{stored_benchmark_version} with {args.benchmark_version}"
+                )
+            benchmark_version = args.benchmark_version
+        else:
+            benchmark_version = stored_benchmark_version
+
+        # get the profile
+        profile = usg.get_profile(
+            args.profile,
+            args.product,
+            benchmark_version
+            )
+
+        # update the benchmark version in the state file
+        benchmark = usg.get_benchmark_by_id(profile.benchmark_id)
+        save_benchmark_version_state(profile.profile_id, benchmark.version)
+
     else:
         profile = usg.load_tailoring(args.tailoring_file).profile
 
@@ -386,10 +519,7 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
 
         if command in ["info", "audit", "fix", "generate-fix", "generate-tailoring"]:
             # Not useful until multiple products exist.
-            # Avoid polluting the CLI and hardcode it to the default for now.
-            # cmd_parser.add_argument("-p", "--product", type=str,
-            #                         help="Target product",  # noqa: ERA001
-            #                         default=default_product)
+            # Avoid polluting the CLI and hardcode it to the config value for now.
             cmd_parser.set_defaults(
                 product=config_defaults.get(
                     "cli", "product", fallback=constants.DEFAULT_PRODUCT
@@ -399,12 +529,8 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
                 "-V",
                 "--benchmark-version",
                 type=str,
-                help="Pin to specific benchmark version",
-                default=config_defaults.get(
-                    "cli",
-                    "benchmark_version",
-                    fallback=constants.DEFAULT_BENCHMARK_VERSION,
-                ),
+                help="Select specific benchmark version",
+                default=argparse.SUPPRESS,
             )
 
         if command in ["audit", "fix"]:
@@ -504,14 +630,11 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
             cmd_parsers[args.command].print_help()
 
     # benchmark_version/product are not compatible with tailoring-file
-    if hasattr(args, "tailoring_file"):
-        if args.benchmark_version != config_defaults["cli"]["benchmark_version"]:
-            error_exit(
-                ("Error: --benchmark-version cannot be used with a tailoring file."),
-                rc=2,
-            )
-        if args.product != config_defaults["cli"]["product"]:
-            error_exit("Error: --product cannot be used with a tailoring file.", rc=2)
+    if hasattr(args, "tailoring_file") and hasattr(args, "benchmark_version"):
+        error_exit(
+            ("Error: --benchmark-version cannot be used with a tailoring file."),
+            rc=2,
+        )
 
     return args
 
