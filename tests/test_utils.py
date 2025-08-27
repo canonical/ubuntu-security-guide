@@ -114,3 +114,17 @@ def test_validate_perms_not_owned(tmp_path, monkeypatch):
     monkeypatch.setattr(os, "stat", fake_stat)
     with pytest.raises(PermValidationError):
         utils.validate_perms(file)
+
+
+def test_aqcuire_lock_fail(monkeypatch, tmp_path):
+    from usg import constants
+    from usg.utils import acquire_lock
+    tmp_lock = tmp_path / "lockfile"
+    monkeypatch.setattr(constants, "LOCK_PATH", tmp_lock)
+
+    acquire_lock()
+    assert tmp_lock.exists()
+
+    with pytest.raises(SystemExit, match="Failed to acquire lock"):
+        acquire_lock()
+
