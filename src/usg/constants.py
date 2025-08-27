@@ -26,3 +26,4 @@ BENCHMARK_PKG = "usg-benchmarks"
 STATE_DIR = Path("/var/lib/usg")
 CLI_STATE_FILE = STATE_DIR / "state.json"
 OPENSCAP_BIN_PATH = Path("/usr/bin/oscap")
+LOCK_PATH = Path("/run/lock/usg.lock")

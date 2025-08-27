@@ -17,7 +17,7 @@ from usg.config import load_config, override_config_with_cli_args
 from usg.exceptions import StateFileError, USGError
 from usg.models import Benchmark, Profile, TailoringFile
 from usg.usg import USG
-from usg.utils import validate_perms
+from usg.utils import acquire_lock, validate_perms
 from usg.version import __version__
 
 logger = logging.getLogger()
@@ -684,6 +684,7 @@ def cli() -> None:
 
 def main() -> None:
     """CLI entry point. Call cli() and catch runtime errors."""
+    acquire_lock()
     try:
         cli()
     except KeyboardInterrupt:
