@@ -1,5 +1,7 @@
 """Utility functions."""
 
+import atexit
+import fcntl
 import gzip
 import hashlib
 import logging
@@ -8,6 +10,7 @@ import shutil
 import stat
 from pathlib import Path
 
+from usg import constants
 from usg.exceptions import IntegrityError, MissingFileError, PermValidationError
 
 logger = logging.getLogger(__name__)
@@ -95,3 +98,21 @@ def gunzip_file(gzipped_file: Path, unzipped_file: Path) -> None:
     logger.debug(f"Gunzipping file {gzipped_file} to {unzipped_file}")
     with gzip.open(gzipped_file, "rb") as f_gz, Path(unzipped_file).open("wb") as f_out:
             shutil.copyfileobj(f_gz, f_out)
+
+
+def acquire_lock() -> None:
+    """Aquire lock for running process."""
+    lock_path = constants.LOCK_PATH
+    mode = 0o600
+    fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, mode)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        raise SystemExit(  # noqa: B904
+            f"Failed to acquire lock {lock_path}. "
+            f"Is another instance of USG running?"
+            )
+    atexit.register(
+        lambda: (fcntl.flock(fd, fcntl.LOCK_UN), os.close(fd))
+        )
+
