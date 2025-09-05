@@ -1,6 +1,6 @@
 % USG(8) usg 24.04.5
 % Eduardo Barretto <eduardo.barretto@canonical.com>
-% 11 August 2025
+% 05 September 2025
 
 # NAME
 usg - Audit and remediation tool for security benchmarks compliance automatization
