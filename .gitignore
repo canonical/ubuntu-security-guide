@@ -9,5 +9,5 @@ tailoring/*
 *.egg-info/
 .coverage
 .pybuild/
-build/
+/build/
 

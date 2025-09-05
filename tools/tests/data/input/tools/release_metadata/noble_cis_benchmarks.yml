@@ -1,5 +1,4 @@
 general:
-  backend: openscap
   benchmark_type: CIS
   product: ubuntu2404
   product_long: Ubuntu 24.04 LTS (Noble Numbat)

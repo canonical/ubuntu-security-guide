@@ -229,6 +229,8 @@ class USG:
         ds_path.parent.mkdir(parents=True, exist_ok=True)
         gunzip_file(ds_gz_path, ds_path)
 
+        verify_integrity(ds_path, ds_gz_file.sha256_orig, "sha256")
+
         backend = OpenscapBackend(
             ds_path,
             constants.OPENSCAP_BIN_PATH,

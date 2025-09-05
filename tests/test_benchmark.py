@@ -59,7 +59,6 @@ def test_usgbenchmark(dummy_benchmarks):
     benchmarks = Benchmarks.from_json(dummy_benchmarks)
     benchmark = benchmarks["ubuntu2404_CIS_2"]
     assert benchmark.id == "ubuntu2404_CIS_2"
-    assert benchmark.backend == "openscap"
     assert benchmark.benchmark_type == "CIS"
     assert benchmark.product == "ubuntu2404"
     assert benchmark.product_long == "Ubuntu 24.04 LTS (Noble Numbat)"
@@ -80,7 +79,7 @@ def test_usgbenchmark(dummy_benchmarks):
     assert benchmark.is_latest == False
     assert len(benchmark.profiles) == 4
     assert benchmark.tailoring_files["cis_level2_server"] == {
-        "file": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
+        "path": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
         "sha256": "b1c953719606572f8ab507e9bfbbd570724127e8c87055aca90ebff85817e6f5",
     }
     t_rel_path = benchmark.get_tailoring_file_relative_path("cis_level2_server")
