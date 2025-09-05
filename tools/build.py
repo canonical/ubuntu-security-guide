@@ -30,7 +30,6 @@ import toml
 from create_rule_and_variable_doc import generate_markdown_doc
 from process_benchmarks import (
     BenchmarkProcessingError,
-    get_pat_token,
     process_benchmarks,
 )
 
@@ -39,10 +38,14 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RELEASE_METADATA_DIR = Path("tools/release_metadata")
 TEMPLATES_DIR = Path("templates")
+TEMPLATES_TAILORING_SUBDIR = Path("tailoring")
 BENCHMARKS_DIR = Path("benchmarks")
+
 TEST_INPUTS_DIR = Path("tools/tests/data/input")
-TEST_PB_DOWNLOAD_DIR = (
-    Path(TEST_INPUTS_DIR) / RELEASE_METADATA_DIR / "process_benchmarks_mock_data"
+TEST_TEMPLATES_DIR = TEST_INPUTS_DIR / "templates"
+TEST_RELEASE_METADATA_DIR = TEST_INPUTS_DIR / "tools/release_metadata"
+TEST_PB_PREBUILT_DATA_DIR = (
+    TEST_INPUTS_DIR / "tools/release_metadata/process_benchmarks_mock_data"
 )
 
 
@@ -53,7 +56,8 @@ def exit_error(msg):
 
 def run_process_benchmarks(
     release_metadata_dir: Path,
-    templates_dir: Path,
+    cac_repo_dir: Path,
+    tailoring_templates_dir: Path,
     pb_download_dir: Path | None,
     output_benchmarks_dir: Path,
 ) -> None:
@@ -64,7 +68,7 @@ def run_process_benchmarks(
     logger.debug(
         f"Running process_benchmarks() with release_metadata_dir: {release_metadata_dir}"
     )
-    logger.debug(f"Running process_benchmarks() with templates_dir: {templates_dir}")
+    logger.debug(f"Running process_benchmarks() with templates_dir: {tailoring_templates_dir}")
     logger.debug(
         f"Running process_benchmarks() with pb_download_dir: {pb_download_dir}"
     )
@@ -78,16 +82,11 @@ def run_process_benchmarks(
     if not release_metadata_files:
         exit_error(f"No yml files fonud in ${RELEASE_METADATA_DIR}")
 
-    if pb_download_dir is not None:
-        github_pat_token = None
-    else:
-        github_pat_token = get_pat_token()
-
     try:
         process_benchmarks(
             release_metadata_files,
-            templates_dir,
-            github_pat_token,
+            cac_repo_dir,
+            tailoring_templates_dir,
             pb_download_dir,
             output_benchmarks_dir,
         )
@@ -110,7 +109,7 @@ def gen_documentation(output_benchmarks_dir: Path) -> tuple[str, str]:
         latest = [
             b
             for b in benchmark_metadata["benchmarks"]
-            if b["backend"] == "openscap" and b["is_latest"]
+            if b["is_latest"]
         ][0]
         datastream_gz_path = (
             output_benchmarks_dir / latest["data_files"]["datastream_gz"]["path"]
@@ -210,17 +209,24 @@ def _get_usg_version() -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--debug", action="store_true")
-    parser.add_argument("--test-mode", action="store_true")
-    parser.add_argument(
-        "--pre-downloaded-data-dir",
+    mutex_group = parser.add_mutually_exclusive_group(required=True)
+    mutex_group.add_argument(
+        "-c", "--complianceascode-repo-dir",
         type=Path,
-        help="Data dir containing pre-downloaded data (also used for testing)",
+        help="Path to up-to-date ComplianceAsCode repo."
+        )
+    mutex_group.add_argument(
+        "-p", "--pre-built-data-dir",
+        type=Path,
+        help="Dir containing pre-built data (also used for testing)",
     )
+    mutex_group.add_argument("--test-mode", action="store_true")
+    parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument(
-        "--output-dir", type=Path, default=PROJECT_ROOT, help="Root output dir"
+        "-o", "--output-dir", type=Path, default=PROJECT_ROOT, help="Root output dir"
     )
     args = parser.parse_args()
+
 
     loglevel = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(
@@ -228,24 +234,28 @@ def main() -> None:
     )
 
     if args.test_mode:
-        logger.warning(f"In test mode, using mock data from {TEST_INPUTS_DIR}")
-        templates_dir = PROJECT_ROOT / TEST_INPUTS_DIR / TEMPLATES_DIR
-        release_metadata_dir = PROJECT_ROOT / TEST_INPUTS_DIR / RELEASE_METADATA_DIR
-        pb_download_dir = PROJECT_ROOT / TEST_PB_DOWNLOAD_DIR
+        if args.complianceascode_repo_dir is not None:
+            sys.exit("Fatal: --test-mode can only be used with --pre-build-data-dir")
+        templates_dir = PROJECT_ROOT / TEST_TEMPLATES_DIR
+        release_metadata_dir = PROJECT_ROOT / TEST_RELEASE_METADATA_DIR
+        pb_pre_build_data_dir = PROJECT_ROOT / TEST_PB_PREBUILT_DATA_DIR
+        cac_repo_dir = None
     else:
         templates_dir = PROJECT_ROOT / TEMPLATES_DIR
         release_metadata_dir = PROJECT_ROOT / RELEASE_METADATA_DIR
-        pb_download_dir = (
-            args.pre_downloaded_data_dir.resolve()
-            if args.pre_downloaded_data_dir
+        pb_pre_build_data_dir = (
+            args.pre_built_data_dir.resolve()
+            if args.pre_built_data_dir
             else None
         )
+        if args.complianceascode_repo_dir is not None:
+            cac_repo_dir = Path(args.complianceascode_repo_dir).resolve()
 
-    output_benchmarks_dir = args.output_dir / BENCHMARKS_DIR
+    output_benchmarks_dir = args.output_dir.resolve() / BENCHMARKS_DIR
 
     logger.debug(f"Templates directory: {templates_dir}")
     logger.debug(f"Release metadata directory: {release_metadata_dir}")
-    logger.debug(f"Mock download directory: {pb_download_dir}")
+    logger.debug(f"Pre-build data directory: {pb_pre_build_data_dir}")
     logger.debug(f"Root output directory: {args.output_dir}")
     logger.debug(f"Output benchmarks directory: {output_benchmarks_dir}")
 
@@ -254,7 +264,11 @@ def main() -> None:
 
     logger.info("Running `process_benchmarks.py`")
     run_process_benchmarks(
-        release_metadata_dir, templates_dir, pb_download_dir, output_benchmarks_dir
+        release_metadata_dir,
+        cac_repo_dir,
+        templates_dir / TEMPLATES_TAILORING_SUBDIR,
+        pb_pre_build_data_dir,
+        output_benchmarks_dir
     )
 
     logger.info("Generating the rules and variables documentation")

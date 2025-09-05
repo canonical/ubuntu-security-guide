@@ -31,12 +31,7 @@ class DataFile:
     type: str
     rel_path: Path
     sha256: str
-
-
-class Backend(str, Enum):
-    """Backend type."""
-
-    OPENSCAP = "openscap"
+    sha256_orig: str
 
 
 class BenchmarkType(str, Enum):
@@ -51,7 +46,6 @@ class Benchmark:
     """Immutable representation of a benchmark entry in benchmarks.json."""
 
     id: str
-    backend: Backend
     benchmark_type: BenchmarkType
     product: str
     product_long: str
@@ -87,12 +81,12 @@ class Benchmark:
                     data_file_type,
                     Path(raw_data["data_files"][data_file_type]["path"]),
                     raw_data["data_files"][data_file_type]["sha256"],
+                    raw_data["data_files"][data_file_type]["sha256_orig"]
                 )
                 for data_file_type in raw_data["data_files"]
             }
             return cls(
                 id=raw_data["benchmark_id"],
-                backend=raw_data["backend"],
                 benchmark_type=raw_data["benchmark_type"],
                 product=raw_data["product"],
                 product_long=raw_data["product_long"],
@@ -127,7 +121,7 @@ class Benchmark:
         """
         logger.debug(f"Getting tailoring file relative path for profile {profile_id}")
         try:
-            path = Path(self.tailoring_files[profile_id]["file"])
+            path = Path(self.tailoring_files[profile_id]["path"])
             logger.debug(f"Tailoring file relative path: {path}")
             return path
         except KeyError as e:
