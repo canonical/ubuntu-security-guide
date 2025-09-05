@@ -2,7 +2,6 @@
   "version": 1,
   "benchmarks": [
     {
-      "backend": "openscap",
       "benchmark_type": "CIS",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
@@ -26,30 +25,30 @@
       "data_files": {
         "datastream_gz": {
           "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-ds.xml.gz",
-          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+          "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
+          "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
         }
       },
       "tailoring_files": {
         "cis_level1_server": {
-          "file": "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "48dccd4d46072ea275f28564b04d867d203455fab6efcd07601d56f25f8646ef"
+          "path": "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml",
+          "sha256": "eab1c25d7565f0d28a51220238ab13e8982eeb4042e912b87caae510534cbeb3"
         },
         "cis_level2_server": {
-          "file": "ubuntu2404_CIS_1/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "9801a7dc68b3f35b3ccc3f0e6f7356762cc4fc7b8e7c8d62df898caa5946990f"
+          "path": "ubuntu2404_CIS_1/tailoring/cis_level2_server-tailoring.xml",
+          "sha256": "32aa8339f2eee97ce9dbe888b8db9e37f17e36d735d71f6d6f884465a64b1587"
         },
         "cis_level1_workstation": {
-          "file": "ubuntu2404_CIS_1/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "49d71779bf83c6f88304474593e9acfa97226b99553eebc586a50d86455c390f"
+          "path": "ubuntu2404_CIS_1/tailoring/cis_level1_workstation-tailoring.xml",
+          "sha256": "0b84590aa66f223e49153b359aed2b57578081db8544c77d30ae5a9a50e13470"
         },
         "cis_level2_workstation": {
-          "file": "ubuntu2404_CIS_1/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "a906c61eb306b97c157845f02a6bf63c8324d64ddceea7a29f334bedc857f4d7"
+          "path": "ubuntu2404_CIS_1/tailoring/cis_level2_workstation-tailoring.xml",
+          "sha256": "ab57fa3bde394f15defbf7d90615b2ac60c699571594cf5e8a823afbc6eb76e2"
         }
       }
     },
     {
-      "backend": "openscap",
       "benchmark_type": "CIS",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
@@ -74,30 +73,30 @@
       "data_files": {
         "datastream_gz": {
           "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-ds.xml.gz",
-          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+          "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
+          "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
         }
       },
       "tailoring_files": {
         "cis_level1_server": {
-          "file": "ubuntu2404_CIS_2/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "4c83778fc3140be65602f0063d081e0ec90267212921af289358309ecfac9e61"
+          "path": "ubuntu2404_CIS_2/tailoring/cis_level1_server-tailoring.xml",
+          "sha256": "ac76e9afc81ff3499090b966d4cdbaaa87a46d6b9133032c2ec195384f44d507"
         },
         "cis_level2_server": {
-          "file": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "6cc687a61343177c4aa592f597003683d76951fa2411dbf0ed4a9baf5a4cd22f"
+          "path": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
+          "sha256": "e50bcbf1feceb5271d59f5ec66e00f827f7c5eb9ff40201e8a3d63f72ef09172"
         },
         "cis_level1_workstation": {
-          "file": "ubuntu2404_CIS_2/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "449580a2af24b02438316e65fe55f4da91ae7ac602a08d2088ff968feab09314"
+          "path": "ubuntu2404_CIS_2/tailoring/cis_level1_workstation-tailoring.xml",
+          "sha256": "0fe3574dbed439d68e5160ee1e681aa4f750e94582647dcad173527602d77c4d"
         },
         "cis_level2_workstation": {
-          "file": "ubuntu2404_CIS_2/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "ef97bbac22f604bb54c80dc8d23c6225bf3c071250ac9d92a63981c7e2505a15"
+          "path": "ubuntu2404_CIS_2/tailoring/cis_level2_workstation-tailoring.xml",
+          "sha256": "48f5b0c969cb3209d97507cd182daedd18b6f0dfd61bf674e32dc53f3e498d9c"
         }
       }
     },
     {
-      "backend": "openscap",
       "benchmark_type": "CIS",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
@@ -118,30 +117,30 @@
       "data_files": {
         "datastream_gz": {
           "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-ds.xml.gz",
-          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+          "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
+          "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
         }
       },
       "tailoring_files": {
         "cis_level1_server": {
-          "file": "ubuntu2404_CIS_3/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "4425d5fe554cfc50332c446776c5dbcd78068c8e90fc845513890f1a362337a4"
+          "path": "ubuntu2404_CIS_3/tailoring/cis_level1_server-tailoring.xml",
+          "sha256": "19782c89163a756b372820b7f852bc23074a4578c0526df7a341d3c248e2300d"
         },
         "cis_level2_server": {
-          "file": "ubuntu2404_CIS_3/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "60b30845c2c19586b6c31e99aa5be758895bc85503f08aa8078a2a98aad80c03"
+          "path": "ubuntu2404_CIS_3/tailoring/cis_level2_server-tailoring.xml",
+          "sha256": "d152d7673f43f3c6dee19d5e29cdc393aa352329d474d76af58c06e26d6ac861"
         },
         "cis_level1_workstation": {
-          "file": "ubuntu2404_CIS_3/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "890330fa100f384ec58719808f0db107211606ae4a5f2ff5e20f18e6a90bb4ed"
+          "path": "ubuntu2404_CIS_3/tailoring/cis_level1_workstation-tailoring.xml",
+          "sha256": "66692fda4821772c8b2e7450de9fbbccd18058d87780d787afe5ef35c19b12f4"
         },
         "cis_level2_workstation": {
-          "file": "ubuntu2404_CIS_3/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "aec0a0bd07fa849d4200778e04d7fd65545b051192e5b43362cc91ceb35c8ea4"
+          "path": "ubuntu2404_CIS_3/tailoring/cis_level2_workstation-tailoring.xml",
+          "sha256": "ec7751cfc2834a7b9e8adfd23ce81b0498035e14418e2a88ba08231d847a6ccb"
         }
       }
     },
     {
-      "backend": "openscap",
       "benchmark_type": "STIG",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
@@ -163,18 +162,18 @@
       "data_files": {
         "datastream_gz": {
           "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-ds.xml.gz",
-          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+          "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
+          "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
         }
       },
       "tailoring_files": {
         "stig": {
-          "file": "ubuntu2404_STIG_1/tailoring/stig-tailoring.xml",
-          "sha256": "7dde0d9e9f90c02d8b0d1ff5b0fb7c450596ccc59d5e98ca552681c7010ccf31"
+          "path": "ubuntu2404_STIG_1/tailoring/stig-tailoring.xml",
+          "sha256": "7f9d44a8e8765484e21f9fc800593b0d427f83d37674a443be5fb3e0e33e6531"
         }
       }
     },
     {
-      "backend": "openscap",
       "benchmark_type": "STIG",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
@@ -196,13 +195,14 @@
       "data_files": {
         "datastream_gz": {
           "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-ds.xml.gz",
-          "sha256": "f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d"
+          "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
+          "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
         }
       },
       "tailoring_files": {
         "stig": {
-          "file": "ubuntu2404_STIG_2/tailoring/stig-tailoring.xml",
-          "sha256": "3ec9824c3bfa74baea917c21e9159678ff0f72b3d014c8f505b943b473ca2b7d"
+          "path": "ubuntu2404_STIG_2/tailoring/stig-tailoring.xml",
+          "sha256": "cc996240d5c16263a647a431ac8db0f5179cea8d93eb092e32fb3cbf2139ba38"
         }
       }
     }
