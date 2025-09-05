@@ -1,6 +1,6 @@
 % USG-CIS(7) usg-benchmarks 24.04.5
 % Eduardo Barretto <eduardo.barretto@canonical.com>
-% 11 August 2025
+% 05 September 2025
 
 # NAME
 usg-cis - Information on CIS profiles implementation

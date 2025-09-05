@@ -1,5 +1,4 @@
 general:
-  backend: openscap
   benchmark_type: CIS
   product: ubuntu2404
   product_long: Ubuntu 24.04 LTS (Noble Numbat)
@@ -10,8 +9,6 @@ benchmark_releases:
     breaking_release: False
     tailoring_version: 1
     cac_commit: e40871066ec2edfce046b53241f0e02d4a184ea5
-    cac_branch: noble
-    cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
     usg_version: 24.04.5
     benchmark_data:
       version: v1.0.0

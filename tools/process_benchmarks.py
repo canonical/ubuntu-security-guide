@@ -2,25 +2,27 @@
 
 import argparse
 import base64
+from dataclasses import dataclass
 import gzip
 import hashlib
 import json
 import logging
+import os
 import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
-import requests
 import yaml
-from generate_tailoring_file import generate_tailoring_file, validate_tailoring_file
+from generate_tailoring_file import generate_tailoring_file, validate_tailoring_file, GenerateTailoringError
 
 logger = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 1
 OUTPUT_JSON_NAME = "benchmarks.json"
-CAC_RELEASE_GZ_NAME = "ssg-{}-ds.xml.gz"
+CAC_RELEASE_NAME = "ssg-{}-ds.xml"
 CAC_TAILORING_NAME = "{}-tailoring.xml"
 
 
@@ -28,7 +30,7 @@ class BenchmarkProcessingError(Exception):
     pass
 
 
-def find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
+def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
     # Search through release graph and map upgrade_paths
     #
     # For each release, these items are added to the object, in-place:
@@ -217,22 +219,15 @@ def find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
         logger.debug("---")
 
 
-def process_yaml(
-    yaml_data: dict[str, Any],
-    templates_dir: Path,
-    github_pat_token: str,
-    test_data_dir: Path,
-    work_dir: Path,
-) -> list[dict[str, Any]]:
+
+def _process_yaml(yaml_data: dict[str, Any]) -> list[dict[str, Any]]:
     # Process CaC release yaml configuration file
 
     # - generate benchmark IDs used in USG
     # - for each latest "active" release in each branch:
     #   - map compatibility with older releases
     #   - generate complete breaking upgrade path
-    #   - download release datastream
-    #   - generate tailoring files and whatever else is needed
-    # - return "benchmarks" list containing metadata, file lists and checksums
+    # - return list of active releases
 
     # Initial iteration over the releases:
     # - initialize several empty fields and generate benchmark_id
@@ -259,15 +254,17 @@ def process_yaml(
         release["benchmark_data"] = b_data
 
     # Traverse release graph and find all upgrade paths
-    find_release_upgrade_paths(all_releases)
+    _find_release_upgrade_paths(all_releases)
 
-    # Extract only active releases (latest in any side branch or latest preceding a breaking release)
+    # Extract only active releases
+    # (latest in any side branch or latest preceding a breaking release)
     active_releases = [
         r for r in all_releases if r == r["upgrade_paths"]["latest_compatible"]
     ]
     active_releases.sort(key=lambda r: r["benchmark_data"]["benchmark_id"])
     logger.debug(
-        "Found these active releases (latest in any side branch or latest preceding a breaking release):"
+        "Found these active releases (latest in any side branch or "
+        "latest preceding a breaking release):"
     )
     for r in active_releases:
         logger.debug(f"{r['cac_tag']} (id: {r['benchmark_data']['benchmark_id']})")
@@ -285,7 +282,6 @@ def process_yaml(
     # - find all superseded compatible releases and mark their benchmark_id as compatible to the latest release
     # - find all superseeding breaking releases and generate the breaking_upgrade_path
     # - fetch datastream, generate tailoring files, generate checksums
-    benchmarks_metadata = []
     for release in active_releases:
         cac_tag = release["cac_tag"]
         b_data = release["benchmark_data"]
@@ -305,20 +301,13 @@ def process_yaml(
             logger.debug(f"Release {cac_tag} is the latest release.")
             b_data["is_latest"] = True
 
-        # Get the actual benchmark data and files
-        _process_benchmark_files(
-            release, work_dir, templates_dir, github_pat_token, test_data_dir
-        )
-
-        benchmarks_metadata.append(b_data)
-
     logger.debug("--- Listing benchmarks")
-    for b in benchmarks_metadata:
-        logger.debug(f"Benchmark: {b['benchmark_id']}")
+    for r in active_releases:
+        logger.debug(f"Benchmark: {r['benchmark_data']['benchmark_id']}")
 
     logger.debug("Exiting process_yaml()")
 
-    return benchmarks_metadata
+    return active_releases
 
 
 def _get_superseded_compatible(
@@ -333,15 +322,19 @@ def _get_superseded_compatible(
         if r != release:
             benchmark_version = r["benchmark_data"]["version"]
             logger.debug(
-                f"Found superseded release with benchmark version: {benchmark_version} (cac_tag: {r['cac_tag']})."
+                f"Found superseded release with benchmark version: "
+                f"{benchmark_version} (cac_tag: {r['cac_tag']})."
             )
             if benchmark_version == release["benchmark_data"]["version"]:
                 logger.debug(
-                    "benchmark version is the same as active release. Not adding it to list of compatible_versions"
+                    "benchmark version is the same as active release. "
+                    "Not adding it to list of compatible_versions"
                 )
             else:
                 logger.debug(
-                    f"Adding the release with benchmark version {benchmark_version} to list of compatible_versions in benchmark in release {release['cac_tag']}"
+                    f"Adding the release with benchmark version {benchmark_version} to "
+                    f"list of compatible_versions in benchmark in release "
+                    f"{release['cac_tag']}"
                 )
                 compatible_versions.add(benchmark_version)
     return sorted(list(compatible_versions))
@@ -391,267 +384,229 @@ def _get_breaking_upgrade_path(
     return breaking_upgrade_path
 
 
-def _request_url(url: str, headers: dict[str, str]) -> requests.Response:
-    # request a URL, exit on error, return the response
-    r = requests.get(url, headers=headers)
-    logger.debug(f"Requesting {url}...")
-    if r.status_code == 401:
+def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> None:
+    # Reset CaC repo to tag==cac_tag and build product cac_product
+    # Raises BenchmarkProcessingError on failure to build
+
+    logger.debug("Building repo {cac_repo_dir}, tag {cac_tag}, product {cac_product}")
+
+    # cleanup repo and checkout tag
+    for cmd in (
+        ["/usr/bin/git", "reset", "--hard"],
+        ["/usr/bin/git", "clean", "-fxd"],
+        ["/usr/bin/git", "checkout", cac_tag],
+    ):
+        logger.debug(f"Calling cmd: {cmd}")
+        try:
+            subprocess.check_call(cmd, cwd=cac_repo_dir)  # noqa: S603
+        except subprocess.CalledProcessError as e:
+            raise BenchmarkProcessingError(
+                f"Failed to checkout tag {cac_tag} in repo {cac_repo_dir}: {e}"
+                ) from e
+
+    # get timestamp of last commit
+    env = os.environ.copy()
+    env["TZ"] = "UTC0"
+    cmd = ["/usr/bin/git", "log", "-1", "--format=tformat:%cd", "--date=format:%s"]
+
+    try:
+        logger.debug(f"Calling cmd: {cmd}")
+        commit_timestamp = subprocess.check_output(cmd, cwd=cac_repo_dir, env=env)
+    except subprocess.CalledProcessError as e:
         raise BenchmarkProcessingError(
-            f"Failed to authenticate when requesting {url}. "
-            f"Likely bad PAT token. Response: {r.text}"
+            f"Failed to get timestamp for tag {cac_tag}: {e}"
+        ) from e
+
+    # build CaC product
+    env["SOURCE_DATE_EPOCH"] = commit_timestamp
+    cmd = [cac_repo_dir/"build_product", cac_product]
+
+    try:
+        logger.debug(f"Calling cmd: {cmd}")
+        subprocess.check_call(cmd, cwd=cac_repo_dir, env=env)  # noqa: S603
+    except subprocess.CalledProcessError as e:
+        raise BenchmarkProcessingError(
+            f"Failed to build repo {cac_repo_dir}: {e}"
+            ) from e
+
+    logger.debug("Successfully built CaC release {cac_tag}")
+
+
+def _save_compressed_datastream(src: Path, dst_gz: Path) -> None:
+    # gzip compress datastream src to dst
+    logger.debug(f"Compressing datastream to {dst_gz}")
+    try:
+        with src.open("rb") as ds:  # noqa: SIM117
+            with gzip.GzipFile(dst_gz, mode="wb", mtime=0) as ds_gz:
+                shutil.copyfileobj(ds, ds_gz)
+    except Exception as e:
+        raise BenchmarkProcessingError(
+            f"Failed to compress datastream {src} "
+            f"to {dst_gz}: {e}"
+        ) from e
+
+
+def _create_tailoring_file(
+        profile_path: Path,
+        datastream_build_path: Path,
+        tailoring_template_path: Path,
+        benchmark_id: str,
+        output_tailoring_path: Path
+) -> None:
+    # Generate and validate tailoring file
+    if not profile_path.exists():
+        raise BenchmarkProcessingError(
+            f"Profile {profile_path} not found in ComplianceAsCode repo."
         )
-    if r.status_code != 200:
-        raise BenchmarkProcessingError(f"Failed to get {url}. Response: {r.text}")
-    logger.debug(f"Status code: {r.status_code}. Response headers: {r.headers}")
-    return r
-
-
-def _download_github_release_datastream(
-    cac_tag: str, github_pat_token: str, download_dir: Path
-) -> None:
-    # download release datastream from Github
-
-    logger.debug(f"From _download_github_release_datastream({cac_tag})")
-    logger.info(
-        f"Downloading datastream for {cac_tag} from Github to {download_dir}..."
-    )
-
-    # get datastream asset information based on the release tag
-    url = f"https://api.github.com/repos/canonical/ComplianceAsCode-content/releases/tags/{cac_tag}"
-    headers = {
-        "Authorization": f"Bearer {github_pat_token}",
-        "Accept": "application/vnd.github+json",
-    }
-    r = _request_url(url, headers)
-    datastream_url, datastream_name = [
-        (asset["url"], asset["name"])
-        for asset in r.json()["assets"]
-        if "xml.gz" in asset["name"]
-    ][0]
-
-    # download datastream asset
-    headers = {
-        "Authorization": f"Bearer {github_pat_token}",
-        "Accept": "application/octet-stream",
-    }
-    r = _request_url(datastream_url, headers)
-    ds_path = download_dir / datastream_name
-    open(ds_path, "wb").write(r.content)
-    logger.debug(f"Downloaded datastream from Github to {ds_path}")
-    logger.debug("Exiting _download_github_release_datastream()")
-
-
-def _download_github_release_profiles(
-    cac_tag: str,
-    cac_commit: str,
-    product: str,
-    github_pat_token: str,
-    download_dir: Path,
-) -> None:
-    # download profile and control files from Github corresponding to the release tag
-
-    logger.debug(f"From _download_github_release_profiles({cac_tag})")
-    logger.info(f"Downloading files for {cac_tag} from Github to {download_dir}...")
-    headers = {
-        "Authorization": f"Bearer {github_pat_token}",
-        "Accept": "application/vnd.github+json",
-    }
-    # get tag hash based on tag name
-    url = f"https://api.github.com/repos/canonical/ComplianceAsCode-content/git/refs/tags/{cac_tag}"
-    r = _request_url(url, headers)
-    tag_hash = r.json()["object"]["sha"]
-
-    # get commit hash associated with the tag
-    url = f"https://api.github.com/repos/canonical/ComplianceAsCode-content/git/tags/{tag_hash}"
-    r = _request_url(url, headers)
-    commit_hash = r.json()["object"]["sha"]
-
-    # sanity check that the commit hash is the same as the one in the yaml file
-    if cac_commit != commit_hash:
+    if not tailoring_template_path.exists():
         raise BenchmarkProcessingError(
-            f"Commit hash {commit_hash} for tag {cac_tag} does not match the one in the yaml file {cac_commit}"
+            f"Tailoring template {tailoring_template_path} not found in template dir."
         )
 
-    # get profile files information based on the commit hash
-    url = f"https://api.github.com/repos/canonical/ComplianceAsCode-content/contents/products/{product}/profiles?ref={commit_hash}"
-    r = _request_url(url, headers)
-    profile_files = r.json()
-
-    # get control files information based on the commit hash
-    url = f"https://api.github.com/repos/canonical/ComplianceAsCode-content/contents/controls?ref={commit_hash}"
-    r = _request_url(url, headers)
-    # TODO: in principle the control files could be named anything.
-    # Here we assume they follow the naming convention of the product.
-    control_files = [c for c in r.json() if product in c["path"]]
-
-    # download profile and control files
-    for file in profile_files + control_files:
-        name, path, url = file["name"], file["path"], file["url"]
-        logger.debug(f"Downloading file {name} from {url}...")
-        r = _request_url(url, headers)
-
-        full_path = download_dir / "ComplianceAsCode-content" / path
-        full_path.parent.mkdir(parents=True, exist_ok=True)
-
-        open(full_path, "wb").write(base64.b64decode(r.json()["content"]))
-        logger.debug(f"Downloaded file {name} to {full_path}")
-
-    logger.debug("Exiting _download_github_release_profiles()")
+    try:
+        tailor_doc = generate_tailoring_file(
+            profile_path,
+            datastream_build_path,
+            tailoring_template_path,
+            benchmark_id,
+        )
+        logger.debug(f"Writing tailoring file to {output_tailoring_path}")
+        tailor_doc.write(
+            output_tailoring_path,
+            pretty_print=True,
+            xml_declaration=True,
+            encoding="UTF-8",
+        )
+        validate_tailoring_file(output_tailoring_path)
+    except GenerateTailoringError as e:
+        raise BenchmarkProcessingError(
+            "Failed to generate tailoring file {output_tailoring_path}: {e}"
+        ) from e
 
 
-def _process_benchmark_files(
-    release: dict[str, Any],
-    work_dir: Path,
-    templates_dir: Path,
-    github_pat_token: str,
-    pre_downloaded_data_dir: Path | None,
+def _calc_sha256(path: Path) -> str:
+    # return sha256 for file
+    with path.open("rb") as f:
+        digest = hashlib.file_digest(f, "sha256").hexdigest()
+    logger.debug(f"sha256 for {path}: {digest}")
+    return digest
+
+
+def _build_active_releases(
+    all_active_releases: list[dict[str, Any]],
+    cac_repo_dir: Path,
+    tailoring_templates_dir: Path,
+    dst_dir: Path,
+    pre_built_data_dir: Path | None,
 ) -> None:
-    # fetch datastream, generate tailoring files, generate checksums
+    # For each active release:
+    # - build datastream (or use pre-built data)
+    # - generate tailoring files
+    # - generate checksums
 
-    cac_tag = release["cac_tag"]
-    b_data = release["benchmark_data"]
-    benchmark_id = b_data["benchmark_id"]
+    logger.debug(f"Building {len(all_active_releases)} active releases...")
 
-    logger.debug(f"From _process_benchmark_files({cac_tag})")
+    for release in all_active_releases:
+        cac_tag = release["cac_tag"]
+        b_data = release["benchmark_data"]
+        benchmark_id = b_data["benchmark_id"]
+        logger.info(f"Building CaC release {cac_tag} (benchmark ID = {benchmark_id})")
 
-    # Fetch release data into temp directory or use test data
-    with tempfile.TemporaryDirectory() as download_dir:
-        logger.debug(f"Using temporary directory: {download_dir}")
-        download_dir = Path(download_dir)
-        if pre_downloaded_data_dir:
-            release_dir = pre_downloaded_data_dir / cac_tag
-            if not release_dir.exists():
-                raise BenchmarkProcessingError(
-                    f"Data directory {cac_tag} does not exist in {pre_downloaded_data_dir}. "
-                    f"Check the pre-downloaded-data-dir argument. "
-                    f"Ensure the directory structure matches the one used in tools/tests/data/input/"
-                )
-            logger.debug(f"Copying test data from {release_dir} to {download_dir}")
-            shutil.copytree(release_dir, download_dir, dirs_exist_ok=True)
-        else:
-            logger.debug(f"Downloading data from Github to {download_dir}")
-            _download_github_release_datastream(cac_tag, github_pat_token, download_dir)
-            _download_github_release_profiles(
-                cac_tag,
-                release["cac_commit"],
-                b_data["product"],
-                github_pat_token,
-                download_dir,
-            )
-
-        # create benchmark directory (e.g. ubuntu2404_CIS_2)
-        output_benchmark_dir = work_dir / benchmark_id
+        # Create output directory based on benchmark id (dst_dir/benchmark_id)
+        output_benchmark_dir = dst_dir / benchmark_id
         output_benchmark_dir.mkdir(parents=True, exist_ok=True)
 
-        # Copy datastream gz to benchmark directory
-        datastream_gz_filename = CAC_RELEASE_GZ_NAME.format(b_data["product"])
-        datastream_gz_downloaded_path = download_dir / datastream_gz_filename
-        datastream_gz_path = output_benchmark_dir / datastream_gz_filename
-        try:
-            shutil.copy(datastream_gz_downloaded_path, datastream_gz_path)
-        except Exception as e:
-            raise BenchmarkProcessingError(
-                f"Failed to copy datastream gz from {datastream_gz_downloaded_path} to {datastream_gz_path}: {e}"
-            )
+        # Create new tmp build dir for each release
+        with tempfile.TemporaryDirectory(prefix=f"cac_{cac_tag}_") as tmp_build_dir:
+            # Build the CaC tag in tmp_build_dir or copy pre-built data
+            logger.debug(f"Building in temporary directory: {tmp_build_dir}")
+            tmp_build_dir = Path(tmp_build_dir)
+            if pre_built_data_dir:
+                release_dir = pre_built_data_dir / cac_tag
+                if not release_dir.exists():
+                    raise BenchmarkProcessingError(
+                        f"Data directory {cac_tag} does not exist in {pre_built_data_dir}. "
+                        f"Check the pre-built-data-dir argument. "
+                        f"Ensure the directory structure matches the one used in tools/tests/data/input/"
+                    )
+                logger.debug(f"Copying test data from {release_dir} to {tmp_build_dir}")
+                shutil.copytree(release_dir, tmp_build_dir, dirs_exist_ok=True)
 
-        # Verify integrity of datastream gz
-        with open(datastream_gz_path, "rb") as f:
-            digest = hashlib.file_digest(f, "sha256")
-            if digest.hexdigest() != release["cac_release_gz_sha256"]:
-                raise BenchmarkProcessingError(
-                    f"Corrupted release file {datastream_gz_path} for release {cac_tag}"
+            else:
+                logger.debug(f"Copying the CaC repo {cac_repo_dir} to tmp dir {tmp_build_dir}")
+                shutil.copytree(
+                    cac_repo_dir,
+                    tmp_build_dir,
+                    dirs_exist_ok=True,
+                    ignore_dangling_symlinks=True
+                    )
+                _build_cac_release(
+                    cac_repo_dir,
+                    cac_tag,
+                    b_data["product"]
                 )
-            logger.debug(f"Integrity check OK for {datastream_gz_path}")
 
-        # Set metadata for datastream
-        b_data["data_files"] = {
-            "datastream_gz": {
-                "path": str(datastream_gz_path.relative_to(work_dir)),
-                "sha256": release["cac_release_gz_sha256"],
+            # Compress datastream and save to destination dir (e.g. dst_dir/ubuntu2404_CIS_2/...)
+            datastream_filename = CAC_RELEASE_NAME.format(b_data["product"])
+            datastream_build_path = tmp_build_dir / "build" / datastream_filename
+            datastream_dst_gz_path = (output_benchmark_dir / datastream_filename).with_suffix(".xml.gz")  # noqa: E501
+            _save_compressed_datastream(datastream_build_path, datastream_dst_gz_path)
+
+            # Calc hashes and set metadata for datastream
+            b_data["data_files"] = {
+                "datastream_gz": {
+                    "path": str(datastream_dst_gz_path.relative_to(dst_dir)),
+                    "sha256": _calc_sha256(datastream_dst_gz_path),
+                    "sha256_orig": _calc_sha256(datastream_build_path)
+                }
             }
-        }
 
-        # Generate tailoring files
-        logger.debug("Generating tailoring files for benchmark {benchmark_id}...")
-        tailoring_files_dir = output_benchmark_dir / "tailoring"
-        tailoring_files_dir.mkdir(parents=True, exist_ok=True)
+            # Generate tailoring files
+            logger.debug("Generating tailoring files for benchmark {benchmark_id}...")
+            output_tailoring_files_dir = output_benchmark_dir / "tailoring"
+            output_tailoring_files_dir.mkdir()
+            b_data["tailoring_files"] = {}
 
-        # Unpack datastream used for generating tailoring files
-        unpacked_datastream_path = tempfile.mktemp(
-            suffix=".datastream.xml", dir=download_dir
-        )
-        logger.debug(f"Unpacking datastream to {unpacked_datastream_path}...")
-        with gzip.open(datastream_gz_path, "rb") as ds_gz:
-            with open(unpacked_datastream_path, "wb") as ds:
-                shutil.copyfileobj(ds_gz, ds)
+            cac_profiles_dir = (
+                tmp_build_dir / "products" / b_data["product"] / "profiles"
+            )
+            for profile_id in b_data["profiles"]:
+                logger.info(f"Generating tailoring file for profile {profile_id}")
 
-        # Generate tailoring files
-        b_data["tailoring_files"] = {}
-        for profile_id in b_data["profiles"]:
-            logger.info(
-                f"Generating tailoring file for profile {profile_id} in benchmark {benchmark_id}..."
-            )
+                profile_path = cac_profiles_dir / f"{profile_id}.profile"
+                tailoring_template_path = tailoring_templates_dir / f"{profile_id}-tailoring.xml"
+                output_tailoring_path = output_tailoring_files_dir / f"{profile_id}-tailoring.xml"
 
-            profile_path = (
-                download_dir
-                / "ComplianceAsCode-content"
-                / "products"
-                / b_data["product"]
-                / "profiles"
-                / f"{profile_id}.profile"
-            )
-            tailoring_template_path = (
-                templates_dir / "tailoring" / f"{profile_id}-tailoring.xml"
-            )
-            output_tailoring_path = tailoring_files_dir / f"{profile_id}-tailoring.xml"
-            logger.debug(
-                f"Calling generate_tailoring_file() with profile {profile_path} "
-                f"and tailoring template: {tailoring_template_path}"
-            )
-            if not profile_path.exists():
-                raise BenchmarkProcessingError(
-                    f"Profile {profile_id} not found in {download_dir}/ComplianceAsCode-content/products/{b_data['product']}/profiles"
-                )
-            if not tailoring_template_path.exists():
-                raise BenchmarkProcessingError(
-                    f"Tailoring template {tailoring_template_path} not found in {templates_dir}/tailoring"
+                _create_tailoring_file(
+                    profile_path,
+                    datastream_build_path,
+                    tailoring_template_path,
+                    benchmark_id,
+                    output_tailoring_path
                 )
 
-            tailor_doc = generate_tailoring_file(
-                profile_path,
-                unpacked_datastream_path,
-                tailoring_template_path,
-                benchmark_id,
-            )
+                # Calc hashes and set metadata 
+                b_data["tailoring_files"][profile_id] = {
+                    "path": str(output_tailoring_path.relative_to(dst_dir)),
+                    "sha256": _calc_sha256(output_tailoring_path)
+                }
+                logger.info(
+                    f"Successfully generated tailoring file {output_tailoring_path}"
+                )
 
-            logger.debug(f"Writing tailoring file to {output_tailoring_path}")
-            tailor_doc.write(
-                output_tailoring_path,
-                pretty_print=True,
-                xml_declaration=True,
-                encoding="UTF-8",
-            )
-
-            logger.debug("Validating tailoring file")
-            validate_tailoring_file(output_tailoring_path)
-
-            logger.debug(f"Calculating sha256 hash of {output_tailoring_path}")
-            with open(output_tailoring_path, "rb") as f:
-                digest = hashlib.file_digest(f, "sha256")
-            b_data["tailoring_files"][profile_id] = {
-                "file": str(output_tailoring_path.relative_to(work_dir)),
-                "sha256": digest.hexdigest(),
-            }
-            logger.debug(f"Calculated sha256 hash: {digest.hexdigest()}")
-            logger.info(
-                f"Successfully generated tailoring file {output_tailoring_path}"
-            )
+            # Copy licence files
+            license_build_path = tmp_build_dir / "LICENSE"
+            license_dst = output_benchmark_dir / "LICENSE"
+            logger.debug("Copying license file to {license_dst}")
+            shutil.copy(license_build_path, license_dst)
 
 
-def log_upgrade_paths(benchmarks: list[dict[str, Any]]) -> None:
+def _log_upgrade_paths(active_releases: list[dict[str, Any]]) -> None:
     # print out clean upgrade paths
     logger.info("--- Benchmark upgrade paths ---")
-    for i, b in enumerate(sorted(benchmarks, key=lambda x: x["benchmark_id"])):
+    for i, release in enumerate(sorted(active_releases,
+                                 key=lambda x: x["benchmark_data"]["benchmark_id"])):
+        b = release["benchmark_data"]
         compatible_versions = [
             x for x in b["compatible_versions"] if x != b["benchmark_id"]
         ] or []
@@ -676,9 +631,9 @@ def log_upgrade_paths(benchmarks: list[dict[str, Any]]) -> None:
 
 def process_benchmarks(
     benchmark_yaml_files: list[Path],
-    templates_dir: Path,
-    github_pat_token: str,
-    pre_downloaded_data_dir: Path,
+    cac_repo_dir: Path,
+    tailoring_templates_dir: Path,
+    pre_built_data_dir: Path,
     out_dir: Path,
 ) -> None:
     # Parse yaml files, do some basic validation, call process_yaml() for each, write output json
@@ -689,104 +644,114 @@ def process_benchmarks(
             f"Remove the old data and re-run the script."
         )
 
+    if cac_repo_dir is not None and not (cac_repo_dir / ".git").is_dir():
+        raise BenchmarkProcessingError(
+            f"ComplianceAsCode directory {cac_repo_dir} doesn't exist "
+            f"or is not a git repository."
+        )
+
     logger.info(f"Schema version is: {SCHEMA_VERSION}")
     benchmarks_json_data = {
         "version": SCHEMA_VERSION,
         "benchmarks": [],
     }
 
-    with tempfile.TemporaryDirectory() as work_dir:
-        work_dir = Path(work_dir).resolve()
 
-        # parse and process benchmark yaml files
-        for benchmark_yaml in sorted(benchmark_yaml_files):
-            logger.info(f"Processing yaml - {benchmark_yaml}")
-            with open(benchmark_yaml) as f:
-                yaml_data = yaml.safe_load(f.read())
+    # parse and process benchmark yaml files
+    all_active_releases = []
+    for benchmark_yaml in sorted(benchmark_yaml_files):
+        logger.info(f"Processing yaml - {benchmark_yaml}")
+        with Path(benchmark_yaml).open() as f:
+            yaml_data = yaml.safe_load(f.read())
 
-            # sanity checks
-            for k in ["general", "benchmark_releases"]:
-                if not yaml_data.get(k):
-                    raise BenchmarkProcessingError(
-                        f"Error: Key {k} not found in {benchmark_yaml}."
-                    )
-
-            for k in ["backend", "benchmark_type", "product"]:
-                if not yaml_data["general"].get(k):
-                    raise BenchmarkProcessingError(
-                        f"Error: Key general.{k} not found in {benchmark_yaml}."
-                    )
-
-            # process yaml and add benchmarks metadata to the json data
-            if yaml_data["general"]["backend"] == "openscap":
-                benchmarks_metadata = process_yaml(
-                    yaml_data,
-                    templates_dir,
-                    github_pat_token,
-                    pre_downloaded_data_dir,
-                    work_dir,
-                )
-            else:
+        # sanity checks
+        for k in ["general", "benchmark_releases"]:
+            if not yaml_data.get(k):
                 raise BenchmarkProcessingError(
-                    f"Unsupported backend {yaml_data['backend']} in {benchmark_yaml}"
+                    f"Error: Key {k} not found in {benchmark_yaml}."
                 )
-            benchmarks_json_data["benchmarks"].extend(benchmarks_metadata)
-            log_upgrade_paths(benchmarks_metadata)
 
+        for k in ["benchmark_type", "product"]:
+            if not yaml_data["general"].get(k):
+                raise BenchmarkProcessingError(
+                    f"Error: Key general.{k} not found in {benchmark_yaml}."
+                )
+
+        # process yaml and store active releases
+        active_releases = _process_yaml(yaml_data)
+        all_active_releases.extend(active_releases)
+        _log_upgrade_paths(active_releases)
+
+
+    # build data for active releases
+    with tempfile.TemporaryDirectory() as tmp_dst_dir:
+        logger.info(f"Building benchmark data in {tmp_dst_dir}")
+        _build_active_releases(
+            all_active_releases,
+            cac_repo_dir,
+            tailoring_templates_dir,
+            Path(tmp_dst_dir),
+            pre_built_data_dir
+            )
         logger.info(f"Copying benchmark files and folders to {out_dir}")
-        shutil.copytree(work_dir, out_dir, dirs_exist_ok=True)
+        shutil.copytree(tmp_dst_dir, out_dir, dirs_exist_ok=True)
 
-    logger.info(f"Writing json - {OUTPUT_JSON_NAME}")
-    with open(out_dir / OUTPUT_JSON_NAME, "w") as f:
-        f.write(json.dumps(benchmarks_json_data, indent=2))
+        # build CaC datastreams and 
+        # Get the actual benchmark data and files
+      #   - download release datastream
+    #   - generate tailoring files and whatever else is needed
+
+
+    # extract benchmark metadata and store in json
+    benchmarks_metadata = [r["benchmark_data"] for r in all_active_releases]
+    benchmarks_json_data["benchmarks"].extend(benchmarks_metadata)
+
+    json_output = out_dir / OUTPUT_JSON_NAME
+    json_output.write_text(
+        json.dumps(benchmarks_json_data, indent=2) + "\n"
+        )
+    logger.info(f"Wrote benchmark metadata to {json_output}")
 
     # calc hash of json
-    with open(out_dir / OUTPUT_JSON_NAME, "rb") as f:
+    with (out_dir / OUTPUT_JSON_NAME).open("rb") as f:
         digest = hashlib.file_digest(f, "sha256")
     logger.info(f"sha256({OUTPUT_JSON_NAME}): {digest.hexdigest()}")
 
 
-def get_pat_token():
-    while True:
-        pat = input("Please input your Github personal access token (PAT): ")
-        if pat:
-            return pat
-        logger.error("PAT cannot be empty. Please try again.")
-
-
 def main():
     parser = argparse.ArgumentParser()
+    mutex_group = parser.add_mutually_exclusive_group(required=True)
+    mutex_group.add_argument(
+        "-c", "--complianceascode-repo-dir",
+        type=Path,
+        help="Path to up-to-date ComplianceAsCode repo."
+        )
+    mutex_group.add_argument(
+        "-p", "--pre-built-data-dir",
+        type=Path,
+        help="Dir containing pre-built data (also used for testing)",
+    )
     parser.add_argument(
         "-b", "--benchmark-yaml-files", type=Path, required=True, nargs="+"
     )
+    parser.add_argument("-t", "--tailoring-templates-dir", type=Path, required=True)
     parser.add_argument("-o", "--output-dir", type=Path, required=True)
-    parser.add_argument("-t", "--templates-dir", type=Path, required=True)
     parser.add_argument("-d", "--debug", action="store_true")
-    parser.add_argument(
-        "--pre-downloaded-data-dir",
-        type=Path,
-        help="Data dir containing pre-downloaded data (also used for testing)",
-    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
     if args.debug:
         logger.setLevel(logging.DEBUG)
-    # formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    # logger.setFormatter(formatter)
 
-    if args.pre_downloaded_data_dir is not None:
-        logger.warning(f"Using pre-downloaded data from {args.pre_downloaded_data_dir}")
-        github_pat_token = None
-    else:
-        github_pat_token = get_pat_token()
+    if args.pre_built_data_dir is not None:
+        logger.warning(f"Using pre-built data from {args.pre_built_data_dir}")
 
     try:
         process_benchmarks(
             args.benchmark_yaml_files,
-            args.templates_dir,
-            github_pat_token,
-            args.pre_downloaded_data_dir,
+            args.complianceascode_repo_dir,
+            args.tailoring_templates_dir,
+            args.pre_built_data_dir,
             args.output_dir,
         )
     except BenchmarkProcessingError as e:
