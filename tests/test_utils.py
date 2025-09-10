@@ -10,7 +10,7 @@ def test_verify_integrity_success(tmp_path):
     file = tmp_path / "testfile"
     content = b"hello world"
     file.write_bytes(content)
-    hexdigest = utils.hashlib.file_digest(open(file, "rb"), "sha256").hexdigest()
+    hexdigest = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
     # Should not raise
     utils.verify_integrity(file, hexdigest, "sha256")
 
@@ -95,23 +95,32 @@ def test_validate_perms_world_writable_parent(tmp_path):
 
 
 def test_validate_perms_not_owned(tmp_path, monkeypatch):
+    # test that validate perms failed if file is not owned by current user (or root)
+    # patch stat to return UID=12345
     file = tmp_path / "afile"
     file.touch()
     os.chmod(file, mode=0o600)
-    # Patch os.stat to fake different uid/gid
-    orig_stat = os.stat
 
-    class FakeStat(dict):
-        def __init__(self, st, uid=12345, gid=12345):
+    class FakeStatResult(object):
+        def __init__(self, st):
             self.st_mode = st.st_mode
-            self.st_uid = uid
-            self.st_gid = gid
+            self.st_ino = st.st_ino
+            self.st_dev = st.st_dev
+            self.st_nlink = st.st_nlink
+            self.st_size = st.st_size
+            self.st_atime = st.st_atime
+            self.st_mtime = st.st_mtime
+            self.st_ctime = st.st_ctime
+            self.st_uid = 12345
+            self.st_gid = 12345
 
     def fake_stat(path, *args, **kwargs):
-        st = orig_stat(path, *args, **kwargs)
-        return FakeStat(st, uid=12345, gid=12345)
+        st = os.stat(path, *args, **kwargs)
+        return FakeStatResult(st)
 
-    monkeypatch.setattr(os, "stat", fake_stat)
+    from pathlib import Path
+    monkeypatch.setattr(Path, "stat", fake_stat)
+
     with pytest.raises(PermValidationError):
         utils.validate_perms(file)
 
