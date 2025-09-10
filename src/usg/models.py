@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
 
 from usg.exceptions import BenchmarkError, ProfileNotFoundError, TailoringFileError
 
@@ -61,7 +61,7 @@ class Benchmark:
     data_files: dict[str, DataFile]
 
     @classmethod
-    def from_dict(cls, raw_data: dict[str, Any]) -> Self:
+    def from_dict(cls, raw_data: dict[str, Any]) -> "Benchmark":
         """Create Benchmark object from a dictionary."""
         logger.debug(f"Creating Benchmark object from {raw_data}")
         try:
@@ -139,7 +139,7 @@ class Benchmarks(dict[str, Benchmark]):
     version: int
 
     @classmethod
-    def from_json(cls, json_path: str | Path) -> Self:
+    def from_json(cls, json_path: str | Path) -> "Benchmarks":
         """Create a Benchmarks object from a JSON file.
 
         Args:
@@ -189,7 +189,7 @@ class TailoringFile:
     benchmark_id: str
 
     @classmethod
-    def from_file(cls, tailoring_file: Path | str) -> Self:
+    def from_file(cls, tailoring_file: Path | str) -> "TailoringFile":
         """Create a TailoringFile object from a tailoring file.
 
         Args:
