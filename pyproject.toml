@@ -21,7 +21,7 @@ Source = "https://github.com/canonical/ubuntu-security-guide"
 usg = "usg.cli:main"
 
 [tool.pytest.ini_options]
-addopts = "--ignore=tests/test_cli_e2e -p no:cacheprovider"
+addopts = "-p no:cacheprovider"
 testpaths = [
     "tests",
     "tools/tests"
