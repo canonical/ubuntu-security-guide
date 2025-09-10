@@ -140,12 +140,17 @@ class CaCProfile:
                 # control is not applicable to selected level
                 continue
 
-            control = self._add_control(control_data["id"], control_data["title"])
+            control = self._add_control(
+                    str(control_data["id"]),
+                    str(control_data["title"])
+                    )
 
             for rule in control_data.get("rules", []):
                 if "=" in rule:
                     name, value = rule.split("=")
                     self._add_or_update_variable(name, value, control)
+                elif rule.startswith("!"):
+                    self._add_or_update_rule(rule.strip("!"), False, control)
                 else:
                     self._add_or_update_rule(rule, True, control)
 
@@ -166,8 +171,20 @@ class CaCProfile:
         )
 
         for selection in profile_data.get("selections", []):
+
+            # variables
+            if "=" in selection:
+                var_name, var_value = selection.split("=")
+                profile._add_or_update_variable(var_name, var_value, profile_control)
+
+            # disabled rules
+            elif selection.startswith("!"):
+                profile._add_or_update_rule(
+                    selection.strip("!"), False, profile_control
+                )
+
             # controls
-            if ":" in selection:
+            elif ":" in selection:
                 tags = selection.split(":")
                 controls_tag = tags[0]
                 if len(tags) == 3:
@@ -179,18 +196,9 @@ class CaCProfile:
                 controls_path = controls_dir / f"{controls_tag}.yml"
                 profile._add_controls_from_file(controls_path, level)
 
-            # variables
-            elif "=" in selection:
-                var_name, var_value = selection.split("=")
-                profile._add_or_update_variable(var_name, var_value, profile_control)
 
-            # disabled rules
-            elif selection.startswith("!"):
-                profile._add_or_update_rule(
-                    selection.strip("!"), False, profile_control
-                )
 
-            # additional uncategorized rules (shouldn't happen)
+            # additional uncategorized rules
             else:
                 profile._add_or_update_rule(selection, True, profile_control)
 
