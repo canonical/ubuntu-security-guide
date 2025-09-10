@@ -541,7 +541,7 @@ def _build_active_releases(
                     ignore_dangling_symlinks=True
                     )
                 _build_cac_release(
-                    cac_repo_dir,
+                    tmp_build_dir,
                     cac_tag,
                     b_data["product"]
                 )
