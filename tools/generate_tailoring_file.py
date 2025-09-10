@@ -131,7 +131,7 @@ def validate_tailoring_file(tailoring_path: Path):
             "oval",
             "validate",
             "--skip-schematron",
-            tailoring_path,
+            str(tailoring_path),
         ]
         subprocess.run(cmd, check=True)  # noqa: S603
     except Exception as e:
