@@ -31,7 +31,11 @@ def verify_integrity(file: Path | str, hexdigest: str, hash_algorithm: str) -> N
     logger.debug(f"Verifying integrity of {file}.")
 
     with Path(file).open("rb") as f:
-        digest = hashlib.file_digest(f, hash_algorithm)
+        try:
+            digest = hashlib.file_digest(f, hash_algorithm)
+        except AttributeError:
+            # python < 3.11
+            digest = hashlib.new(hash_algorithm, f.read())
 
     if digest.hexdigest() != hexdigest:
         logger.error(
