@@ -480,7 +480,7 @@ def _create_tailoring_file(
         validate_tailoring_file(output_tailoring_path)
     except GenerateTailoringError as e:
         raise BenchmarkProcessingError(
-            "Failed to generate tailoring file {output_tailoring_path}: {e}"
+            f"Failed to generate tailoring file {output_tailoring_path}: {e}"
         ) from e
 
 
