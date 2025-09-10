@@ -3,10 +3,11 @@ import importlib.resources
 import os
 import re
 import subprocess
+import shutil
 from pathlib import Path
 
 BUILD_SCRIPT_PATH = Path(__file__).resolve().parent.parent / "build.py"
-TEST_DATA_DIR = importlib.resources.files() / "data"
+TEST_DATA_DIR = importlib.resources.files("tools") / "tests/data"
 
 
 def replace_dynamic_content(expected_text, actual_text, regex):
@@ -44,7 +45,8 @@ def compare_files(expected_file, actual_file):
 
 
 def test_build(tmpdir):
-    os.system(f"cp -r {TEST_DATA_DIR}/input {tmpdir}/")
+    shutil.copytree(TEST_DATA_DIR / "input", tmpdir, dirs_exist_ok=True)
+
     output_dir = Path(tmpdir) / "output"
     subprocess.run(
         [
