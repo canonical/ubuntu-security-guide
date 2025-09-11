@@ -14,7 +14,6 @@ OPENSCAP_REPORT_FILE = "usg-report-{DATE}.html"
 OPENSCAP_RESULTS_FILE = "usg-results-{DATE}.xml"
 OPENSCAP_LOG_FILE = "usg-log-{DATE}.log"
 OPENSCAP_FIX_FILE = "{PROFILE_ID}-{DATE}.sh"
-OPENSCAP_FIX_LOG_FILE = "remediation-{DATE}.log"
 OPENSCAP_OVAL_RESULTS_FILE = "ssg-{PRODUCT}-oval.xml.result-{DATE}.xml"
 OPENSCAP_OVAL_CPE_RESULTS_FILE = "ssg-{PRODUCT}-cpe-oval.xml.result-{DATE}.xml"
 OPENSCAP_SAVE_OVAL_RESULTS = False

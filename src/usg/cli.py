@@ -20,7 +20,7 @@ from usg.usg import USG
 from usg.utils import acquire_lock, validate_perms
 from usg.version import __version__
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 # shared format strings
@@ -436,14 +436,15 @@ def init_logging(log_path: Path, debug: bool) -> None:
         debug: Whether to enable debug logging
 
     """
-    if logger.hasHandlers():
-        logger.handlers.clear()
+    root = logging.getLogger()
+    if root.hasHandlers():
+        root.handlers.clear()
 
     if debug:
         sys.stderr.write(f"Debug logging enabled. Writing to {log_path}.\n")
 
     try:
-        log_handler: logging.Handler = logging.FileHandler(log_path)
+        log_handler = logging.FileHandler(log_path)
     except Exception:  # noqa: BLE001
         sys.stderr.write(
             f"Error: cannot open '{log_path}' for writing. Writing logs to stderr.\n"
@@ -451,24 +452,25 @@ def init_logging(log_path: Path, debug: bool) -> None:
         log_handler = logging.StreamHandler()
     else:
         # warning logs go to console always
-        warning_handler = logging.StreamHandler()
-        warning_handler.setLevel(logging.WARNING)
-        warning_handler.setFormatter(
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.WARNING)
+        console_handler.setFormatter(
             logging.Formatter("\n%(levelname)s: %(message)s\n")
         )
-        logger.addHandler(warning_handler)
+        root.addHandler(console_handler)
 
     if debug:
         fmt_string = "%(levelname)s - %(module)s %(funcName)s %(message)s"
         log_handler.setLevel(logging.DEBUG)
-        logger.setLevel(logging.DEBUG)
+        root.setLevel(logging.DEBUG)
     else:
         fmt_string = "%(levelname)s - %(message)s"
         log_handler.setLevel(logging.INFO)
-        logger.setLevel(logging.INFO)
+        root.setLevel(logging.INFO)
 
     log_handler.setFormatter(logging.Formatter(fmt_string))
-    logger.addHandler(log_handler)
+    root.addHandler(log_handler)
+
     logger.info(80 * "-")
     logger.info(f"Initialized logging on {time.ctime()}")
 
@@ -690,7 +692,8 @@ def main() -> None:
     except KeyboardInterrupt:
         error_exit("Caught keyboard interrupt. Exiting USG...")
     except Exception as e:  # noqa: BLE001
-        logger.info(e)
+        # info lvl is used to avoid dumping the traceback to the console handler
+        logger.info("Uncaught exception:", exc_info=e)
         error_exit(
             "\nUSG encountered an unknown error. "
             "See the log file and report the issue to "

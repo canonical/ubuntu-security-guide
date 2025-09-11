@@ -3,15 +3,13 @@
 import argparse
 import configparser
 import logging
-from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 
 from usg import constants
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
-DEFAULT_CONFIG: Mapping[str, Mapping[str, Any]] = {
+DEFAULT_CONFIG = {
     "cli": {
         "log_file": constants.CLI_LOG_FILE,
         "product": constants.DEFAULT_PRODUCT,
@@ -22,7 +20,6 @@ DEFAULT_CONFIG: Mapping[str, Mapping[str, Any]] = {
         "audit_results": constants.OPENSCAP_RESULTS_FILE,
         "audit_log": constants.OPENSCAP_LOG_FILE,
         "fix_script": constants.OPENSCAP_FIX_FILE,
-        "fix_log": constants.OPENSCAP_FIX_LOG_FILE,
         "audit_oval_results": constants.OPENSCAP_OVAL_RESULTS_FILE,
         "audit_oval_cpe_results": constants.OPENSCAP_OVAL_CPE_RESULTS_FILE,
         "save_oval_results": constants.OPENSCAP_SAVE_OVAL_RESULTS,
