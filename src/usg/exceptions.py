@@ -20,6 +20,10 @@ class BackendError(USGError):
     """Failure inside an auditing/remediation backend."""
 
 
+class BackendCommandError(USGError):
+    """Failure inside an auditing/remediation backend."""
+
+
 class TailoringFileError(USGError):
     """Malformed or unsupported tailoring file."""
 

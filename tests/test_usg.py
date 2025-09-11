@@ -7,9 +7,31 @@ from usg.exceptions import ProfileNotFoundError, USGError
 from usg.models import Benchmark, Benchmarks, Profile
 from usg.results import AuditResults, BackendArtifacts
 from usg.usg import USG
+import configparser
 
 TEST_DATE = "20250715.1200"
 TEST_DATETIME = datetime.datetime(2025, 7, 15, 12, 0)
+
+@pytest.fixture
+def dummy_config(tmp_path):
+    config = configparser.ConfigParser()
+    config.read_dict({
+        "cli": {
+            "log_file": tmp_path / "test.usg.log",
+            "product": "ubuntu2404",
+            "fix_only_failed": False,
+        },
+        "openscap_backend": {
+            "audit_report": "test-report-{PROFILE_ID}-{DATE}.html",
+            "audit_results": "test-results-{PROFILE_ID}-{DATE}.xml",
+            "audit_log": "test-log-{PROFILE_ID}-{DATE}.txt",
+            "fix_script": "test-fix-{PROFILE_ID}-{DATE}.sh",
+            "audit_oval_results": "test-oval-results.xml",
+            "audit_oval_cpe_results": "test-oval-cpe-results.xml",
+            "save_oval_results": True
+        }
+    })
+    return config
 
 
 @pytest.fixture
@@ -58,8 +80,8 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
             # mock fix script file, it should be moved to the
             # correct path by usg.generate_fix()
             artifacts = BackendArtifacts()
-            fname = "test_backend_fix_script_file.sh"
-            fix_script_file = tmp_path_factory.mktemp("fix_script") / fname
+            test_name = "test_backend_fix_script.sh"
+            fix_script_file = tmp_path_factory.mktemp("fix_script") / test_name
             fix_script_file.write_text("test_fix_script_contents")
             artifacts.add_artifact("fix_script", fix_script_file)
             return artifacts
@@ -77,12 +99,12 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
                 f"audit_results_file={ar_fname}"
             )
 
-            # mock fix log file, should be moved to the correct path by usg.fix()
+            # mock fix script file, should be moved to the correct path by usg.fix()
             artifacts = BackendArtifacts()
-            fname = "test_backend_fix_log_file.log"
-            fix_log_file = tmp_path_factory.mktemp("fix_log") / fname
-            fix_log_file.write_text("test_fix_log_contents")
-            artifacts.add_artifact("fix_log", fix_log_file)
+            test_name = "test_backend_fix_script.sh"
+            fix_script_file = tmp_path_factory.mktemp("script_fix") / test_name
+            fix_script_file.write_text("test_fix_script_contents")
+            artifacts.add_artifact("fix_script", fix_script_file)
             return artifacts
 
     from usg import usg as usg_module
@@ -242,7 +264,7 @@ def test_generate_fix(patch_usg, dummy_benchmarks, capsys):
     # test that generate fix runs and passess the correct arguments to the backend
     usg = USG()
     profile = usg.get_profile("cis_level1_server", "ubuntu2404")
-    usg.generate_fix(profile)
+    _ = usg.generate_fix(profile)
     stdout, _ = capsys.readouterr()
     assert stdout == (
         "generate_fix called with profile_id=cis_level1_server, "
@@ -250,11 +272,21 @@ def test_generate_fix(patch_usg, dummy_benchmarks, capsys):
     )
 
 
+def test_generate_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, capsys):
+    # test that generate-fix creates the correct artifact name and moves it to the correct path
+    usg = USG(dummy_config)
+    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    artifacts = usg.generate_fix(profile)
+    expected_name = "test-fix-cis_level1_server-20250715.1200.sh"
+    assert artifacts.get_by_type("fix_script").path.name == expected_name
+
+
+
 def test_fix(patch_usg, dummy_benchmarks, capsys):
     # test that fix runs and passess the correct arguments to the backend
     usg = USG()
     profile = usg.get_profile("cis_level1_server", "ubuntu2404")
-    artifacts = usg.fix(profile)
+    _ = usg.fix(profile)
     stdout, _ = capsys.readouterr()
     assert stdout == (
         "audit called with profile_id=cis_level1_server, "
@@ -262,7 +294,6 @@ def test_fix(patch_usg, dummy_benchmarks, capsys):
         "fix called with profile_id=cis_level1_server, "
         "tailoring_file=None, audit_results_file=None\n"
     )
-    assert isinstance(artifacts, BackendArtifacts)
 
 
 def test_fix_only_failed(patch_usg, dummy_benchmarks, capsys):
@@ -277,6 +308,16 @@ def test_fix_only_failed(patch_usg, dummy_benchmarks, capsys):
         "fix called with profile_id=cis_level1_server, "
         "tailoring_file=None, audit_results_file=test_backend_results_file.xml\n"
     )
+
+
+def test_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, capsys):
+    # test that fix creates the correct artifact name and moves it to the correct path
+    usg = USG(dummy_config)
+    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    artifacts = usg.fix(profile, only_failed=True)
+    expected_name = "test-fix-cis_level1_server-20250715.1200.sh"
+    assert artifacts.get_by_type("fix_script").path.name == expected_name
+
 
 
 def test_audit_correct_arguments(patch_usg, dummy_benchmarks, capsys):
