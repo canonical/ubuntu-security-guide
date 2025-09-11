@@ -2,16 +2,80 @@
 
 import logging
 import os
+import re
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import ClassVar
 
-from usg.exceptions import BackendError, PermValidationError
+from usg.exceptions import BackendCommandError, BackendError, PermValidationError
 from usg.results import AuditResults, BackendArtifacts
 from usg.utils import validate_perms
 
 logger = logging.getLogger(__name__)
+
+
+def run_cmd(
+    cmd: list,
+    cwd: Path | None,
+    capture_output: bool = True,
+    timeout: int | None = None,
+    allowed_return_codes: list[int] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+    """Call external command cmd and log and return completed process.
+
+    Args:
+        cmd: command list
+        cwd: cwd to pass to subprocess.run
+        capture_output: passed to subprocess.run
+                        (True: capture and return output,
+                         False: forward to console)
+        timeout: timeout to pass to subprocess.run
+        allowed_return_codes: raises BackendCommandError if process returns
+                               exitcode that is not in this list (defaults to [0])
+
+    Returns:
+        process: completed process
+
+    Raises:
+        BackendCommandError: if command is not found or if command returns
+                        non-zero return code and raise_on_error==True
+
+    """
+    allowed_return_codes = allowed_return_codes or [0]
+
+    cmd_str = " ".join(cmd)
+    logger.info(f"Calling command {cmd_str} in cwd {cwd}")
+    try:
+        process = subprocess.run(  # noqa: S603
+            cmd,
+            cwd=cwd,
+            timeout=timeout,
+            capture_output=capture_output,
+            check=False,
+            encoding="utf-8",
+            errors="replace",
+            text=True,
+            )
+    except (OSError, subprocess.TimeoutExpired) as e:
+        raise BackendCommandError(
+            f"Failed to execute command {cmd_str}: {e}"
+            ) from e
+
+    logger.debug(f"Return code: {process.returncode}")
+    if capture_output:
+        logger.debug(f"Command stdout: {process.stdout}")
+        logger.debug(f"Command stderr: {process.stderr}")
+    else:
+        logger.debug("Command stdout and stderr are streamed to console.")
+
+    if process.returncode not in allowed_return_codes:
+        logger.error(process.stderr or process.stdout)
+        raise BackendCommandError(
+            f"Backend command {cmd_str} resulted in return code "
+            f"{process.returncode}"
+            )
+    return process
 
 
 class OpenscapBackend:
@@ -22,8 +86,12 @@ class OpenscapBackend:
         "audit_results": "results.xml",
         "audit_log": "oscap.log",
         "fix_script": "fix.sh",
-        "fix_log": "fix.log",
     }
+
+    OSCAP_VERSION_PATTERN = re.compile(
+        r"^\s*OpenSCAP[\s]+command[\s]+line[\s]+tool[\s]+\(oscap\)[\s]+(\d+)\.(\d+)\.(\d+)\s*$",
+        flags=re.MULTILINE
+    )
 
     def __init__(
         self,
@@ -65,6 +133,31 @@ class OpenscapBackend:
                 f"Issue with temporary work directory: {e}",
             ) from e
 
+        self._oscap_version = self._get_oscap_version(self._oscap_path)
+
+
+    @staticmethod
+    def _get_oscap_version(oscap_bin_path: Path) -> tuple:
+        # run "oscap --version" and return tuple
+        logger.debug("Checking OpenSCAP version")
+
+        cmd = ["oscap", "--version"]
+        try:
+            p = run_cmd(cmd, cwd=None, timeout=60)
+        except BackendCommandError as e:
+            raise BackendError(
+                f"Failed to determine oscap version: {e}"
+            ) from e
+
+        try:
+            match = re.match(OpenscapBackend.OSCAP_VERSION_PATTERN, p.stdout)
+            return tuple(int(x) for x in match.groups())
+        except (AttributeError, IndexError):
+            raise BackendError(
+                "Failed to determine oscap version. Check debug logs."
+                ) from None
+
+
     def audit(
         self,
         cac_profile: str,
@@ -101,21 +194,28 @@ class OpenscapBackend:
 
         verbose_flag = "INFO" if debug else "WARNING"
 
-        cmd.extend(
-            [
-                "--verbose",
-                verbose_flag,
-                "--verbose-log-file",
-                str(log_path),
+        verbose_options = [
+                "--verbose", verbose_flag,
+                "--verbose-log-file", str(log_path),
+            ]
+
+        xccdf_options = [
                 "eval",
-                "--results",
-                str(results_path),
-                "--report",
-                str(report_path),
-                "--profile",
-                cac_profile,
-            ],
-        )
+                "--results", str(results_path),
+                "--report", str(report_path),
+                "--profile", cac_profile,
+            ]
+
+        # The cli is not backwards compatible with respect to verbose options.
+        # In 1.3.9 (Noble), the options work only on the base command (xccdf).
+        # In 1.2.17 (Jammy), the options work only on subcommands (eval),
+        # Addressed in https://github.com/OpenSCAP/openscap/pull/2220
+        if self._oscap_version < (1, 3, 0):
+            cmd.extend(xccdf_options)
+            cmd.extend(verbose_options)
+        else:
+            cmd.extend(verbose_options)
+            cmd.extend(xccdf_options)
 
         if oval_results or debug:
             cmd.extend(["--oval-results"])
@@ -126,12 +226,16 @@ class OpenscapBackend:
 
         cmd.append(str(self._datastream_path))
 
-        logger.debug(f"Running cmd: {' '.join(cmd)}")
         try:
-            subprocess.run(cmd, check=False, cwd=self._work_dir)  # noqa: S603
-        except subprocess.SubprocessError as e:
+            _ = run_cmd(
+                cmd,
+                cwd=self._work_dir,
+                capture_output=False,
+                allowed_return_codes=[0,2],
+                )
+        except BackendCommandError as e:
             raise BackendError(
-                f"Error running backend audit command: {e}",
+                f"Failed to run backend audit command: {e}",
             ) from e
 
         if not results_path.exists():
@@ -170,8 +274,18 @@ class OpenscapBackend:
                 logger.error("Expected OVAL CPE result file not found.")
 
         logger.debug("Audit completed, parsing results")
-        results = self._parse_audit_results(results_path)
+        try:
+            results = self._parse_audit_results(results_path)
+        except Exception as e:  # noqa: BLE001
+            # Result parsing is not critical and shouldn't break the app.
+            # Log error and return empty results on fail.
+            logger.error(
+                f"Failed to parse audit results: {e}. "
+                f"Check the result and report files."
+                )
+            results = AuditResults()
         return results, artifacts
+
 
     def _parse_audit_results(
         self,
@@ -244,6 +358,7 @@ class OpenscapBackend:
         logger.debug(f"Found {len(audit_results)} results")
         return audit_results
 
+
     def fix(
         self,
         cac_profile: str,
@@ -270,42 +385,31 @@ class OpenscapBackend:
         logger.debug(f"tailoring_file: {tailoring_file}")
         logger.debug(f"audit_results_file: {audit_results_file}")
 
-        fix_log_path = self._work_dir / self.ARTIFACT_FILENAMES["fix_log"]
+        # generate and run the fix script
+        artifacts = self.generate_fix(
+            cac_profile,
+            tailoring_file,
+            audit_results_file,
+        )
+        fix_path = artifacts.get_by_type("fix_script").path
 
+        cmd = ["bash", str(fix_path)]
         try:
-            # generate and run the fix script
-            artifacts = self.generate_fix(
-                cac_profile,
-                tailoring_file,
-                audit_results_file,
-            )
-            fix_path = artifacts.get_by_type("fix_script").path
-
-            cmd = ["/usr/bin/bash", str(fix_path)]
-
-            with Path(fix_log_path).open("w+") as fl:
-                logger.debug(f"Running cmd: {' '.join(cmd)}")
-                logger.debug(f"Writing output to: {fix_log_path}")
-                subprocess.run(  # noqa: S603
-                    cmd,
-                    stdout=fl,
-                    stderr=fl,
-                    text=True,
-                    check=False,
-                    cwd=self._work_dir,
+            _ = run_cmd(
+                cmd,
+                cwd=self._work_dir,
+                capture_output=False,
+                timeout=None,
+                allowed_return_codes=list(range(256))
                 )
-
-        except BackendError:
-            raise
-        except Exception as e:
-            logger.exception(e)
-            raise BackendError(f"Error running backend fix command: {e}") from e
+        except BackendCommandError as e:
+            raise BackendError(f"Failed to run backend fix command: {e}") from e
 
         logger.debug("Remediation finished")
         artifacts = BackendArtifacts()
         artifacts.add_artifact("fix_script", fix_path)
-        artifacts.add_artifact("fix_log", fix_log_path)
         return artifacts
+
 
     def generate_fix(
         self,
@@ -330,58 +434,37 @@ class OpenscapBackend:
         fix_path = self._work_dir / self.ARTIFACT_FILENAMES["fix_script"]
         cmd = [
             str(self._oscap_path),
-            "xccdf",
-            "generate",
-            "fix",
-            "--fix-type",
-            "bash",
-            "--output",
-            str(fix_path),
+            "xccdf", "generate", "fix",
+            "--fix-type", "bash",
+            "--output", str(fix_path),
         ]
 
         if tailoring_file is not None:
             tailoring_file = Path(tailoring_file).resolve()
-            cmd.extend(
-                [
-                    "--tailoring-file",
-                    str(tailoring_file),
-                ]
-            )
+            cmd.extend([
+                "--tailoring-file",
+                str(tailoring_file)
+                ])
 
         if audit_results_file is not None:
             audit_results_file = Path(audit_results_file).resolve()
-            cmd.extend(
-                [
-                    "--result-id",
-                    cac_profile,
-                    str(audit_results_file),
-                ]
-            )
+            cmd.extend([
+                "--result-id", cac_profile,
+                str(audit_results_file)
+                ])
         else:
-            cmd.extend(
-                [
-                    "--profile",
-                    cac_profile,
-                    str(self._datastream_path),
-                ]
-            )
+            cmd.extend([
+                "--profile", cac_profile,
+                str(self._datastream_path)
+                ])
 
-        logger.info(f"Running cmd: {' '.join(cmd)}")
-        p = subprocess.run(  # noqa: S603
-            cmd,
-            cwd=self._work_dir,
-            text=True,
-            check=False,
-        )
-
-        if p.returncode != 0:
-            logger.error(f"Stdout: {p.stdout}")
-            logger.error(f"Stderr: {p.stderr}")
-            logger.error(f"Returncode: {p.returncode}")
+        logger.debug(f"Writing remediation script {fix_path}")
+        try:
+            _ = run_cmd(cmd, cwd=self._work_dir)
+        except BackendCommandError as e:
             raise BackendError(
-                f"Openscap command failed with error code {p.returncode}",
-            )
-        logger.debug(f"Fix script generated at {fix_path}")
+                f"Failed to run backend generate-fix command: {e}"
+            ) from e
 
         artifacts = BackendArtifacts()
         artifacts.add_artifact("fix_script", fix_path)

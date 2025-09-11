@@ -11,20 +11,6 @@ TEST_PROFILE_ID = "test_profile"
 
 
 @pytest.fixture
-def dummy_config(tmp_path):
-    # Create a dummy config file
-    config = configparser.ConfigParser()
-    config["openscap_backend"] = {
-        "report_file": "test-report-{PROFILE_ID}-{DATE}.html",
-        "results_file": "test-results-{PROFILE_ID}-{DATE}.xml",
-        "log_file": "test-log-{PROFILE_ID}-{DATE}.txt",
-        "fix_file": "test-fix-{PROFILE_ID}-{DATE}.sh",
-        "fix_log_file": "test-fixlog-{PROFILE_ID}-{DATE}.txt",
-    }
-    return config
-
-
-@pytest.fixture
 def dummy_datastream(tmp_path):
     # Create a dummy datastream file
     ds_path = tmp_path / TEST_DS_NAME
@@ -69,14 +55,14 @@ if grep -qw "eval" <<< "$@"; then
 
 elif grep -qw "generate" <<< "$@"; then
     if grep -qw -- "--result-id" <<< "$@"; then
-        output_str="TEST FIX OUTPUT USING AUDIT RESULTS"
+        output_str="#TEST FIX OUTPUT USING AUDIT RESULTS"
     else
-        output_str="TEST FIX OUTPUT WITHOUT AUDIT RESULTS"
+        output_str="#TEST FIX OUTPUT WITHOUT AUDIT RESULTS"
     fi
     # create dummy fix file
     while [[ $# -gt 0 ]]; do
         if [[ "$1" == "--output" ]]; then
-            echo -e "#!/bin/bash\necho -n $output_str" > $2
+            echo -n "$output_str" > $2
         fi
         shift
     done
@@ -90,7 +76,7 @@ exit 0
 
 @pytest.fixture
 def oscap_backend(
-    monkeypatch, tmp_path, dummy_config, dummy_datastream, dummy_openscap_bin
+    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
 ):
     # Fixture to create a dummy OpenscapBackend
     # - Patch validate_perms to always pass
@@ -113,7 +99,7 @@ def oscap_backend(
 
 
 def test_oscap_backend_error_on_non_executable_oscap(
-    monkeypatch, tmp_path, dummy_config, dummy_datastream, dummy_openscap_bin
+    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
 ):
     # Test that a non-executable oscap fails
     os.chmod(dummy_openscap_bin, 0o644)
@@ -129,7 +115,7 @@ def test_oscap_backend_error_on_non_executable_oscap(
 
 
 def test_oscap_backend_error_on_bad_oscap_permissions(
-    monkeypatch, tmp_path, dummy_config, dummy_datastream, dummy_openscap_bin
+    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
 ):
     # Test that a bad permissions oscap fails
     os.chmod(dummy_openscap_bin, 0o777)
@@ -143,7 +129,7 @@ def test_oscap_backend_error_on_bad_oscap_permissions(
 
 
 def test_oscap_backend_error_on_bad_tmp_work_dir_permissions(
-    monkeypatch, tmp_path, dummy_config, dummy_datastream, dummy_openscap_bin
+    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
 ):
     # Test that a bad permissions tmp_work_dir fails
     os.chmod(dummy_openscap_bin, 0o700)
@@ -313,21 +299,19 @@ def test_parse_audit_results_notselected_rule(oscap_backend, tmp_path):
 # ---- OpenscapBackend fix tests ----
 
 
-def test_fix_runs_and_creates_script_and_log_file(oscap_backend):
-    # Test that fix runs, creates fix file and writes to log file
+def test_fix_runs_and_creates_script(oscap_backend, tmp_path):
+    # Test that fix runs and creates fix file
     artifacts = oscap_backend.fix(cac_profile=TEST_PROFILE_ID, tailoring_file=None)
     # The copy of the fix file should exist with correct content
     fix_file = artifacts.get_by_type("fix_script").path
-    assert fix_file.read_text().startswith("#!/bin/bash")
-    # The log file should exist with the correct content
-    fix_log_file = artifacts.get_by_type("fix_log").path
-    assert fix_log_file.read_text() == "TEST FIX OUTPUT WITHOUT AUDIT RESULTS"
+    print(fix_file)
+    print((tmp_path / "test_oscap_echo_args.stdout").read_text())
+
+    assert fix_file.read_text() == "#TEST FIX OUTPUT WITHOUT AUDIT RESULTS"
 
 
-def test_fix_runs_and_creates_script_and_log_file_with_audit_results(
-    tmp_path, oscap_backend
-):
-    # Test that fix runs, creates fix file and writes to log file
+def test_fix_runs_and_creates_script_with_audit_results(tmp_path, oscap_backend):
+    # Test that fix runs and creates fix file when passing in audit_results
     audit_results_file = tmp_path / "test_audit_results.xml"
     artifacts = oscap_backend.fix(
         cac_profile=TEST_PROFILE_ID,
@@ -336,10 +320,8 @@ def test_fix_runs_and_creates_script_and_log_file_with_audit_results(
     )
     # The fix file should exist with the correct content
     fix_file = artifacts.get_by_type("fix_script").path
-    assert fix_file.read_text().startswith("#!/bin/bash")
-    # The log file should exist with the correct content
-    fix_log_file = artifacts.get_by_type("fix_log").path
-    assert fix_log_file.read_text() == "TEST FIX OUTPUT USING AUDIT RESULTS"
+    assert fix_file.read_text() == "#TEST FIX OUTPUT USING AUDIT RESULTS"
+
 
 
 # ---- OpenscapBackend generate_fix tests ----
@@ -347,12 +329,10 @@ def test_fix_runs_and_creates_script_and_log_file_with_audit_results(
 
 def test_generate_fix_runs_and_creates_fix_file(oscap_backend):
     # Test that generate_fix runs and creates fix file
-    oscap_backend.generate_fix(cac_profile=TEST_PROFILE_ID, tailoring_file=None)
-
-
-def test_generate_fix_runs_and_creates_fix_file_with_tailoring(oscap_backend):
-    # Test that generate_fix runs and creates fix file with tailoring
-    oscap_backend.generate_fix(cac_profile=TEST_PROFILE_ID, tailoring_file=None)
+    artifacts = oscap_backend.generate_fix(cac_profile=TEST_PROFILE_ID, tailoring_file=None)
+    # The copy of the fix file should exist with correct content
+    fix_file = artifacts.get_by_type("fix_script").path
+    assert fix_file.read_text() == "#TEST FIX OUTPUT WITHOUT AUDIT RESULTS"
 
 
 def test_generate_fix_command_line_options(oscap_backend, tmp_path, dummy_datastream):
@@ -372,7 +352,6 @@ def test_generate_fix_command_line_options(oscap_backend, tmp_path, dummy_datast
         f"{dummy_datastream}"
     )
 
-
 def test_generate_fix_command_line_options_with_audit_results(oscap_backend, tmp_path):
     # Test that command line options are correct
     audit_results_file = tmp_path / "test_audit_results.xml"
@@ -390,6 +369,3 @@ def test_generate_fix_command_line_options_with_audit_results(oscap_backend, tmp
         f"--result-id {TEST_PROFILE_ID} "
         f"{audit_results_file}"
     )
-
-
-# TODO tests how config options affect output files
