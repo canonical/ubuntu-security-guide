@@ -50,7 +50,7 @@ class BackendArtifacts(list[BackendArtifact]):
             None
 
         """
-        logger.debug("Adding artifact of type {kind}: {path}")
+        logger.debug(f"Adding artifact of type {kind}: {path}")
         if [True for a in self if a.kind == kind]:
             raise ValueError(f"Artifact with kind {kind} already exists")
         self.append(BackendArtifact(kind, Path(path).resolve(), metadata or {}))
@@ -68,7 +68,7 @@ class BackendArtifacts(list[BackendArtifact]):
             ValueError: if no file is found
 
         """
-        logger.debug("Getting artifact by type: {kind}")
+        logger.debug(f"Getting artifact by type: {kind}")
         for file in self:
             if file.kind == kind:
                 return file
@@ -82,7 +82,7 @@ class BackendArtifacts(list[BackendArtifact]):
             parent_dir_filter: Path to the parent directory to filter the artifacts by
 
         """
-        logger.debug("Moving artifacts to {dir_path}")
+        logger.debug(f"Moving artifacts to {dir_path}")
         dir_path = Path(dir_path).resolve()
         parent_dir_filter = Path(parent_dir_filter).resolve()
         for artifact in self:
