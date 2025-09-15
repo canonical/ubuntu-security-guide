@@ -29,12 +29,14 @@ RUN cp -r /root/usg/tools/tests/data/expected/benchmarks/ /usr/share/usg-benchma
 RUN cd /root/usg \
     && rm -rf .pybuild \
     && pybuild --install-dir /usr/share/usg --dest-dir / \
-    && cp -r /root/usg/src/legacy /usr/share/usg \
-    && cp /root/usg/sbin/usg /sbin/usg \
+    && cp -r ./src/legacy /usr/share/usg \
+    && cp ./sbin/usg /usr/sbin/usg \
     && mkdir -p /var/lib/usg \
     && chmod 0700 /var/lib/usg \
-    && cp /root/usg/etc/usg.conf /etc/usg.conf \
-    && cp /root/usg/debian/usg.bash-completion /usr/share/bash-completion/completions/usg
+    && cp ./etc/usg.conf /etc/usg.conf \
+    && mkdir -p /etc/logrotate.d \
+    && cp ./etc/logrotate.d/usg /etc/logrotate.d/ \
+    && cp ./debian/usg.bash-completion /usr/share/bash-completion/completions/usg
     
 WORKDIR /root/usg
 

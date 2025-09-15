@@ -3,7 +3,7 @@
 from pathlib import Path
 
 # CLI configurable options
-CLI_LOG_FILE = "/var/lib/usg/usg.log"
+CLI_LOG_FILE = "/var/log/usg.log"
 DEFAULT_PRODUCT = "ubuntu2404"
 DEFAULT_FIX_ONLY_FAILED = False
 
