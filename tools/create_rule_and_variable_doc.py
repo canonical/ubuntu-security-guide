@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Ubuntu Security Guides
 # Copyright (C) 2025 Canonical Limited
@@ -16,9 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+if sys.version_info < (3,12):
+    sys.exit("Build tools require Python>=3.12")
+
 import logging
 import re
-import sys
 from pathlib import Path
 
 from lxml import etree
