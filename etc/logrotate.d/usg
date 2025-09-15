@@ -1,0 +1,6 @@
+/var/log/usg.log {
+    rotate 4
+    size 10M
+    compress
+    missingok
+}

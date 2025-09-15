@@ -2,20 +2,20 @@ Source: ubuntu-security-guides-enhanced
 Section: misc
 Priority: optional
 Maintainer: Ubuntu Security <security@ubuntu.com>
-Build-Depends:  pandoc (>= 2.5-3build2),
-                debhelper (>= 13),
+Build-Depends:  pandoc,
+                debhelper,
                 dh-python,
                 pybuild-plugin-pyproject,
                 python3-pytest,
                 python3-all,
                 dh-sequence-bash-completion
-Standards-Version: 3.9.7
+Standards-Version: 4.7.2
 
 Package: usg
 Architecture: all
-Depends: openscap-scanner, ${python3:Depends}, ${misc:Depends}
+Depends: usg-benchmarks, openscap-scanner, ${python3:Depends}, ${misc:Depends}
 Conflicts: usg-common
-Recommends: usg-benchmarks,usg-benchmarks-1
+Recommends: usg-benchmarks-1
 Description: usg tool application to work with Ubuntu Benchmarks
  This package contains a helper application to simplify the auditing
  and hardening executions.
