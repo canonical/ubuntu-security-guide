@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Ubuntu Security Guide
 # Copyright (C) 2025 Canonical Limited
@@ -15,6 +15,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+if sys.version_info < (3,12):
+    sys.exit("Build tools require Python>=3.12")
 
 import argparse
 import datetime
@@ -33,7 +37,6 @@ BENCHMARK_HREF_PATTERN = "/usr/share/usg-benchmarks/{benchmark_id}"
 
 class GenerateTailoringError(Exception):
     """General error when generating tailoring file."""
-
 
 def generate_tailoring_file(
     profile_path: Path,

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Ubuntu Security Guide
 # Copyright (C) 2022 Canonical Limited
@@ -16,17 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+if sys.version_info < (3,12):
+    sys.exit("Build tools require Python>=3.12")
+
 import argparse
+import configparser
 import datetime
 import gzip
 import json
 import logging
-import shutil
-import sys
-import tempfile
 from pathlib import Path
+import shutil
+import tempfile
+import tomllib
 
-import toml
 from create_rule_and_variable_doc import generate_markdown_doc
 from process_benchmarks import (
     BenchmarkProcessingError,
@@ -145,6 +149,7 @@ def mass_replacer(
     meat_placeholder: str,
     current_timestamp: datetime.datetime,
     file_lines: str,
+    usg_version: str,
 ) -> str:
     # This function significantly reduces code reuse and other potential
     # ickyness. "the_meat" refers to the main data that needs to be put
@@ -158,7 +163,7 @@ def mass_replacer(
     corrected_lines = (
         file_lines.replace("<<YEAR_PLACEHOLDER>>", str(current_year))
         .replace("<<DATE_PLACEHOLDER>>", str(current_datestring))
-        .replace("<<USG_BENCHMARKS_VERSION_PLACEHOLDER>>", _get_usg_version())
+        .replace("<<USG_BENCHMARKS_VERSION_PLACEHOLDER>>", usg_version)
         .replace(meat_placeholder, str(the_meat))
     )
 
@@ -171,6 +176,7 @@ def build_files(
     rules_doc: str,
     vars_doc: str,
     current_timestamp: datetime.datetime,
+    usg_version
 ) -> None:
     # An array of [path, data, placeholder]
     data_info = [
@@ -193,6 +199,7 @@ def build_files(
             specific_file_data[2],
             current_timestamp,
             template_data,
+            usg_version
         )
         try:
             output_path = output_dir / specific_file_data[0]
@@ -203,9 +210,29 @@ def build_files(
 
 
 def _get_usg_version() -> str:
-    pyproject_path = PROJECT_ROOT / "pyproject.toml"
-    pyproject_toml = toml.load(pyproject_path)
-    return pyproject_toml["project"]["version"]
+    logger.debug("Getting usg version from project setup files")
+    try:
+        pyproject_path = PROJECT_ROOT / "pyproject.toml"
+        with pyproject_path.open("rb") as f:
+            pyproject_toml = tomllib.load(f)
+        version = pyproject_toml["project"]["version"]
+    except (OSError, tomllib.TOMLDecodeError, KeyError) as e:
+        logger.warning(
+                "Could not determine project version from pyproject.toml. "
+                "If this is not the jammy branch, something is broken. "
+                "Trying setup.cfg..."
+                )
+        try:
+            cfg = configparser.ConfigParser()
+            with (PROJECT_ROOT / "setup.cfg").open() as f:
+                cfg.read_file(f)
+            version = cfg.get("metadata", "version")
+        except configparser.Error as e:
+            raise RuntimeError(
+                    "Failed to get usg version from pyproject.toml or setup.cfg"
+                    ) from e
+    logger.debug(f"Version: {version}")
+    return version
 
 
 def main() -> None:
@@ -263,6 +290,9 @@ def main() -> None:
     # Get the current timestamp
     current_timestamp = datetime.datetime.now(datetime.UTC).replace(microsecond=0)
 
+    # Get USG version
+    usg_version = _get_usg_version()
+
     logger.info("Running `process_benchmarks.py`")
     run_process_benchmarks(
         release_metadata_dir,
@@ -278,8 +308,18 @@ def main() -> None:
     logger.info(
         "Building the template files from all of the data that we've collected."
     )
-    build_files(templates_dir, args.output_dir, rules_doc, vars_doc, current_timestamp)
+    build_files(
+            templates_dir,
+            args.output_dir,
+            rules_doc,
+            vars_doc,
+            current_timestamp,
+            usg_version
+            )
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.exception(f"Uncaught exception raised during build:")
