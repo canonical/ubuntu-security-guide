@@ -161,7 +161,7 @@ CIS benchmark (see *INTERNET RESOURCES*).
 
 
 # INTERNET RESOURCES
-Ubuntu 24.04 CIS Benchmark v1.0.0: https://workbench.cisecurity.org/benchmarks/18959
+Ubuntu 22.04 CIS Benchmark: https://workbench.cisecurity.org/benchmarks/10430
 
 # SEE ALSO
 **usg**(8), **usg-rules**(7), **usg-variables**(7)
