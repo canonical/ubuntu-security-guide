@@ -69,7 +69,7 @@ def run_cmd(
 
     logger.debug(f"Return code: {process.returncode}")
     if capture_output:
-        logger.error(f"Command stdout: {process.stdout}")
+        logger.debug(f"Command stdout: {process.stdout}")
         logger.debug(f"Command stderr: {process.stderr}")
     else:
         logger.debug("Command stdout and stderr are streamed to console.")
