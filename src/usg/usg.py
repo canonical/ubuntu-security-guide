@@ -106,12 +106,11 @@ class USG:
             profile object matching criteria
 
         Raises:
-            ValueError: when no match is found
+            ProfileNotFoundError: when no match is found
 
         """
         logger.debug(f"Getting profile: {profile_id},{product},{benchmark_version}")
 
-        results = []
         for benchmark in self.benchmarks.values():
             for profile in benchmark.profiles.values():
                 logger.debug(f"Checking profile {profile}")
@@ -125,7 +124,7 @@ class USG:
                         logger.debug(
                             f"Found latest version of {profile_id} for {product}"
                         )
-                        results.append(profile)
+                        return profile
 
                     # return specific version if exists
                     if benchmark_version == benchmark.version:
@@ -138,7 +137,7 @@ class USG:
                                 f"Version {benchmark.version} of the benchmark profile "
                                 f"{profile_id} is deprecated."
                             )
-                        results.append(profile)
+                        return profile
 
                     # return compatible (non-breaking) version if exists
                     compatible_versions = list(benchmark.compatible_versions)
@@ -153,22 +152,13 @@ class USG:
                             f"{benchmark.version}. "
                             f" Automatically selecting the latter."
                         )
-                        results.append(profile)
+                        return profile
 
-        if len(results) == 0:
-            raise ProfileNotFoundError(
-                f"No profile found matching these criteria: "
-                f"profile={profile_id}, product={product}, "
-                f"version={benchmark_version}"
-            )
-        if len(results) > 1:
-            raise ProfileNotFoundError(
-                f"Multiple benchmark profiles found matching these criteria: "
-                f"profile={profile_id}, product={product}, "
-                f"version={benchmark_version}"
-            )
-
-        return results[0]
+        raise ProfileNotFoundError(
+            f"No profile found matching these criteria: "
+            f"profile={profile_id}, product={product}, "
+            f"version={benchmark_version}."
+        )
 
     def load_tailoring(
         self,
