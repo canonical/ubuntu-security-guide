@@ -90,7 +90,7 @@ test_cmd "grep -c BEGIN fix.sh"  0  "^2$"  ""
 
 
 # test that audit starts when using profile (full run is too long and useless, timeout at 2s)
-test_cmd "timeout 2 usg audit cis_level1_server"  124  "Starting Evaluation"  ""
+test_cmd "timeout 2 usg audit cis_level1_server"  124  "Rule.*xccdf_org.ssgproject.content_rule"  ""
 
 
 # test that the legacy usg fallback runs ok and fails due to missing benchmark bundle
