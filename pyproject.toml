@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "usg"
 version = "24.04.5"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 authors = [
     { name = "Miha Purg" },
     { name = "Alan Moore" },
