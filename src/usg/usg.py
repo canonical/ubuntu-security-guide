@@ -373,7 +373,7 @@ class USG:
 
         logger.info("Remediation finished.")
         for file in artifacts:
-            logger.info(f"'{file.kind}' file written to {file.path}")
+            logger.info(f"File '{file.kind}' written to {file.path}")
         return artifacts
 
     def audit(
@@ -424,6 +424,8 @@ class USG:
         shutil.rmtree(work_dir)
 
         logger.info("Audit completed.")
+        summary = ", ".join(results.get_summary().split("\n"))
+        logger.info(f"Results summary: {summary}")
         for file in artifacts:
             logger.info(f"'{file.kind}' file written to {file.path}")
 
