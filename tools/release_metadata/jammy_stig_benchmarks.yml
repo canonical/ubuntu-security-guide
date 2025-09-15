@@ -1,23 +1,21 @@
 general:
-  benchmark_type: CIS
+  benchmark_type: STIG
   product: ubuntu2204
   product_long: Ubuntu 22.04 LTS (Jammy Jellyfish)
 
 benchmark_releases:
-  - cac_tag: testing_asd #jammy-cis-1.12
+  - cac_tag: jammy-stig-1.5
     parent_tag: 
     breaking_release: False
     tailoring_version: 1
     cac_commit: 02edc5a1bcbf89a6cb7329e13de0aee3717aedab
     usg_version: 22.04.12
     benchmark_data:
-      version: v1.0.0
+      version: V2R3
       profiles:
-          cis_level1_server: {}
-          cis_level2_server: {}
-          cis_level1_workstation: {}
-          cis_level2_workstation: {}
+          stig:
+            legacy_id: disa_stig
       description: |
-          ComplianceAsCode implementation of CIS Ubuntu 22.04 LTS v1.0.0 benchmark.
+          ComplianceAsCode implementation of STIG Ubuntu 22.04 LTS V2R3 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
-      reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      reference_url: https://public.cyber.mil/stigs/downloads/
