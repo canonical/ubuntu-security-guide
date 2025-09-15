@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 def run_cmd(
-    cmd: list,
-    cwd: Path | None,
+    cmd: list[str],
+    cwd: Path,
     capture_output: bool = True,
-    timeout: int | None = None,
+    timeout: float | None = None,
     allowed_return_codes: list[int] | None = None,
     ) -> subprocess.CompletedProcess[str]:
     """Call external command cmd and log and return completed process.
@@ -44,8 +44,13 @@ def run_cmd(
     """
     allowed_return_codes = allowed_return_codes or [0]
 
+    cmd = list(map(str, cmd))
     cmd_str = " ".join(cmd)
-    logger.info(f"Calling command {cmd_str} in cwd {cwd}")
+    logger.info(f"Calling command '{cmd_str}'")
+    logger.debug(
+        f"CWD: {cwd}, timeout: {timeout}, "
+        f"capture_output: {capture_output}"
+        )
     try:
         process = subprocess.run(  # noqa: S603
             cmd,
@@ -64,17 +69,17 @@ def run_cmd(
 
     logger.debug(f"Return code: {process.returncode}")
     if capture_output:
-        logger.debug(f"Command stdout: {process.stdout}")
+        logger.error(f"Command stdout: {process.stdout}")
         logger.debug(f"Command stderr: {process.stderr}")
     else:
         logger.debug("Command stdout and stderr are streamed to console.")
 
     if process.returncode not in allowed_return_codes:
-        logger.error(process.stderr or process.stdout)
         raise BackendCommandError(
-            f"Backend command {cmd_str} resulted in return code "
+            f"Backend command '{cmd_str}' exited with return code "
             f"{process.returncode}"
             )
+    logger.info("Command finished successfully.")
     return process
 
 
@@ -133,26 +138,31 @@ class OpenscapBackend:
                 f"Issue with temporary work directory: {e}",
             ) from e
 
-        self._oscap_version = self._get_oscap_version(self._oscap_path)
+        self._oscap_version = self._get_oscap_version(
+            self._oscap_path, self._work_dir
+            )
 
 
     @staticmethod
-    def _get_oscap_version(oscap_bin_path: Path) -> tuple:
+    def _get_oscap_version(oscap_bin_path: Path, cwd: Path) -> tuple:
         # run "oscap --version" and return tuple
         logger.debug("Checking OpenSCAP version")
 
-        cmd = ["oscap", "--version"]
+        cmd = [str(oscap_bin_path), "--version"]
         try:
-            p = run_cmd(cmd, cwd=None, timeout=60)
+            process = run_cmd(cmd, cwd=cwd, timeout=60)
         except BackendCommandError as e:
             raise BackendError(
                 f"Failed to determine oscap version: {e}"
             ) from e
 
         try:
-            match = re.match(OpenscapBackend.OSCAP_VERSION_PATTERN, p.stdout)
-            return tuple(int(x) for x in match.groups())
-        except (AttributeError, IndexError):
+            match = re.match(
+                OpenscapBackend.OSCAP_VERSION_PATTERN, process.stdout
+                )
+            version_s = match.group(1, 2, 3) # pyright: ignore[reportOptionalMemberAccess]
+            return tuple(map(int, version_s))
+        except (AttributeError, IndexError, ValueError):
             raise BackendError(
                 "Failed to determine oscap version. Check debug logs."
                 ) from None
