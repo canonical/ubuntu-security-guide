@@ -4,7 +4,7 @@ general:
   product_long: Ubuntu 22.04 LTS (Jammy Jellyfish)
 
 benchmark_releases:
-  - cac_tag: testing_asd #noble-stig-1.5
+  - cac_tag: jammy-stig-1.5
     parent_tag: 
     breaking_release: False
     tailoring_version: 1
