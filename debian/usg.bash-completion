@@ -1,5 +1,3 @@
-#!/bin/bash
-
 _usg_completions() {
 
     # Filter out options already in COMP_LINE
@@ -129,5 +127,4 @@ _usg_completions() {
 }
 
 complete -o default -o nosort -F _usg_completions usg
-
 
