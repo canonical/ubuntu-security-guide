@@ -3,27 +3,27 @@ Section: misc
 Priority: optional
 Maintainer: Ubuntu Security <security@ubuntu.com>
 Build-Depends:  pandoc,
-                debhelper,
+                debhelper (>= 13),
                 dh-python,
                 pybuild-plugin-pyproject,
                 python3-pytest,
                 python3-all,
                 dh-sequence-bash-completion
-Standards-Version: 4.7.2
+Standards-Version: 4.6.2
 
 Package: usg
 Architecture: all
 Depends: usg-benchmarks, openscap-scanner, ${python3:Depends}, ${misc:Depends}
 Conflicts: usg-common
 Recommends: usg-benchmarks-1
-Description: usg tool application to work with Ubuntu Benchmarks
+Description: tool for security auditing and hardening
  This package contains a helper application to simplify the auditing
  and hardening executions.
 
 Package: usg-benchmarks
 Architecture: all
-Depends: usg, ${misc:Depends}
-Description: SCAP content for CIS Ubuntu Benchmarks
+Depends: ${misc:Depends}
+Description: SCAP content for CIS and STIG Ubuntu Benchmarks
  This package contains SCAP content to support the automation of
  compliance evaluation for CIS and DISA STIG.
  .
