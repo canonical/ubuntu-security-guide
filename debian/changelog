@@ -1,3 +1,13 @@
+ubuntu-security-guides-enhanced (20.04.24) focal; urgency=medium
+
+  * CaC content:
+    - Add oval check to rule prevent_direct_root_logins
+    - Fix config priority for rule rsyslog_filecreatemode (LP: #2107530)
+    - Fix maxdepth in file_owner and file_groupowner templates
+    - Disable symlink dereference in file_owner and file_groupowner templates
+
+ -- Miha Purg <miha.purg@canonical.com>  Thu, 25 Sep 2025 14:50:01 +0200
+
 ubuntu-security-guides-enhanced (20.04.23) focal; urgency=medium
 
   * CaC content:
