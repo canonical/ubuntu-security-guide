@@ -26,13 +26,13 @@ Available profiles: see **usg list**
 **usg**, short for Ubuntu Security Guide, is a tool to audit and comply with security guides such as CIS and DISA-STIG.
 The tool is designed to carry the basic operations needed to maintain and audit compliance on a system, while using the powerful OpenSCAP engine.
 
-**usg** provides several commands, **list**, **info**, **audit**, **fix**, **generate-fix** and **generate-tailoring**, which are described in the **commands** section.
+usg provides several commands, **list**, **info**, **audit**, **fix**, **generate-fix** and **generate-tailoring**, which are described in the **commands** section.
 
-Running **usg** without any command line parameters cause **usg** to display its usage message.
+Running usg without any command line parameters will display usage.
 
 # COMMANDS
 **usg list**
-: Lists available profiles. Only supported versions are shown by default. Use **--all** to list deprecated versions.
+: Lists available profiles. Only supported versions are shown by default. Use **`--all`** to list deprecated versions.
 
 **usg info**
 : Shows information about a specific profile or tailoring file.
@@ -57,14 +57,14 @@ Running **usg** without any command line parameters cause **usg** to display its
 : Filepath of the remediate file generated. Only works when the command is **generate-fix**.
 
 **`--tailoring-file`**
-: Sets the path to the tailoring-file, which contains a set of rules-selectors and value-customization elements, effectively letting the user customize the rules which will be applied. If that option is used, then the **profile** parameter is **ignored**! This option can be used for both commands. Check the **Tailoring Files** section for more info on them.
+: Sets the path to the tailoring-file, which contains a set of rules-selectors and value-customization elements, effectively letting the user customize the rules which will be applied. If that option is used, then the profile parameter is ignored! This option can be used for both commands. Check the **Tailoring Files** section for more info on them.
 
 # EXAMPLES
 1. list all profiles, including deprecated versions
 
     `# usg list --all`
 
-2. show information about tailoring file **tailoring.xml**
+2. show information about tailoring file tailoring.xml
 
     `# usg info -t tailoring.xml`
 
@@ -90,7 +90,7 @@ Running **usg** without any command line parameters cause **usg** to display its
 
 
 # TAILORING FILES
-**usg** rules are associated with **usg profiles** (and their benchmark counterparts) on datastream files used by OpenSCAP, which also contain the parameters used by the rules.
+usg rules are associated with **usg profiles** (and their benchmark counterparts) on datastream files used by OpenSCAP, which also contain the parameters used by the rules.
 The datastream files, however, are quite verbose and complicated and usg hides the complexity of dealing with them. **Tailoring files** is the way to customize profiles with usg.
 
 A tailoring file is a XML file which contains the list of rules that are used in auditing and fixing with their corresponding parameters.
@@ -106,7 +106,7 @@ This element sets if a given **usg rule** will be audited (and/or fixed, dependi
 ```
 
 ## the xccdf:set-value element
-This element sets a variable associated with a given **usg rule**. The variable will change the way the rule executes in a specific way for that rule. So, as an example, if the administrator wants to customize his tailoring file to change the *var\_sshd\_set\_loglevel* variable to the value 'VERBOSE', its associated *xccdf:set-value* element must be set as below:
+This element sets a variable associated with a given usg rule. The variable will change the way the rule executes in a specific way for that rule. So, as an example, if the administrator wants to customize his tailoring file to change the *var\_sshd\_set\_loglevel* variable to the value 'VERBOSE', its associated *xccdf:set-value* element must be set as below:
 
 ```
 <xccdf:set-value idref="var_sshd_set_loglevel">VERBOSE</xccdf:set-value>
@@ -131,7 +131,7 @@ The *usg* tool depends on the *usg-benchmarks* package to be able to execute its
 # TAILORING FILES COMPATIBILITY
 Tailoring files are tied to a major version of a profile and are incompatible with other versions.
 
-The version is encoded in the *benchmark* element of a tailoring file in the attribute **href** and is used internally by the *usg* tool to map the tailoring file to a compatible datastream file.
+The version is encoded in the *benchmark* element of a tailoring file in the attribute *href* and is used internally by the usg tool to map the tailoring file to a compatible datastream file.
 Take the following snippet of a tailoring file as an example:
 
 ```
@@ -148,12 +148,12 @@ between backwards incompatible (major) releases of the profile. Such a release i
 contain significant modifications to the remediation, and would result in configuration changes that have not been evaluated by the end-user when
 used with existing tailoring files (e.g. any added rules would be selected by default as they are not explicitly unselected in the tailoring file).
 
-*Note*: The **href** attribute in older versions of tailoring files contains a URL to */usg/share/ubuntu-scap-security-guides* which *usg* internally remaps to the correct benchmark ID.
+**Note**: The *href* attribute in older versions of tailoring files contains a URL to `/usg/share/ubuntu-scap-security-guides` which usg internally remaps to the correct benchmark ID.
 
 # FILES
 /etc/usg.conf
   
-  Main configuration file
+> Main configuration file
 
 /var/lib/usg/usg.log
 
@@ -181,18 +181,18 @@ On the other hand, **usg rules** are sets of specific instructions, described in
 A **benchmark rule is implemented by one or more usg rules**.
 
 ## What are Profiles?
-Profiles are set of **usg rules** which, together, implement the rules described by a specific benchmark (CIS or STIG). For instance, the profile *cis_level1_server* states that the *usg rules* implement audit and remediation instructions to make a system as compliant as possible with the Ubuntu 20.04 CIS Benchmark, specifically, with its CIS level 1 server set of benchmark rules (which is also called a profile by the CIS).
+Profiles are set of usg rules which, together, implement the rules described by a specific benchmark (CIS or STIG). For instance, the profile *cis_level1_server* states that the usg rules implement audit and remediation instructions to make a system as compliant as possible with the Ubuntu 20.04 CIS Benchmark, specifically, with its CIS level 1 server set of benchmark rules (which is also called a profile by the CIS).
 
 Note that the DISA-STIG benchmark only has a single profile, because it's thought to run in a broad set of environments.
 
-If you desire to customize the rules which are ran in a given profile or customize their parameters, use the **`--tailoring-file`** option to point **usg** to **Tailoring files**.
+If you desire to customize the rules which are ran in a given profile or customize their parameters, use the **`--tailoring-file`** option to point usg to a tailoring file.
 
-Note, however, that if the **tailoring-file** option is not provided, the user **must** provide a profile name for the **usg** tool!
+Note, however, that if the `--tailoring-file` option is not provided, the user must provide a profile name for the usg tool!
 
 See more info on **Tailoring Files** on the same-name section.
 
 ### Additional Info on Profiles
-CIS Profiles (**cis_level1_server**, **cis_level2_server**, **cis_level1_workstation**, **cis_level2_workstation**, **cis_level1_server_ec2)
+CIS Profiles (**cis_level1_server**, **cis_level2_server**, **cis_level1_workstation**, **cis_level2_workstation**, **cis_level1_server_ec2**)
 : Level 1 profiles have smaller usability impact than their level 2 counterparts.
 : Server profiles are made for Canonical Ubuntu Server images, while Workstation profiles are made for Workstation images, which generally implies the use of a graphical interface.
 
