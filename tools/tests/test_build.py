@@ -45,7 +45,7 @@ def compare_files(expected_file, actual_file):
         assert actual_text_subbed == expected_text_subbed
 
 
-@pytest.mark.parametrize("test_product", [("ubuntu2404"),])
+@pytest.mark.parametrize("test_product", [("ubuntu2404"), ("ubuntu2204"),])
 def test_build_24_04(test_product, tmpdir):
 
     test_data_dir = TEST_DATA_DIR / test_product
@@ -55,7 +55,7 @@ def test_build_24_04(test_product, tmpdir):
         [
             BUILD_SCRIPT_PATH,
             "--test-data", test_data_dir,
-            "--debug",
+#            "--debug",
             "--output-dir",
             output_dir,
         ],

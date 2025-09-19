@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2" id="xccdf_scap-workbench_tailoring_default">
+  <benchmark href="/usr/share/usg-benchmarks/ubuntu2204_CIS_1"/>
+  <version time="2025-09-19T09:44:09+00:00">1</version>
+  <Profile id="xccdf_org.ssgproject.content_profile_cis_level1_workstation_customized" extends="xccdf_org.ssgproject.content_profile_cis_level1_workstation">
+    <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">CIS Ubuntu 22.04 Level 1 Workstation Benchmark [CUSTOMIZED]</title>
+    <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">This baseline aligns to the Center for Internet Security Ubuntu 22.04 LTS Benchmark, v1.0.0, released 08-30-2022.</description>
+    <!--_Profile_Rules_And_Variables_: Profile rules and variables not belonging to a specific control-->
+    <select idref="xccdf_org.ssgproject.content_rule_service_autofs_disabled" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_kernel_module_usb-storage_disabled" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_disable_automount" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_disable_automount_open" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_xorg-x11-server-common_removed" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_cups_disabled" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_cups_removed" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_wireless_disable_interfaces" selected="false"/>
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_x11_forwarding" selected="true"/>
+  </Profile>
+</Tailoring>
