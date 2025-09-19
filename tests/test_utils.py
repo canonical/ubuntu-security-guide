@@ -1,9 +1,10 @@
 import os
 
 import pytest
+import logging
 
-from usg import utils
-from usg.exceptions import IntegrityError, PermValidationError
+from usg import utils, constants
+from usg.exceptions import IntegrityError, PermValidationError, LockError
 
 
 def test_verify_integrity_success(tmp_path):
@@ -124,16 +125,26 @@ def test_validate_perms_not_owned(tmp_path, monkeypatch):
     with pytest.raises(PermValidationError):
         utils.validate_perms(file)
 
-
 def test_aqcuire_lock_fail(monkeypatch, tmp_path):
-    from usg import constants
-    from usg.utils import acquire_lock
+    # test that failure to acquire lock raises an exception
     tmp_lock = tmp_path / "lockfile"
     monkeypatch.setattr(constants, "LOCK_PATH", tmp_lock)
 
-    acquire_lock()
+    utils.acquire_lock()
     assert tmp_lock.exists()
 
-    with pytest.raises(SystemExit, match="Failed to acquire lock"):
-        acquire_lock()
+    with pytest.raises(LockError, match="Failed to acquire lock"):
+        utils.acquire_lock()
+
+def test_aqcuire_lock_failed_creation(monkeypatch, tmp_path, caplog):
+    # test that failure to create lock file doesnt fail the program
+    tmp_lock = tmp_path / "nonwritabledir/lockfile2"
+    tmp_lock.parent.mkdir(mode=0o500, parents=True, exist_ok=True)
+    monkeypatch.setattr(constants, "LOCK_PATH", tmp_lock)
+
+    with caplog.at_level(logging.ERROR):
+        utils.acquire_lock()
+        assert "Failed to create lock file" in caplog.text
+    assert not tmp_lock.exists()
+
 

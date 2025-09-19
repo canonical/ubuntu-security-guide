@@ -28,6 +28,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     mp.setattr(constants_module, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
     mp.setattr(constants_module, "STATE_DIR", tmp_state_dir)
     mp.setattr(constants_module, "CLI_STATE_FILE", tmp_state_dir / "state.json")
+    mp.setattr(constants_module, "LOCK_PATH", tmp_state_dir / "usg.lock")
 
     from usg import usg as usg_module
 
@@ -341,6 +342,7 @@ def test_benchmark_version_state_integration(patch_usg_and_cli, capsys, monkeypa
     importlib.reload(cli)
     monkeypatch.setattr(cli, "USG", DummyUSG)
     monkeypatch.setattr(cli.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(cli, "acquire_lock", lambda: None)
 
     from usg.cli import load_benchmark_version_state
 

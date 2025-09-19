@@ -11,7 +11,9 @@ import stat
 from pathlib import Path
 
 from usg import constants
-from usg.exceptions import IntegrityError, MissingFileError, PermValidationError
+from usg.exceptions import (
+        IntegrityError, MissingFileError, PermValidationError, LockError
+        )
 
 logger = logging.getLogger(__name__)
 
@@ -108,11 +110,17 @@ def acquire_lock() -> None:
     """Aquire lock for running process."""
     lock_path = constants.LOCK_PATH
     mode = 0o600
-    fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, mode)
+    try:
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, mode)
+    except OSError as e:
+        # don't fail completely if file can't be created
+        logger.error(f"Failed to create lock file: {e}")
+        return
+
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
-        raise SystemExit(  # noqa: B904
+        raise LockError(
             f"Failed to acquire lock {lock_path}. "
             f"Is another instance of USG running?"
             )
