@@ -45,11 +45,10 @@ TEMPLATES_DIR = Path("templates")
 TEMPLATES_TAILORING_SUBDIR = Path("tailoring")
 BENCHMARKS_DIR = Path("benchmarks")
 
-TEST_INPUTS_DIR = Path("tools/tests/data/input")
-TEST_TEMPLATES_DIR = TEST_INPUTS_DIR / "templates"
-TEST_RELEASE_METADATA_DIR = TEST_INPUTS_DIR / "tools/release_metadata"
-TEST_PB_PREBUILT_DATA_DIR = (
-    TEST_INPUTS_DIR / "tools/release_metadata/process_benchmarks_mock_data"
+TEST_TEMPLATES_DIR = Path("input/templates")
+TEST_RELEASE_METADATA_DIR = Path("input/tools/release_metadata")
+TEST_PB_PREBUILT_DATA_DIR = Path(
+    "input/tools/release_metadata/process_benchmarks_mock_data"
 )
 
 
@@ -80,11 +79,11 @@ def run_process_benchmarks(
         f"Running process_benchmarks() with output_benchmarks_dir: {output_benchmarks_dir}"
     )
 
-    release_metadata_files = list(release_metadata_dir.glob("*.yml"))
+    release_metadata_files = list(release_metadata_dir.glob("*.y*ml"))
 
     logger.debug(f"Found benchmark metadata files: {release_metadata_files}")
     if not release_metadata_files:
-        exit_error(f"No yml files fonud in ${RELEASE_METADATA_DIR}")
+        exit_error(f"No yaml files found in {release_metadata_dir}")
 
     try:
         process_benchmarks(
@@ -243,11 +242,9 @@ def main() -> None:
         help="Path to up-to-date ComplianceAsCode repo."
         )
     mutex_group.add_argument(
-        "-p", "--pre-built-data-dir",
-        type=Path,
-        help="Dir containing pre-built data (also used for testing)",
-    )
-    mutex_group.add_argument("--test-mode", action="store_true")
+            "--test-data", type=Path,
+            help="Run in test mode using the data in specified directory (e.g. tools/tests/data/ubuntu2404)"
+            )
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument(
         "-o", "--output-dir", type=Path, default=PROJECT_ROOT, help="Root output dir"
@@ -260,23 +257,16 @@ def main() -> None:
         stream=sys.stdout, level=loglevel, format="%(levelname)s: %(message)s"
     )
 
-    if args.test_mode:
-        if args.complianceascode_repo_dir is not None:
-            sys.exit("Fatal: --test-mode can only be used with --pre-build-data-dir")
-        templates_dir = PROJECT_ROOT / TEST_TEMPLATES_DIR
-        release_metadata_dir = PROJECT_ROOT / TEST_RELEASE_METADATA_DIR
-        pb_pre_build_data_dir = PROJECT_ROOT / TEST_PB_PREBUILT_DATA_DIR
+    if args.test_data:
+        templates_dir = args.test_data / TEST_TEMPLATES_DIR
+        release_metadata_dir = args.test_data / TEST_RELEASE_METADATA_DIR
+        pb_pre_build_data_dir = args.test_data / TEST_PB_PREBUILT_DATA_DIR
         cac_repo_dir = None
     else:
         templates_dir = PROJECT_ROOT / TEMPLATES_DIR
         release_metadata_dir = PROJECT_ROOT / RELEASE_METADATA_DIR
-        pb_pre_build_data_dir = (
-            args.pre_built_data_dir.resolve()
-            if args.pre_built_data_dir
-            else None
-        )
-        if args.complianceascode_repo_dir is not None:
-            cac_repo_dir = Path(args.complianceascode_repo_dir).resolve()
+        pb_pre_build_data_dir = None
+        cac_repo_dir = Path(args.complianceascode_repo_dir).resolve()
 
     output_benchmarks_dir = args.output_dir.resolve() / BENCHMARKS_DIR
 

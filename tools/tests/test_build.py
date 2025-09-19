@@ -5,6 +5,7 @@ import re
 import subprocess
 import shutil
 from pathlib import Path
+import pytest
 
 BUILD_SCRIPT_PATH = Path(__file__).resolve().parent.parent / "build.py"
 TEST_DATA_DIR = importlib.resources.files("tools") / "tests/data"
@@ -44,26 +45,30 @@ def compare_files(expected_file, actual_file):
         assert actual_text_subbed == expected_text_subbed
 
 
-def test_build(tmpdir):
-    shutil.copytree(TEST_DATA_DIR / "input", tmpdir, dirs_exist_ok=True)
+@pytest.mark.parametrize("test_product", [("ubuntu2404"),])
+def test_build_24_04(test_product, tmpdir):
 
+    test_data_dir = TEST_DATA_DIR / test_product
     output_dir = Path(tmpdir) / "output"
-    subprocess.run(
+
+    p = subprocess.run(
         [
             BUILD_SCRIPT_PATH,
-            "--test-mode",
-            # "--debug",
+            "--test-data", test_data_dir,
+            "--debug",
             "--output-dir",
             output_dir,
         ],
         check=False,
     )
+    assert p.returncode == 0, f"Build process failed with RC: {p.returncode}"
 
-    expected_output_dir = TEST_DATA_DIR / "expected"
+    expected_output_dir = TEST_DATA_DIR / test_product / "expected"
     expected_output_files = sorted(list(expected_output_dir.rglob("*")))
     actual_output_files = sorted(list(output_dir.rglob("*")))
 
-    assert len(expected_output_files) == len(actual_output_files)
+    assert len(expected_output_files) == len(actual_output_files), \
+            "Number of built files does not match expected number"
     for expected_file, actual_file in zip(
         expected_output_files, actual_output_files, strict=False
     ):
