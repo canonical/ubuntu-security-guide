@@ -493,7 +493,10 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
         prog="usg",
     )
 
-    parser.add_argument("-V", "--version", action="version", version=__version__)
+    # Add leading zero (removed by python packaging)
+    # to be consistent with usg package versioning.
+    display_version = __version__.replace(".4.", ".04.")
+    parser.add_argument("-V", "--version", action="version", version=display_version)
 
     subparsers = parser.add_subparsers(dest="command", required=False)
     cmd_parsers = {}

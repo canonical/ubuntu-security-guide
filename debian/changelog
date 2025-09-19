@@ -1,8 +1,8 @@
-ubuntu-security-guides-enhanced (24.04.5ubuntu1) noble; urgency=medium
+ubuntu-security-guides-enhanced (24.04.6) noble; urgency=medium
 
   * testing python rewrite of USG
 
- -- Miha Purg <miha.purg@canonical.com>  Wed, 13 Aug 2025 16:58:09 +0200
+ -- Miha Purg <miha.purg@canonical.com>  Fri, 19 Sep 2025 15:36:38 +0200
 
 ubuntu-security-guides-enhanced (24.04.5) noble; urgency=medium
 
