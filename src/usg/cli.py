@@ -14,7 +14,7 @@ from pathlib import Path
 
 from usg import constants
 from usg.config import load_config, override_config_with_cli_args
-from usg.exceptions import StateFileError, USGError
+from usg.exceptions import StateFileError, USGError, LockError
 from usg.models import Benchmark, Profile, TailoringFile
 from usg.usg import USG
 from usg.utils import acquire_lock, validate_perms
@@ -645,6 +645,10 @@ def cli() -> None:
     """Load configuration, parse args, run USG commands."""
     if os.geteuid() != 0:
         error_exit("Error: this script must be run with super-user privileges.")
+    try:
+        acquire_lock()
+    except LockError as e:
+        error_exit(str(e))
 
     # load config from defaults or file if exists
     config = load_config(constants.CONFIG_PATH)
@@ -686,7 +690,6 @@ def cli() -> None:
 
 def main() -> None:
     """CLI entry point. Call cli() and catch runtime errors."""
-    acquire_lock()
     try:
         cli()
     except KeyboardInterrupt:
