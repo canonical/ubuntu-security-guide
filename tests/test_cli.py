@@ -122,7 +122,7 @@ def test_cli_non_root_user(monkeypatch, capsys):
         # base commands
         ([], "Available commands are:", None, 2),
         (["--help"], "Available commands are:", None, 0),
-        (["--version"], __version__, None, 0),
+        (["--version"], __version__.replace(".4.", ".04."), None, 0),
         (["notacommand"], None, "invalid choice:", 2),
         # list command
         (["list"], "Listing available profiles...", None, None),
