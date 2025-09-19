@@ -446,11 +446,21 @@ def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> No
     ):
         logger.debug(f"Calling cmd: {cmd}")
         try:
-            subprocess.check_call(cmd, cwd=cac_repo_dir)  # noqa: S603
+            p = subprocess.run(
+                    cmd,
+                    cwd=cac_repo_dir,
+                    check=True,
+                    text=True,
+                    capture_output=True
+                    )  # noqa: S603
+            logger.debug(f"STDOUT: {p.stdout}")
+            logger.debug(f"STDERR: {p.stderr}")
         except subprocess.CalledProcessError as e:
+            logger.error(p.stderr)
             raise BenchmarkProcessingError(
                 f"Failed to checkout tag {cac_tag} in repo {cac_repo_dir}: {e}"
                 ) from e
+
 
     # get timestamp of last commit
     env = os.environ.copy()
@@ -469,16 +479,27 @@ def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> No
 
     # build CaC product
     env["SOURCE_DATE_EPOCH"] = commit_timestamp
-    cmd = [cac_repo_dir/"build_product", cac_product]
+    env["ADDITIONAL_CMAKE_OPTIONS"] = "-DSSG_SCE_ENABLED:BOOL=ON -DSSG_OVAL_SCHEMATRON_VALIDATION_ENABLED=OFF"
+    cmd = [cac_repo_dir/"build_product", "-j8", "-o5.11", cac_product]
 
     try:
         logger.debug(f"Calling cmd: {cmd}")
-        subprocess.check_call(cmd, cwd=cac_repo_dir, env=env)  # noqa: S603
+        p = subprocess.run(
+                cmd,
+                cwd=cac_repo_dir,
+                env=env,
+                check=True,
+                text=True,
+                capture_output=True
+                )  # noqa: S603
     except subprocess.CalledProcessError as e:
+        logger.error(p.stderr)
         raise BenchmarkProcessingError(
             f"Failed to build repo {cac_repo_dir}: {e}"
             ) from e
 
+    logger.debug(f"STDOUT: {p.stdout}")
+    logger.debug(f"STDERR: {p.stderr}")
     logger.debug("Successfully built CaC release {cac_tag}")
 
 
@@ -548,7 +569,7 @@ def _build_active_releases(
     # - generate tailoring files
     # - generate checksums
 
-    logger.debug(f"Building {len(all_active_releases)} active releases...")
+    logger.info(f"Building {len(all_active_releases)} active releases...")
 
     for release in all_active_releases:
         cac_tag = release["cac_tag"]
@@ -593,6 +614,8 @@ def _build_active_releases(
                     cac_tag,
                     b_data["product"]
                 )
+                logger.info("Successfully built CaC content.")
+
 
             # Compress datastream and save to destination dir
             # (e.g. dst dir/ubuntu2404_CIS_2/...)
