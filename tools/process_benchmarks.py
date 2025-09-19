@@ -745,9 +745,9 @@ def main():
         help="Path to up-to-date ComplianceAsCode repo."
         )
     mutex_group.add_argument(
-        "-p", "--pre-built-data-dir",
+        "--pre-built-data-dir",
         type=Path,
-        help="Dir containing pre-built data (also used for testing)",
+        help="Dir containing pre-built data (mainly used for testing)",
     )
     parser.add_argument(
         "-b", "--benchmark-yaml-files", type=Path, required=True, nargs="+"
