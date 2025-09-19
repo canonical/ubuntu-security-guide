@@ -23,7 +23,7 @@ RUN apt install -y vim-tiny less
 COPY ./ /root/usg/
 
 # copy test benchmark data
-RUN cp -r /root/usg/tools/tests/data/expected/benchmarks/ /usr/share/usg-benchmarks/
+RUN cp -r /root/usg/tools/tests/data/ubuntu2404/expected/benchmarks/ /usr/share/usg-benchmarks/
 
 # install usg module, wrapper, config, and bash completion
 RUN cd /root/usg \
