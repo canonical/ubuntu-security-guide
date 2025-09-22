@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Common functionality for reading ComplianceAsCode profiles/controls."""
 #
 # Ubuntu Security Guide
 # Copyright (C) 2025 Canonical Limited
@@ -17,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+
 if sys.version_info < (3,12):
     sys.exit("Build tools require Python>=3.12")
 
@@ -31,12 +33,16 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Control:
+    """Representation of a single CaC control."""
+
     control_id: str
     title: str
 
 
 @dataclass
 class Variable:
+    """Representation of a single CaC profile variable."""
+
     name: str
     value: str
     control: Control
@@ -44,22 +50,28 @@ class Variable:
 
 @dataclass
 class Rule:
+    """Representatino of a single CaC rule."""
+
     name: str
     selected: bool
     control: Control
 
 
-class CaCParsingException(Exception):
-    pass
+class CaCParsingError(Exception):
+    """Error parsing CaC profile files."""
 
 
 class CaCProfile:
+    """Class for parsing and storing ComplianceAsCode profile files."""
+
     def __init__(self):
         self.controls = {}
         self.vars = {}
         self.rules = {}
 
-    def _add_or_update_rule(self, rule_name, selected, control):
+    def _add_or_update_rule(
+            self, rule_name: str, selected: bool, control: Control
+            ) -> Rule | None:
         # create rule object and add to list of rules if it doesn't exist
         if rule_name not in self.rules:
             rule = Rule(rule_name, selected, control)
@@ -80,7 +92,9 @@ class CaCProfile:
             )
         return None
 
-    def _add_or_update_variable(self, var_name, var_value, control):
+    def _add_or_update_variable(
+            self, var_name: str, var_value: str, control: Control
+            ) -> Variable | None:
         # create variable object and add to list of vars if it doesn't exist
         # if it exists, update the value
         if var_name not in self.vars:
@@ -102,18 +116,20 @@ class CaCProfile:
             )
         return None
 
-    def _add_control(self, control_id, title):
+    def _add_control(self, control_id: str, title: str) -> None:
         # add control to list of controls in profile
         # if it exists, fail
         if control_id not in self.controls:
             control = Control(control_id, title)
             self.controls[control_id] = control
             return control
-        raise CaCParsingException(
+        raise CaCParsingError(
             f"Duplicate controls not supported(control id: '{control_id}')."
         )
 
-    def _add_controls_from_file(self, controls_path, level_id):
+    def _add_controls_from_file(
+            self, controls_path: Path, level_id: str
+            ) -> None:
         # parse control file and return items corresponding to level
         with open(controls_path) as file:
             yaml_data = yaml.safe_load(file)
@@ -124,7 +140,7 @@ class CaCProfile:
         # special level keyword 'all' matches all levels.
         applicable_levels = set()
 
-        def _parse_level(level_id):
+        def _parse_level(level_id: str) -> None:
             levels = [
                 level
                 for level in yaml_data.get("levels", {})
@@ -159,10 +175,9 @@ class CaCProfile:
                     self._add_or_update_rule(rule, True, control)
 
     @staticmethod
-    def from_yaml(yaml_path):
-        # generate profile object from profile yaml file
-
-        with open(yaml_path) as file:
+    def from_yaml(yaml_path: Path) -> "CaCProfile":
+        """Generate CaC profile object from profile yaml file."""
+        with yaml_path.open() as file:
             profile_data = yaml.safe_load(file)
 
         profile = CaCProfile()
