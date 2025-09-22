@@ -1,4 +1,4 @@
-"""USG
+"""USG.
 
 This package contains the core module
 and CLI for the Ubuntu Security Guide (USG).

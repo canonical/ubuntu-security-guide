@@ -45,3 +45,4 @@ class StateFileError(USGError):
 
 class LockError(USGError):
     """Failed to acquire lock on file."""
+
