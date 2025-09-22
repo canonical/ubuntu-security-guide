@@ -4,7 +4,8 @@ import configparser
 import pytest
 from pytest import MonkeyPatch
 
-import usg
+from usg import usg as usg_module
+from usg import constants
 from usg.exceptions import ProfileNotFoundError, USGError
 from usg.models import Benchmark, Benchmarks, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
@@ -109,12 +110,12 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
             artifacts.add_artifact("fix_script", fix_script_file)
             return artifacts
 
-    mp.setattr(usg.constants, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
-    mp.setattr(usg.constants, "STATE_DIR", tmp_path_factory.mktemp("var_dir"))
-    mp.setattr(usg.usg, "OpenscapBackend", DummyBackend)
-    mp.setattr(usg.usg, "validate_perms", lambda *a, **k: None)
-    mp.setattr(usg.usg, "verify_integrity", lambda *a, **k: None)
-    mp.setattr(usg.usg, "gunzip_file", lambda *a, **k: None)
+    mp.setattr(constants, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
+    mp.setattr(constants, "STATE_DIR", tmp_path_factory.mktemp("var_dir"))
+    mp.setattr(usg_module, "OpenscapBackend", DummyBackend)
+    mp.setattr(usg_module, "validate_perms", lambda *a, **k: None)
+    mp.setattr(usg_module, "verify_integrity", lambda *a, **k: None)
+    mp.setattr(usg_module, "gunzip_file", lambda *a, **k: None)
 
     class DummyDatetime(datetime.datetime):
         @classmethod
@@ -340,6 +341,6 @@ def test_audit_correct_artifact_names(patch_usg, dummy_benchmarks, capsys):
 
 def test_missing_benchmarks_file(monkeypatch, tmp_path):
     # test that the missing benchmark file raises the correct errror
-    monkeypatch.setattr(usg.constants, "BENCHMARK_METADATA_PATH", tmp_path / "nonexistant")
+    monkeypatch.setattr(constants, "BENCHMARK_METADATA_PATH", tmp_path / "nonexistant")
     with pytest.raises(USGError, match="Could not find benchmark data"):
         USG()
