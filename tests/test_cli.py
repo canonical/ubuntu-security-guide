@@ -125,7 +125,7 @@ def test_cli_non_root_user(monkeypatch, capsys):
         (["list"], "Listing available profiles...", None, None),
         (["list", "asd"], None, "unrecognized arguments: asd", 2),
         (["list", "--all"], "v1.0.0", None, None),
-        (["list", "--names-only"], "cis_level1_server", None, None),        
+        (["list", "--machine-readable"], "cis_level1_server:CIS:ubuntu2404:v2.0.0", None, None),
         (["list"], "v2.0.0", None, None),
         # successfulcommands with profile argument
         (["info", "cis_level1_server"], "ubuntu2404_CIS_3", None, None),
@@ -231,7 +231,7 @@ def test_cli_generate_tailoring(
     <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
     </Profile>
 </Tailoring>""")
-    
+
     sys.argv = ["usg", *cli_args]
 
     cli.cli()
@@ -256,7 +256,7 @@ def test_load_benchmark_version_state(tmp_path, monkeypatch):
         }
     }))
     assert load_benchmark_version_state("cis_level1_server") == "test_version"
-    
+
     # missing benchmark profile defaults to "latest" version
     assert load_benchmark_version_state("missing_profile") == "latest"
 
@@ -270,7 +270,7 @@ def test_load_benchmark_version_state_error(tmp_path, monkeypatch):
     Path(state_file).write_text("test")
     with pytest.raises(StateFileError, match="Corrupted"):
         load_benchmark_version_state("cis_level1_server")
-    
+
     # bad data
     Path(state_file).write_text(json.dumps({
         "bad_key_for_benchmark_versions": {
@@ -279,7 +279,7 @@ def test_load_benchmark_version_state_error(tmp_path, monkeypatch):
     }))
     with pytest.raises(StateFileError, match="Corrupted"):
         load_benchmark_version_state("cis_level1_server")
-   
+
 
 def test_save_benchmark_version_state(tmp_path, monkeypatch):
     # Test that benchmark version state is stored correctly to state file
@@ -316,7 +316,7 @@ def test_save_benchmark_version_state_corrupted_error(tmp_path, monkeypatch):
 
 def test_benchmark_version_state_integration(patch_usg_and_cli, capsys, monkeypatch, tmp_path):
     # test that cli commands retain benchmark version across runs
-     
+
     # hack to undo monkepatches to load/save_state functions done in patch_usg_and_cli
     from usg.cli import USG as DummyUSG
     importlib.reload(cli)
