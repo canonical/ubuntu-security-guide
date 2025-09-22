@@ -73,7 +73,7 @@ def test_tailoringfile_parse_legacy_stig():
 
 def test_tailoringfile_parse_invalid_xml():
     # Test that invalid XML raises an error
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(TailoringFileError, match="XML parser failed to parse"):
         TailoringFile._parse_tailoring_scap("""<badxml>""")
 
 
@@ -84,7 +84,7 @@ def test_tailoringfile_parse_invalid_root():
     <Profile id="xccdf_org.ssgproject.content_profile_test"/>
 </BadRoot>
 """
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(TailoringFileError, match="Root element of tailoring"):
         TailoringFile._parse_tailoring_scap(tailoring_xml)
 
 
@@ -95,7 +95,7 @@ def test_tailoringfile_parse_no_profile():
   <benchmark href="/usr/share/usg-benchmarks/ubuntu2404_CIS_1"/>
 </Tailoring>
 """
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(TailoringFileError, match="doesn't contain a profile"):
         TailoringFile._parse_tailoring_scap(tailoring_xml)
 
 
@@ -108,7 +108,7 @@ def test_tailoringfile_parse_two_profiles():
   <Profile id="xccdf_org.ssgproject.content_profile_cis_test2"/>
 </Tailoring>
 """
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(TailoringFileError, match="Multiple profiles"):
         TailoringFile._parse_tailoring_scap(tailoring_xml)
 
 
@@ -120,7 +120,7 @@ def test_tailoringfile_parse_no_profile_id():
   <Profile/>
 </Tailoring>
 """
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(TailoringFileError, match="no profile id"):
         TailoringFile._parse_tailoring_scap(tailoring_xml)
 
 
@@ -133,7 +133,7 @@ def test_tailoringfile_parse_no_benchmark():
   </Profile>
 </Tailoring>
 """
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(TailoringFileError, match="missing the 'benchmark'"):
         TailoringFile._parse_tailoring_scap(tailoring_xml)
 
 
@@ -145,7 +145,7 @@ def test_tailoringfile_parse_no_benchmark_id_or_href():
   <Profile id="xccdf_org.ssgproject.content_profile_test"/>
 </Tailoring>
 """
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(TailoringFileError, match="Missing benchmark.href"):
         TailoringFile._parse_tailoring_scap(tailoring_xml)
 
 
@@ -159,7 +159,10 @@ def test_tailoringfile_parse_unsupported_legacy_profile_id():
   </Profile>
 </Tailoring>
 """
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(
+            TailoringFileError,
+            match="Cannot infer benchmark type from profile"
+            ):
         TailoringFile._parse_tailoring_scap(tailoring_xml)
 
 
@@ -171,5 +174,5 @@ def test_tailoringfile_parse_malformed_benchmark_href():
   <Profile id="xccdf_org.ssgproject.content_profile_test"/>
 </Tailoring>
 """
-    with pytest.raises(TailoringFileError):
+    with pytest.raises(TailoringFileError, match="Unrecognized benchmark.href"):
         TailoringFile._parse_tailoring_scap(tailoring_xml)

@@ -292,10 +292,16 @@ class USG:
                 profile.tailoring_file,
             )
         except BackendError as e:
-            logger.error(f"Failed to generate the fix script. Storing partial outputs in {work_dir}.")
+            logger.error(
+                    f"Failed to generate the fix script. "
+                    f"Storing partial outputs in {work_dir}."
+                    )
             raise USGError(f"Failed to run backend operation: {e}") from e
         except (KeyboardInterrupt, Exception) as e:
-            logger.error(f"Failed to generate the fix script. Storing partial outputs in {work_dir}.")
+            logger.error(
+                    f"Failed to generate the fix script. "
+                    f"Storing partial outputs in {work_dir}."
+                    )
             raise e
 
         self._move_artifacts(artifacts, profile.profile_id, benchmark.product)
@@ -350,10 +356,16 @@ class USG:
                 audit_results_file=audit_results_file,
             )
         except BackendError as e:
-            logger.error(f"Failed to remediate the system. Storing partial outputs in {work_dir}.")
+            logger.error(
+                    f"Failed to remediate the system. "
+                    f"Storing partial outputs in {work_dir}."
+                    )
             raise USGError(f"Failed to run backend operation: {e}") from e
         except (KeyboardInterrupt, Exception) as e:
-            logger.error(f"Failed to remediate the system. Storing partial outputs in {work_dir}.")
+            logger.error(
+                    f"Failed to remediate the system. "
+                    f"Storing partial outputs in {work_dir}."
+                    )
             raise e
 
         self._move_artifacts(artifacts, profile.profile_id, benchmark.product)
@@ -402,10 +414,16 @@ class USG:
                 oval_results=oval_results,
             )
         except BackendError as e:
-            logger.error(f"Failed to audit the system. Storing partial outputs in {work_dir}.")
+            logger.error(
+                    f"Failed to audit the system. "
+                    f"Storing partial outputs in {work_dir}."
+                    )
             raise USGError(f"Failed to run backend operation: {e}") from e
         except (KeyboardInterrupt, Exception) as e:
-            logger.error(f"Failed to audit the system. Storing partial outputs in {work_dir}.")
+            logger.error(
+                    f"Failed to audit the system. "
+                    f"Storing partial outputs in {work_dir}."
+                    )
             raise e
 
         self._move_artifacts(artifacts, profile.profile_id, benchmark.product)

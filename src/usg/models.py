@@ -228,6 +228,57 @@ class TailoringFile:
         )
 
     @classmethod
+    def _map_benchmark_id_from_legacy(cls, benchmark_href: str, profile_id: str) -> str:
+        """Map benchmark id from legacy href attribute and profile id.
+
+        Maps the legacy href to the new ID scheme (e.g. ubuntu2404_CIS_1)
+        by extracting the tailoring_file version and the
+        product name from the href itself.
+        The benchmark type can be inferred from the profile.
+
+        Args:
+            benchmark_href: legacy href attribute
+            (/usr/share/ubuntu-scap-security-guide/N/benchmarks/ssg-ubuntuXXXX.xccdf.xml)
+
+        Returns:
+            (benchmark_id, profile_id)
+
+        Raises:
+            TailoringFileError: parsing issues
+
+        """
+        logger.debug(
+                f"Extracting benchmark_id from legacy href "
+                f"{benchmark_href} and profile {profile_id}"
+                )
+        # example match: (1, 'ubuntu2404')
+        legacy_fields = re.search(
+            r"/(\d)/benchmarks/ssg-(\w+)-xccdf.xml", benchmark_href
+        )
+        if legacy_fields is None:
+            raise TailoringFileError(
+                "Could not find a valid benchmark reference in tailoring file"
+            )
+
+        tailoring_version = legacy_fields.group(1)
+        product = legacy_fields.group(2)
+
+        if "profile_cis_" in profile_id:
+            benchmark_type = "CIS"
+        elif "profile_stig_" in profile_id:
+            benchmark_type = "STIG"
+        else:
+            raise TailoringFileError(
+                f"Cannot infer benchmark type from profile {profile_id}"
+            )
+
+        benchmark_id = f"{product}_{benchmark_type}_{tailoring_version}"
+        logger.debug(
+            f"Extracted benchmark id from legacy tailoring file: {benchmark_id}"
+        )
+        return benchmark_id
+
+    @classmethod
     def _parse_tailoring_scap(cls, tailoring_file_contents: str) -> tuple[str, str]:
         """Parse scap tailoring file contents and returns benchmark and profile IDs.
 
@@ -259,7 +310,7 @@ class TailoringFile:
             raise TailoringFileError("Tailoring file doesn't contain a profile")
         if len(profiles) > 1:
             raise TailoringFileError(
-                "Mutliple profiles in tailoring file are not supported."
+                "Multiple profiles in tailoring file are not supported."
             )
         profile_id = profiles[0].get("id")
         if profile_id is None:
@@ -276,7 +327,7 @@ class TailoringFile:
         benchmark_href = benchmark.get("href")
         if benchmark_href is None:
             raise TailoringFileError(
-                "Could not find a valid benchmark reference in tailoring file"
+                "Missing benchmark.href attribute in tailoring file"
             )
         logger.debug(f"Found benchmark element with href={benchmark_href}.")
 
@@ -284,41 +335,15 @@ class TailoringFile:
             # new href (e.g. /usr/share/usg-benchmarks/ubuntu2404_CIS_1,
             # benchmark_id is equal to ubuntu2404_CIS_1)
             benchmark_id = Path(benchmark_href).name
-        else:
-            # Legacy tailoring files (href contains path
-            # to correct folder/datastream)
-            #
-            # We can map to the new ID scheme (e.g. ubuntu2404_CIS_1)
-            # by extracting the tailoring_file version and the
-            # product name from the href itself.
-            # The benchmark type can be inferred from the profile.
-
+        elif "/usr/share/ubuntu-scap-security-guide" in benchmark_href:
+            # legacy href (e.v. /usr/share/ubuntu-scap-security-guide/...)
             logger.warning("Using legacy tailoring file.")
-
-            # example match: (1, 'ubuntu2404')
-            legacy_fields = re.search(
-                r"/(\d)/benchmarks/ssg-(\w+)-xccdf.xml", benchmark_href
-            )
-            if legacy_fields is None:
-                raise TailoringFileError(
-                    "Could not find a valid benchmark reference in tailoring file"
-                )
-
-            tailoring_version = legacy_fields.group(1)
-            product = legacy_fields.group(2)
-
-            if "profile_cis_" in profile_id:
-                benchmark_type = "CIS"
-            elif "profile_stig_" in profile_id:
-                benchmark_type = "STIG"
-            else:
-                raise TailoringFileError(
-                    f"Cannot infer benchmark type from profile {profile_id}"
-                )
-
-            benchmark_id = f"{product}_{benchmark_type}_{tailoring_version}"
-            logger.debug(
-                f"Extracted benchmark id from legacy tailoring file: {benchmark_id}"
+            benchmark_id = cls._map_benchmark_id_from_legacy(
+                    benchmark_href, profile_id
+                    )
+        else:
+            raise TailoringFileError(
+                f"Unrecognized benchmark.href in tailoring file: '{benchmark_href}'"
             )
 
         return benchmark_id, profile_id
