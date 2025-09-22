@@ -142,7 +142,7 @@ def error_exit(msg: str = "", rc: int = 1) -> None:
 def command_list(usg: USG, args: argparse.Namespace) -> None:
     """List available profiles."""
     logger.debug("Starting command_list")
-    if not args.names_only:
+    if not args.machine_readable:
         print("Listing available profiles...\n")
         print(CLI_LIST_FORMAT.format("PROFILE", "BENCHMARK/PRODUCT", "VERSION"))
 
@@ -153,8 +153,16 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
         if not latest and not args.all:
             continue
 
-        if args.names_only:
-            print(p.profile_id)
+        if args.machine_readable:
+            print(":".join([
+                p.profile_id,
+                benchmark.benchmark_type,
+                benchmark.product,
+                benchmark.version,
+                p.benchmark_id,
+                "", "", "", "", "", "" # reserved
+                ]))
+
         else:
             depr = "" if latest else " *deprecated*"
             print(
@@ -164,7 +172,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
                     benchmark.version + depr,
                 )
             )
-    if not args.names_only:
+    if not args.machine_readable:
         print("""
 
 Use 'usg info' to print information about a specific profile or tailoring file:
@@ -620,10 +628,10 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
             )
             cmd_parser.add_argument(
                 "-n",
-                "--names-only",
+                "--machine-readable",
                 action="store_true",
                 default=False,
-                help="Show only profiles names",
+                help="Machine readable output",
             )
 
         cmd_parser.add_argument(

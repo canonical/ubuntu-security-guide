@@ -26,7 +26,7 @@ _usg_completions() {
 
     # Get list of available profiles
     usg_profile_list() {
-        usg list --names-only 2>/dev/null | xargs
+        usg list --machine-readable 2>/dev/null | cut -d: -f1 | xargs
     }
 
     # Add mutually exclusive args --tailoring-file (optional) and <profile> (1st positional)
