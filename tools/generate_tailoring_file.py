@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-#
+"""Functions and CLI for generating USG tailoring files."""
+
 # Ubuntu Security Guide
 # Copyright (C) 2025 Canonical Limited
 #
@@ -17,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+
 if sys.version_info < (3,12):
     sys.exit("Build tools require Python>=3.12")
 
@@ -24,7 +26,6 @@ import argparse
 import datetime
 import logging
 import subprocess
-import sys
 from pathlib import Path
 
 from cac_tools import CaCProfile
@@ -42,8 +43,9 @@ def generate_tailoring_file(
     profile_path: Path,
     datastream_path: Path,
     tailoring_template_path: Path,
-    benchmark_id: str
-) -> str:
+    benchmark_id: str,
+    tailoring_file_output_path: Path
+) -> None:
     """Create a tailoring file based on provided args.
 
     Args:
@@ -51,16 +53,16 @@ def generate_tailoring_file(
         datastream_path: ComplianceAsCode compiled source datastream file
         tailoring_template_path: template file for tailoring file
         benchmark_id: benchmark ID (e.g. ubuntu2404_CIS_1)
-
-    Returns:
-        tailoring file in string format
+        tailoring_file_output_path: output path
 
     Raises:
         GenerateTailoringError
 
     """
     logger.debug(
-        f"Generating tailoring file for profile {profile_path} with datastream file {datastream_path} and tailoring template {tailoring_template_path}"
+        f"Generating tailoring file {tailoring_file_output_path} for profile "
+        f"{profile_path} with datastream file {datastream_path} and tailoring "
+        f"template {tailoring_template_path}."
     )
     logger.debug(f"Benchmark ID: {benchmark_id}")
 
@@ -79,11 +81,11 @@ def generate_tailoring_file(
         logger.debug(f"Processing template tailoring file {tailoring_template_path}")
         parser = etree.XMLParser(remove_blank_text=True)
         tailor_doc = etree.parse(tailoring_template_path, parser)
-        xml_bench = tailor_doc.find(".//{%s}benchmark" % XMLNS)
+        xml_bench = tailor_doc.find(f".//{{{XMLNS}}}benchmark")
         xml_bench.attrib["href"] = BENCHMARK_HREF_PATTERN.format(
             benchmark_id=benchmark_id
         )
-        xml_ver = tailor_doc.find(".//{%s}version" % XMLNS)
+        xml_ver = tailor_doc.find(f".//{{{XMLNS}}}version")
         xml_ver.attrib["time"] = current_timestamp.isoformat()
     except etree.XMLSyntaxError as e:
         raise GenerateTailoringError(
@@ -120,22 +122,28 @@ def generate_tailoring_file(
                 is_selected = "true" if rule.selected else "false"
                 prule = f"xccdf_org.ssgproject.content_rule_{rule.name}"
                 _insert_into_xml(tailor_doc, "select", prule, is_selected)
-
     logger.debug(f"Successfully generated tailoring file for profile {profile_path}")
-    return tailor_doc
+
+    tailor_doc.write(
+        tailoring_file_output_path,
+        pretty_print=True,
+        xml_declaration=True,
+        encoding="utf-8",
+    )
+    logger.debug(f"Successfully wrote tailoring file {tailoring_file_output_path}")
 
 
-def validate_tailoring_file(tailoring_path: Path):
+def validate_tailoring_file(tailoring_path: Path) -> None:
     """Validate the tailoring file using oscap."""
     logger.debug(f"Validating tailoring file {tailoring_path}")
+    cmd = [
+        "/usr/bin/oscap",
+        "oval",
+        "validate",
+        "--skip-schematron",
+        str(tailoring_path),
+    ]
     try:
-        cmd = [
-            "/usr/bin/oscap",
-            "oval",
-            "validate",
-            "--skip-schematron",
-            str(tailoring_path),
-        ]
         subprocess.run(cmd, check=True)  # noqa: S603
     except Exception as e:
         raise GenerateTailoringError(
@@ -144,31 +152,36 @@ def validate_tailoring_file(tailoring_path: Path):
     logger.info("Successfully validated the tailoring file")
 
 
-def _get_value_for_var_selector(doc, var, val):
+def _get_value_for_var_selector(doc: etree._ElementTree, var: str, val: str) -> str:
     logger.debug(f"Getting value for variable {var} with selector {val}")
     root = doc.getroot()
-    for xmlVal in root.findall(".//{%s}Value" % XMLNS):
-        if xmlVal.get("id") == var:
-            for xmlval in xmlVal.findall(".//{%s}value" % XMLNS):
-                if xmlval.get("selector") == val:
-                    return xmlval.text
+    for xml_val in root.findall(f".//{{{XMLNS}}}Value"):
+        if xml_val.get("id") == var:
+            for xml_val2 in xml_val.findall(f".//{{{XMLNS}}}value"):
+                if xml_val2.get("selector") == val:
+                    return xml_val2.text
     raise GenerateTailoringError(
         f"No value found for variable {var}!"
         )
 
 
-def _insert_into_xml(tailor_doc, elem, idref, text=None):
+def _insert_into_xml(
+        tailor_doc: etree._ElementTree,
+        elem: str,
+        idref: str,
+        text: str | None = None
+        ) -> None:
     logger.debug(f"Inserting {elem} into XML for {idref}")
     root = tailor_doc.getroot()
-    for xmlProf in root.findall(".//{%s}Profile" % XMLNS):
+    for xml_prof in root.findall(f".//{{{XMLNS}}}Profile"):
         if elem == "set-value":
-            value = etree.SubElement(xmlProf, f"{elem}", idref=idref)
+            value = etree.SubElement(xml_prof, elem, idref=idref)
             value.text = text
         elif elem == "select":
-            value = etree.SubElement(xmlProf, f"{elem}", idref=idref, selected=text)
+            value = etree.SubElement(xml_prof, elem, idref=idref, selected=text)
         else:
             value = etree.Comment(idref)
-            xmlProf.append(value)
+            xml_prof.append(value)
 
 
 if __name__ == "__main__":
@@ -196,23 +209,20 @@ if __name__ == "__main__":
     )
 
     logger.info(
-        f"Generating tailoring file for profile {args.profile_path} with datastream file {args.datastream_path} and tailoring template {args.tailoring_template_path}"
+        f"Generating tailoring file for profile {args.profile_path} "
+        f"with datastream file {args.datastream_path} and "
+        f"tailoring template {args.tailoring_template_path}"
     )
     logger.info(f"Benchmark ID: {args.benchmark_id}")
     logger.info(f"Output tailoring file: {args.output_tailoring_path}")
 
     try:
-        tailor_doc = generate_tailoring_file(
+        generate_tailoring_file(
             args.profile_path,
             args.datastream_path,
             args.tailoring_template_path,
             args.benchmark_id,
-        )
-        tailor_doc.write(
-            args.output_tailoring_path,
-            pretty_print=True,
-            xml_declaration=True,
-            encoding="utf-8",
+            args.output_tailoring_path
         )
         validate_tailoring_file(args.output_tailoring_path)
     except GenerateTailoringError as e:

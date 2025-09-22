@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-#
+"""Functions and CLI for processing USG benchmark releases."""
+
 # Ubuntu Security Guide
 # Copyright (C) 2025 Canonical Limited
 #
@@ -17,12 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+
 if sys.version_info < (3,12):
     sys.exit("Build tools require Python>=3.12")
 
 import argparse
-import base64
-from dataclasses import dataclass
 import gzip
 import hashlib
 import json
@@ -31,11 +31,16 @@ import os
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import yaml
-from generate_tailoring_file import generate_tailoring_file, validate_tailoring_file, GenerateTailoringError
+from generate_tailoring_file import (
+    GenerateTailoringError,
+    generate_tailoring_file,
+    validate_tailoring_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,53 +51,60 @@ CAC_TAILORING_NAME = "{}-tailoring.xml"
 
 
 class BenchmarkProcessingError(Exception):
-    pass
+    """Error processing benchmark data."""
 
 def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
-    # Search through release graph and map upgrade_paths
-    #
-    # For each release, these items are added to the object, in-place:
-    # - compatible: list of releases which are compatible with the current release (starting at the nearest parent breaking release and ending at latest compatible release)
-    # - latest_compatible: reference to the latest compatible release:
-    #      - the latest release in a branch (B1, D2, or H in below graph) or
-    #      - the latest release which precede a breaking release (F in below graph)
-    # - next_breaking: reference to the next breaking release, if any
-    #
-    # E.g. looking at below graph, the function would map this to the release objects, into the dictionary "upgrade_paths":
-    #
-    #   A:  {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
-    #   B:  {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
-    #   B1: {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
-    #   C:  {"compatible": (C, D, D1, D2), "latest_compatible": D2, "next_breaking": E    },
-    #   D2: {"compatible": (C, D, D1, D2), "latest_compatible": D2, "next_breaking": E    },
-    #   F:  {"compatible": (E, F),         "latest_compatible": F,  "next_breaking": G    },
-    #   H:  {"compatible": (G, H),         "latest_compatible": H,  "next_breaking": None }
-    #
-    # (D,D1,E,G not shown)
-    #
-    #
-    #    H (latest)
-    #    |
-    #    G (breaking)
-    #  --|--
-    #    F
-    #    |
-    #    E (breaking)
-    #  --|--
-    #    D - D1 - D2
-    #    |
-    #    C (breaking)
-    #  --|--
-    #    B - B1
-    #    |
-    #    A (initial)
-    #
-    #
-    # The release graph must have:
-    # - a main branch containing breaking and non-breaking releases and ending with the latest release
-    # - side branching only prior to a breaking release (e.g. at B, D, and F in above graph)
-    # - side branches which can contain only *non-breaking* releases
-    #
+    """Search through release graph and map upgrade_paths.
+
+    Args:
+        all_releases: list of dictionaries representation of CaC releases
+
+    For each release, these items are added to the object, in-place:
+    - compatible: list of releases which are compatible with the current release
+                  (starting at the nearest parent breaking release and
+                   ending at latest compatible release)
+    - latest_compatible: reference to the latest compatible release:
+         - the latest release in a branch (B1, D2, or H in below graph) or
+         - the latest release which precede a breaking release (F in below graph)
+    - next_breaking: reference to the next breaking release, if any
+
+    E.g. looking at below graph, the function would map this to the release objects,
+    into the dictionary "upgrade_paths":
+
+    A:  {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
+    B:  {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
+    B1: {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
+    C:  {"compatible": (C, D, D1, D2), "latest_compatible": D2, "next_breaking": E    },
+    D2: {"compatible": (C, D, D1, D2), "latest_compatible": D2, "next_breaking": E    },
+    F:  {"compatible": (E, F),         "latest_compatible": F,  "next_breaking": G    },
+    H:  {"compatible": (G, H),         "latest_compatible": H,  "next_breaking": None }
+
+    (D,D1,E,G not shown)
+
+
+       H (latest)
+       |
+       G (breaking)
+     --|--
+       F
+       |
+       E (breaking)
+     --|--
+       D - D1 - D2
+       |
+       C (breaking)
+     --|--
+       B - B1
+       |
+       A (initial)
+
+
+    The release graph must have:
+    - a main branch containing breaking and non-breaking releases and ending with the latest release
+    - side branching only prior to a breaking release (e.g. at B,D, and F in the graph)
+    - side branches which can contain only *non-breaking* releases
+
+    """
     logger.debug("Entered get_release_upgrade_paths()")
 
     # initialize new vars
@@ -117,6 +129,8 @@ def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
                     f"{release['cac_tag']}, {initial_release['cac_tag']}"
                 )
             initial_release = release
+    if not initial_release:
+        raise BenchmarkProcessingError("No initial release found (without parent tag)")
     logger.debug(f"Found initial release: {initial_release['cac_tag']}")
 
     # initialize the search queue and upgrade paths
@@ -158,7 +172,8 @@ def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
         for i, child in enumerate(children):
             child_cac_tag = child["cac_tag"]
             logger.debug(
-                f"Found child ({i + 1} of {len(children)}) of {cac_tag}: {child_cac_tag}."
+                f"Found child ({i + 1} of {len(children)}) of "
+                f"{cac_tag}: {child_cac_tag}."
             )
 
             # add child to search queue
@@ -167,11 +182,13 @@ def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
             # if child is a breaking release
             if child["breaking_release"]:
                 logger.debug(f"Release {child_cac_tag} is breaking.")
-                # sanity check that the tailoring version for a breaking release is exactly 1 greater than the parent
+                # sanity check that the tailoring version for a breaking release is
+                # exactly 1 greater than the parent
                 if child["tailoring_version"] != release["tailoring_version"] + 1:
                     raise BenchmarkProcessingError(
-                        f"Error - tailoring_version of breaking child {child['cac_tag']} "
-                        f"should be exactly 1 greater than its parent {release['cac_tag']}"
+                        f"Error - tailoring_version of breaking child "
+                        f"{child['cac_tag']} should be exactly 1 greater "
+                        f"than its parent {release['cac_tag']}"
                     )
                 # reset the compatible upgrade path for the child
                 child["upgrade_paths"]["compatible"] = [
@@ -183,11 +200,13 @@ def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
             # else, the child is non-breaking
             else:
                 logger.debug(f"Release {child_cac_tag} is non-breaking.")
-                # sanity check that the tailoring version for a non-breaking release is the same as the parent
+                # sanity check that the tailoring version for a non-breaking
+                # release is the same as the parent
                 if child["tailoring_version"] != release["tailoring_version"]:
                     raise BenchmarkProcessingError(
-                        f"Error - tailoring_version of non-breaking child {child['cac_tag']} "
-                        f"should be same as parent {release['cac_tag']}"
+                        f"Error - tailoring_version of non-breaking child "
+                        f"{child['cac_tag']} should be same as parent "
+                        f"{release['cac_tag']}"
                     )
                 # add the child to the compatible upgrade path of the parent
                 release["upgrade_paths"]["compatible"].append(child)
@@ -197,16 +216,18 @@ def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
                 ]
 
         # if the release has no children or one child which is a breaking release
-        # mark it as the latest compatible release for all releases in its compatible upgrade path
+        # mark it as the latest compatible release for all releases
+        # in its compatible upgrade path
         if not children or (len(children) == 1 and nbreaking == 1):
             logger.debug(f"Release {cac_tag} is latest compatible in its branch.")
 
-            # set latest compatible release for all releases in the compatible upgrade path
+            # set latest compatible release for all releases in the
+            # compatible upgrade path
             for r in release["upgrade_paths"]["compatible"]:
                 r["upgrade_paths"]["latest_compatible"] = release
 
-    # Now that we have all the upgrade paths and references to "latest_compatible" releases,
-    # set "next_breaking" for all the releases in the compatible upgrade path
+    # Now that we have all the upgrade paths and references to "latest_compatible"
+    # releases, set "next_breaking" for all the releases in the compatible upgrade path
     for release in all_releases:
         if release["upgrade_paths"][
             "next_breaking"
@@ -297,7 +318,8 @@ def _process_yaml(yaml_data: dict[str, Any]) -> list[dict[str, Any]]:
         )
 
     # For each active release
-    # - find all superseded compatible releases and mark their benchmark_id as compatible to the latest release
+    # - find all superseded compatible releases and mark their benchmark_id as
+    #   compatible to the latest release
     # - find all superseeding breaking releases and generate the breaking_upgrade_path
     # - fetch datastream, generate tailoring files, generate checksums
     for release in active_releases:
@@ -355,7 +377,7 @@ def _get_superseded_compatible(
                     f"{release['cac_tag']}"
                 )
                 compatible_versions.add(benchmark_version)
-    return sorted(list(compatible_versions))
+    return sorted(compatible_versions)
 
 
 def _get_breaking_upgrade_path(
@@ -365,7 +387,7 @@ def _get_breaking_upgrade_path(
 
     logger.debug(f"From _get_breaking_upgrade_path({release['cac_tag']})")
 
-    def _get_breaking_list(r: dict[str, Any]) -> list[dict[str, Any]]:
+    def _get_breaking_list(r: dict[str, Any]) -> Iterator[dict[str, Any]]:
         # recursive search for successive breaking releases
         # returns succession in reverse order (from newest to oldest release)
         if r["upgrade_paths"]["next_breaking"]:
@@ -429,7 +451,9 @@ def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> No
 
     try:
         logger.debug(f"Calling cmd: {cmd}")
-        commit_timestamp = subprocess.check_output(cmd, cwd=cac_repo_dir, env=env)
+        commit_timestamp = subprocess.check_output(
+            cmd, cwd=cac_repo_dir, env=env, text=True
+            )
     except subprocess.CalledProcessError as e:
         raise BenchmarkProcessingError(
             f"Failed to get timestamp for tag {cac_tag}: {e}"
@@ -482,18 +506,12 @@ def _create_tailoring_file(
         )
 
     try:
-        tailor_doc = generate_tailoring_file(
+        generate_tailoring_file(
             profile_path,
             datastream_build_path,
             tailoring_template_path,
             benchmark_id,
-        )
-        logger.debug(f"Writing tailoring file to {output_tailoring_path}")
-        tailor_doc.write(
-            output_tailoring_path,
-            pretty_print=True,
-            xml_declaration=True,
-            encoding="UTF-8",
+            output_tailoring_path
         )
         validate_tailoring_file(output_tailoring_path)
     except GenerateTailoringError as e:
@@ -535,15 +553,16 @@ def _build_active_releases(
         output_benchmark_dir.mkdir(parents=True, exist_ok=True)
 
         # Create new tmp build dir for each release
-        with tempfile.TemporaryDirectory(prefix=f"cac_{cac_tag}_") as tmp_build_dir:
+        with tempfile.TemporaryDirectory(prefix=f"cac_{cac_tag}_") as tmp_build_dir_x:
             # Build the CaC tag in tmp_build_dir or copy pre-built data
-            logger.debug(f"Building in temporary directory: {tmp_build_dir}")
-            tmp_build_dir = Path(tmp_build_dir)
+            logger.debug(f"Building in temporary directory: {tmp_build_dir_x}")
+            tmp_build_dir = Path(tmp_build_dir_x)
             if pre_built_data_dir:
                 release_dir = pre_built_data_dir / cac_tag
                 if not release_dir.exists():
                     raise BenchmarkProcessingError(
-                        f"Data directory {cac_tag} does not exist in {pre_built_data_dir}. "
+                        f"Data directory {cac_tag} does not exist in "
+                        f"{pre_built_data_dir}. "
                         f"Check the pre-built-data-dir argument. "
                         f"Ensure the directory structure matches the one used in "
                         f"tools/tests/data/input/"
@@ -552,7 +571,9 @@ def _build_active_releases(
                 shutil.copytree(release_dir, tmp_build_dir, dirs_exist_ok=True)
 
             else:
-                logger.debug(f"Copying the CaC repo {cac_repo_dir} to tmp dir {tmp_build_dir}")
+                logger.debug(
+                    f"Copying the CaC repo {cac_repo_dir} to tmp dir {tmp_build_dir}"
+                    )
                 shutil.copytree(
                     cac_repo_dir,
                     tmp_build_dir,
@@ -565,12 +586,13 @@ def _build_active_releases(
                     b_data["product"]
                 )
 
-            # Compress datastream and save to destination dir (e.g. dst_dir/ubuntu2404_CIS_2/...)
+            # Compress datastream and save to destination dir
+            # (e.g. dst dir/ubuntu2404_CIS_2/...)
             datastream_filename = CAC_RELEASE_NAME.format(b_data["product"])
             datastream_build_path = tmp_build_dir / "build" / datastream_filename
             datastream_dst_gz_path = (
                     output_benchmark_dir / datastream_filename
-                    ).with_suffix(".xml.gz")  # noqa: E501
+                    ).with_suffix(".xml.gz")
             _save_compressed_datastream(datastream_build_path, datastream_dst_gz_path)
 
             # Calc hashes and set metadata for datastream
