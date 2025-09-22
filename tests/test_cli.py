@@ -36,6 +36,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     mp.setattr(constants, "STATE_DIR", tmp_state_dir)
     mp.setattr(constants, "CLI_STATE_FILE", tmp_state_dir / "state.json")
     mp.setattr(constants, "CONFIG_PATH", dummy_cfg)
+    mp.setattr(constants, "LOCK_PATH", tmp_state_dir / "usg.lock")
 
     mp.setattr(usg.utils, "validate_perms", lambda *a, **k: None)
     mp.setattr(usg.utils, "verify_integrity", lambda *a, **k: None)

@@ -4,7 +4,7 @@ import pytest
 import logging
 
 from usg import constants, utils
-from usg.exceptions import IntegrityError, PermValidationError
+from usg.exceptions import IntegrityError, PermValidationError, LockError
 
 
 def test_verify_integrity_success(tmp_path):
@@ -138,8 +138,7 @@ def test_aqcuire_lock_fail(monkeypatch, tmp_path):
 
 def test_aqcuire_lock_failed_creation(monkeypatch, tmp_path, caplog):
     # test that failure to create lock file doesnt fail the program
-    tmp_lock = tmp_path / "nonwritabledir/lockfile2"
-    tmp_lock.parent.mkdir(mode=0o500, parents=True, exist_ok=True)
+    tmp_lock = tmp_path / "nonexistantdir/lockfile2"
     monkeypatch.setattr(constants, "LOCK_PATH", tmp_lock)
 
     with caplog.at_level(logging.ERROR):
