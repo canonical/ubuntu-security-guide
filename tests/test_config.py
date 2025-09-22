@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 from usg import config as usg_config
-
+from usg import constants
 
 def test_load_config_defaults():
     # Should load defaults if no config file is provided
@@ -51,9 +51,7 @@ def test_load_config_invalid_file(tmp_path, caplog):
 
 def test_get_artifact_path(monkeypatch):
     # Test that artifact paths are correctly resolved and formatted
-    from usg import constants as constants_module
-
-    monkeypatch.setattr(constants_module, "STATE_DIR", Path("/test_state_dir"))
+    monkeypatch.setattr(constants, "STATE_DIR", Path("/test_state_dir"))
 
     test_config = configparser.ConfigParser()
     test_config.read_dict(

@@ -1,13 +1,15 @@
 import datetime
+import configparser
 
 import pytest
 from pytest import MonkeyPatch
 
+import usg
 from usg.exceptions import ProfileNotFoundError, USGError
-from usg.models import Benchmark, Benchmarks, Profile
+from usg.models import Benchmark, Benchmarks, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
 from usg.usg import USG
-import configparser
+
 
 TEST_DATE = "20250715.1200"
 TEST_DATETIME = datetime.datetime(2025, 7, 15, 12, 0)
@@ -107,14 +109,12 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
             artifacts.add_artifact("fix_script", fix_script_file)
             return artifacts
 
-    from usg import usg as usg_module
-
-    mp.setattr(usg_module.constants, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
-    mp.setattr(usg_module.constants, "STATE_DIR", tmp_path_factory.mktemp("var_dir"))
-    mp.setattr(usg_module, "OpenscapBackend", DummyBackend)
-    mp.setattr(usg_module, "validate_perms", lambda *a, **k: None)
-    mp.setattr(usg_module, "verify_integrity", lambda *a, **k: None)
-    mp.setattr(usg_module, "gunzip_file", lambda *a, **k: None)
+    mp.setattr(usg.constants, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
+    mp.setattr(usg.constants, "STATE_DIR", tmp_path_factory.mktemp("var_dir"))
+    mp.setattr(usg.usg, "OpenscapBackend", DummyBackend)
+    mp.setattr(usg.usg, "validate_perms", lambda *a, **k: None)
+    mp.setattr(usg.usg, "verify_integrity", lambda *a, **k: None)
+    mp.setattr(usg.usg, "gunzip_file", lambda *a, **k: None)
 
     class DummyDatetime(datetime.datetime):
         @classmethod
@@ -223,8 +223,6 @@ def test_load_tailoring_returns_tailoring_object(patch_usg, tmp_path, monkeypatc
                 tailoring_file=tailoring_path,
             )
 
-    from usg.models import TailoringFile
-
     monkeypatch.setattr(TailoringFile, "from_file", lambda path: DummyTailoring())
     result = usg.load_tailoring(tailoring_path)
     assert isinstance(result, DummyTailoring)
@@ -250,7 +248,6 @@ def test_load_tailoring_benchmark_not_found(patch_usg, monkeypatch, tmp_path):
             tailoring_file=tailoring_path,
         )
 
-    from usg.models import TailoringFile
 
     monkeypatch.setattr(TailoringFile, "from_file", lambda path: DummyTailoring)
     with pytest.raises(
@@ -343,8 +340,6 @@ def test_audit_correct_artifact_names(patch_usg, dummy_benchmarks, capsys):
 
 def test_missing_benchmarks_file(monkeypatch, tmp_path):
     # test that the missing benchmark file raises the correct errror
-    from usg.usg import constants
-
-    monkeypatch.setattr(constants, "BENCHMARK_METADATA_PATH", tmp_path / "nonexistant")
+    monkeypatch.setattr(usg.constants, "BENCHMARK_METADATA_PATH", tmp_path / "nonexistant")
     with pytest.raises(USGError, match="Could not find benchmark data"):
         USG()
