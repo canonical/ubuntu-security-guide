@@ -1,0 +1,36 @@
+name: Cron Job for TIOBE TiCS
+
+on:
+  schedule:
+    - cron: '0 15 * * 1' # Every Monday at 15:00 UTC
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  TICS:
+    runs-on: [self-hosted, linux, amd64, tiobe, noble]
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - name: Install deps deb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pytest python3-coverage flake8 pylint
+      - name: Run coverage
+        env:
+          PYTHONPATH: src/
+        run: |
+          python3-coverage erase
+          python3-coverage run --source src/usg -m pytest tests
+          python3-coverage report -m
+          mkdir -p coverage
+          python3-coverage xml -o coverage/coverage.xml
+        continue-on-error: true
+      - name: Run TICS analysis with github-action
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: qserver
+          project: ubuntu-security-guide
+          branchdir: ${{ github.workspace }}
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
+          tmpdir: /tmp/tics
