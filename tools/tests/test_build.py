@@ -46,7 +46,7 @@ def compare_files(expected_file, actual_file):
 
 
 @pytest.mark.parametrize("test_product", [("ubuntu2404"), ("ubuntu2204"),])
-def test_build_24_04(test_product, tmpdir):
+def test_build(test_product, tmpdir):
 
     test_data_dir = TEST_DATA_DIR / test_product
     output_dir = Path(tmpdir) / "output"
