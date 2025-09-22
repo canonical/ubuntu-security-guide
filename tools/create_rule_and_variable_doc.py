@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Functions for populating rule and variable markdown files."""
 #
 # Ubuntu Security Guides
 # Copyright (C) 2025 Canonical Limited
@@ -17,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+
 if sys.version_info < (3,12):
     sys.exit("Build tools require Python>=3.12")
 
@@ -32,22 +34,28 @@ XMLNS = "http://checklists.nist.gov/xccdf/1.2"
 
 
 class DocItem:
+    """Representation of single item (rule, var) in document."""
+
     def __init__(
-        self, id: str, title: str | None = None, description: str | None = None
-    ):
-        self.id = id
+        self, _id: str, title: str | None = None, description: str | None = None
+    ) -> None:
+        """Initialize DocItem."""
+        self.id = _id
         self.title = title
         self.description = description
 
     def __hash__(self) -> int:
+        """Return hash based only on ID attribute."""
         return hash(self.id)  # Only id must be unique
 
     def __eq__(self, other: object) -> bool:
+        """Check if ID attribute of element matches."""
         if not isinstance(other, type(self)):
             return NotImplemented
         return self.id == other.id
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Return string representation of DocItem."""
         return f"{self.id}, {self.title}, {self.description}"
 
 
@@ -67,27 +75,27 @@ def _extract_data_from_datastream(
     item_dict = {}
     root = datastream_doc.getroot()
     if items_type == "variables":
-        Elems = root.findall(".//{%s}Value" % XMLNS)
+        elements = root.findall(f".//{{{XMLNS}}}Value")
     else:
-        Elems = root.findall(".//{%s}Rule" % XMLNS)
+        elements = root.findall(f".//{{{XMLNS}}}Rule")
 
-    for Elem in Elems:
-        if "id" in Elem.keys():
-            id_ = Elem.get("id")
+    for element in elements:
+        if "id" in element.keys():
+            id_ = element.get("id")
             obj = DocItem(id_)
-            for Elemchild in Elem.getchildren():
-                if "title" in Elemchild.tag:
-                    obj.title = Elemchild.text
-                if "description" in Elemchild.tag:
+            for element_child in element.getchildren():
+                if "title" in element_child.tag:
+                    obj.title = element_child.text
+                if "description" in element_child.tag:
                     desc = ""
-                    for elems in Elemchild.xpath("*|text()"):
-                        if isinstance(elems, etree._Element):
+                    for desc_elements in element_child.xpath("*|text()"):
+                        if isinstance(desc_elements, etree._Element):
                             # Some text has HTML elements inside,
                             # which must be handled
-                            if elems.text is not None:
-                                desc += elems.text
+                            if desc_elements.text is not None:
+                                desc += desc_elements.text
                         else:
-                            desc += str(elems)
+                            desc += str(desc_elements)
                     obj.description = desc
             item_dict[id_] = obj
 
@@ -95,6 +103,16 @@ def _extract_data_from_datastream(
 
 
 def generate_markdown_doc(datastream_path: Path, items_type: str) -> str:
+    """Generate markdown document describing rules and variables in SCAP datastream.
+
+    Args:
+        datastream_path: path to SCAP datastream file
+        items_type: type of items to extract (rules, variables)
+
+    Returns:
+        markdown document in string format
+
+    """
     if items_type not in ["rules", "variables"]:
         raise ValueError('items_type must be either "rules" or "variables"')
 
@@ -109,8 +127,10 @@ def generate_markdown_doc(datastream_path: Path, items_type: str) -> str:
         lines.append("# List of rules")
 
     for it in item_dict.values():
-        lines.append("## Rule id: %s" % re.sub(md_escape, r"\\\1", it.id))
-        lines.append("### Title: %s" % re.sub(md_escape, r"\\\1", it.title))
+        rule_escaped = re.sub(md_escape, r"\\\1", it.id)
+        title_escaped = re.sub(md_escape, r"\\\1", it.title)
+        lines.append(f"## Rule id: {rule_escaped}")
+        lines.append(f"### Title: {title_escaped}")
         if (
             it.description is not None
             and len(it.description) > 0
@@ -124,8 +144,9 @@ def generate_markdown_doc(datastream_path: Path, items_type: str) -> str:
 
 
 def main(args: list[str]) -> None:
+    """CLI entry point."""
     usage = f"""
-Script for generating markdown docs based on rule and variable metadata in the datastream file. 
+Script for generating markdown docs based on rule and variable metadata in the datastream file.
 
 Usage: {args[0]} [ rules | variables ] <datastream file path> <out file>
 """
@@ -139,12 +160,11 @@ Usage: {args[0]} [ rules | variables ] <datastream file path> <out file>
     out_path = Path(args[3])
 
     try:
-        open(out_path, "w").write(generate_markdown_doc(datastream_path, command))
+        out_path.open("w").write(generate_markdown_doc(datastream_path, command))
         logger.info(f"Successfully wrote docs for {command} in {out_path}")
     except Exception as e:
-        logger.error("Unknown exception:", e)
+        logger.exception(f"Unknown exception: {e}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     logging.basicConfig(

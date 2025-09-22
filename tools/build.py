@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+
 if sys.version_info < (3,12):
     sys.exit("Build tools require Python>=3.12")
 
@@ -26,11 +27,11 @@ import datetime
 import gzip
 import json
 import logging
-from pathlib import Path
 import shutil
 import tempfile
-import tomllib
+from pathlib import Path
 
+import tomllib
 from create_rule_and_variable_doc import generate_markdown_doc
 from process_benchmarks import (
     BenchmarkProcessingError,
@@ -52,7 +53,7 @@ TEST_PB_PREBUILT_DATA_DIR = Path(
 )
 
 
-def exit_error(msg):
+def _exit_error(msg):
     logger.error(f"Build script exiting with error:\n{msg}\n")
     sys.exit(1)
 
@@ -83,7 +84,7 @@ def run_process_benchmarks(
 
     logger.debug(f"Found benchmark metadata files: {release_metadata_files}")
     if not release_metadata_files:
-        exit_error(f"No yaml files found in {release_metadata_dir}")
+        _exit_error(f"No yaml files found in {release_metadata_dir}")
 
     try:
         process_benchmarks(
@@ -95,7 +96,7 @@ def run_process_benchmarks(
         )
 
     except BenchmarkProcessingError as e:
-        exit_error(f"Error while processing benchmarks: {e}")
+        _exit_error(f"Error while processing benchmarks: {e}")
 
     logger.debug("process_benchmarks() completed successfully")
 
@@ -118,7 +119,7 @@ def gen_documentation(output_benchmarks_dir: Path) -> tuple[str, str]:
             output_benchmarks_dir / latest["data_files"]["datastream_gz"]["path"]
         )
     except Exception:
-        exit_error(
+        _exit_error(
             f"Could not find 'latest' openscap datastream in {benchmark_metadata_path}"
         )
 
@@ -138,7 +139,7 @@ def gen_documentation(output_benchmarks_dir: Path) -> tuple[str, str]:
             rules_output = generate_markdown_doc(unpacked_datastream_path, "rules")
             vars_output = generate_markdown_doc(unpacked_datastream_path, "variables")
         except Exception as e:
-            exit_error(f"Failed to generate documentation: {e}")
+            _exit_error(f"Failed to generate documentation: {e}")
 
     return (rules_output, vars_output)
 
@@ -191,7 +192,7 @@ def build_files(
             template_path = templates_dir / specific_file_data[0]
             template_data = template_path.read_text()
         except FileNotFoundError:
-            exit_error(f"Template file at {template_path} cannot be opened.")
+            _exit_error(f"Template file at {template_path} cannot be opened.")
 
         built_data = mass_replacer(
             specific_file_data[1],
@@ -205,7 +206,7 @@ def build_files(
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(built_data)
         except FileNotFoundError:
-            exit_error("File at {output_path} cannot be opened for writing.")
+            _exit_error("File at {output_path} cannot be opened for writing.")
 
 
 def _get_usg_version() -> str:
@@ -215,7 +216,7 @@ def _get_usg_version() -> str:
         with pyproject_path.open("rb") as f:
             pyproject_toml = tomllib.load(f)
         version = pyproject_toml["project"]["version"]
-    except (OSError, tomllib.TOMLDecodeError, KeyError) as e:
+    except (OSError, tomllib.TOMLDecodeError, KeyError):
         logger.warning(
                 "Could not determine project version from pyproject.toml. "
                 "If this is not the jammy branch, something is broken. "
@@ -311,5 +312,5 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
-        logger.exception(f"Uncaught exception raised during build:")
+    except Exception:
+        logger.exception("Uncaught exception raised during build:")
