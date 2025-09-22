@@ -12,8 +12,11 @@ from pathlib import Path
 
 from usg import constants
 from usg.exceptions import (
-        IntegrityError, MissingFileError, PermValidationError, LockError
-        )
+    IntegrityError,
+    LockError,
+    MissingFileError,
+    PermValidationError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -119,11 +122,11 @@ def acquire_lock() -> None:
 
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
+    except BlockingIOError as e:
         raise LockError(
             f"Failed to acquire lock {lock_path}. "
             f"Is another instance of USG running?"
-            )
+            ) from e
     atexit.register(
         lambda: (fcntl.flock(fd, fcntl.LOCK_UN), os.close(fd))
         )

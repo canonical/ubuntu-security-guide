@@ -237,8 +237,9 @@ class TailoringFile:
         The benchmark type can be inferred from the profile.
 
         Args:
-            benchmark_href: legacy href attribute
+            benchmark_href: legacy href attribute from tailoring file
             (/usr/share/ubuntu-scap-security-guide/N/benchmarks/ssg-ubuntuXXXX.xccdf.xml)
+            profile_id: profile id attribute from tailoring file
 
         Returns:
             (benchmark_id, profile_id)
