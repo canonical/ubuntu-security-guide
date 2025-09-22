@@ -545,7 +545,8 @@ def _build_active_releases(
                     raise BenchmarkProcessingError(
                         f"Data directory {cac_tag} does not exist in {pre_built_data_dir}. "
                         f"Check the pre-built-data-dir argument. "
-                        f"Ensure the directory structure matches the one used in tools/tests/data/input/"
+                        f"Ensure the directory structure matches the one used in "
+                        f"tools/tests/data/input/"
                     )
                 logger.debug(f"Copying test data from {release_dir} to {tmp_build_dir}")
                 shutil.copytree(release_dir, tmp_build_dir, dirs_exist_ok=True)
@@ -567,7 +568,9 @@ def _build_active_releases(
             # Compress datastream and save to destination dir (e.g. dst_dir/ubuntu2404_CIS_2/...)
             datastream_filename = CAC_RELEASE_NAME.format(b_data["product"])
             datastream_build_path = tmp_build_dir / "build" / datastream_filename
-            datastream_dst_gz_path = (output_benchmark_dir / datastream_filename).with_suffix(".xml.gz")  # noqa: E501
+            datastream_dst_gz_path = (
+                    output_benchmark_dir / datastream_filename
+                    ).with_suffix(".xml.gz")  # noqa: E501
             _save_compressed_datastream(datastream_build_path, datastream_dst_gz_path)
 
             # Calc hashes and set metadata for datastream
@@ -592,8 +595,12 @@ def _build_active_releases(
                 logger.info(f"Generating tailoring file for profile {profile_id}")
 
                 profile_path = cac_profiles_dir / f"{profile_id}.profile"
-                tailoring_template_path = tailoring_templates_dir / f"{profile_id}-tailoring.xml"
-                output_tailoring_path = output_tailoring_files_dir / f"{profile_id}-tailoring.xml"
+                tailoring_template_path = (
+                        tailoring_templates_dir / f"{profile_id}-tailoring.xml"
+                        )
+                output_tailoring_path = (
+                        output_tailoring_files_dir / f"{profile_id}-tailoring.xml"
+                        )
 
                 _create_tailoring_file(
                     profile_path,
@@ -603,7 +610,7 @@ def _build_active_releases(
                     output_tailoring_path
                 )
 
-                # Calc hashes and set metadata 
+                # Calc hashes and set metadata
                 b_data["tailoring_files"][profile_id] = {
                     "path": str(output_tailoring_path.relative_to(dst_dir)),
                     "sha256": _calc_sha256(output_tailoring_path)
@@ -622,7 +629,7 @@ def _build_active_releases(
 def _log_upgrade_paths(active_releases: list[dict[str, Any]]) -> None:
     # print out clean upgrade paths
     logger.info("--- Benchmark upgrade paths ---")
-    for i, release in enumerate(sorted(active_releases,
+    for _, release in enumerate(sorted(active_releases,
                                  key=lambda x: x["benchmark_data"]["benchmark_id"])):
         b = release["benchmark_data"]
         compatible_versions = [
@@ -654,8 +661,12 @@ def process_benchmarks(
     pre_built_data_dir: Path,
     out_dir: Path,
 ) -> None:
-    # Parse yaml files, do some basic validation, call process_yaml() for each, write output json
+    """Process benchmark releases defined in benchmark_yaml_files.
 
+    - Parse yaml files and get list of active CaC releases (_process_yaml)
+    - Build active ComplianceAsCode releases
+    - Write benchmark metadata json
+    """
     if out_dir.exists() and list(out_dir.rglob("*.xml")):
         raise BenchmarkProcessingError(
             f"Benchmark directory {out_dir} is not empty. "
@@ -673,7 +684,6 @@ def process_benchmarks(
         "version": SCHEMA_VERSION,
         "benchmarks": [],
     }
-
 
     # parse and process benchmark yaml files
     all_active_releases = []
@@ -714,11 +724,10 @@ def process_benchmarks(
         logger.info(f"Copying benchmark files and folders to {out_dir}")
         shutil.copytree(tmp_dst_dir, out_dir, dirs_exist_ok=True)
 
-        # build CaC datastreams and 
+        # build CaC datastreams and
         # Get the actual benchmark data and files
       #   - download release datastream
     #   - generate tailoring files and whatever else is needed
-
 
     # extract benchmark metadata and store in json
     benchmarks_metadata = [r["benchmark_data"] for r in all_active_releases]
@@ -736,7 +745,8 @@ def process_benchmarks(
     logger.info(f"sha256({OUTPUT_JSON_NAME}): {digest.hexdigest()}")
 
 
-def main():
+def main() -> None:
+    """Command line entry point."""
     parser = argparse.ArgumentParser()
     mutex_group = parser.add_mutually_exclusive_group(required=True)
     mutex_group.add_argument(
