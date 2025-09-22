@@ -1,0 +1,21 @@
+name: Unit and E2E tests on all platforms
+on:
+  pull_request:
+    branches: [ master, noble, jammy ]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.run_id }}
+  cancel-in-progress: true
+jobs:
+  run-tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install podman
+        run: sudo apt-get update && sudo apt-get install -y podman
+      - name: Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+        with:
+          fetch-depth: 0
+      - name: Run test script
+        id: run_tests
+        run: ./tools/run_tests.sh
