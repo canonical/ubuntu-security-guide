@@ -42,9 +42,9 @@ test_cmd "usg --version"  0  "\d*\.\d*\.\d*"                 ""
 test_cmd "usg list --all"                            0  "cis_level1_server"             ""
 test_cmd "usg list --all | grep 'Listing available'" 0  "Listing available profiles"             ""
 
-# only names should exist with --names-only
-test_cmd "usg list --names-only"                            0  "cis_level1_server"             ""
-test_cmd "usg list --names-only | grep 'Listing available'" 1  ""                              ""
+# machine-readable flag should print "profile:type:product:..." and no extra information
+test_cmd "usg list --machine-readable"                            0  "cis_level1_server:CIS:"             ""
+test_cmd "usg list --machine-readable | grep 'Listing available'" 1  ""                              ""
 
 # info for profile should work
 test_cmd "usg info cis_level1_server"  0  "Benchmark.*CIS"   ""
