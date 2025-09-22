@@ -3,8 +3,8 @@ import os
 import pytest
 import logging
 
-from usg import utils, constants
-from usg.exceptions import IntegrityError, PermValidationError, LockError
+from usg import constants, utils
+from usg.exceptions import IntegrityError, PermValidationError
 
 
 def test_verify_integrity_success(tmp_path):
@@ -146,5 +146,4 @@ def test_aqcuire_lock_failed_creation(monkeypatch, tmp_path, caplog):
         utils.acquire_lock()
         assert "Failed to create lock file" in caplog.text
     assert not tmp_lock.exists()
-
 
