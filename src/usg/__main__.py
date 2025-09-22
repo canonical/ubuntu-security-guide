@@ -1,4 +1,4 @@
-"""Module entry point"""
+"""Module entry point."""
 
 from usg.cli import main
 
