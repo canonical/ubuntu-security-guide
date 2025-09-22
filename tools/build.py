@@ -182,7 +182,7 @@ def build_files(
     data_info = [
         ["doc/man8/usg.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-cis.md", "", "<<DOESNT_EXIST>>"],
-        ["doc/man7/usg-disa-stig.md", "", "<<DOESNT_EXIST>>"],
+        ["doc/man7/usg-stig.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-rules.md", rules_doc, "<<USG_MAN_RULES_PLACEHOLDER>>"],
         ["doc/man7/usg-variables.md", vars_doc, "<<USG_MAN_VARIABLE_PLACEHOLDER>>"],
     ]
