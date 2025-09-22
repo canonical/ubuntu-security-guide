@@ -18,7 +18,7 @@ for release in $TEST_RELEASES; do
     else
         test_dirs="tests/"
     fi
-    run_cmd bash -c "PYTHONPATH=/usr/share/usg/ python3 -m pytest -vvv --cov=usg --cov-report=term-missing $test_dirs"
+    run_cmd bash -c "PYTHONPATH=/usr/share/usg/ python3 -m pytest -vvv $test_dirs"
     rc_sum=$(( $rc_sum + $? ))
 
     echo "Running e2e tests on $release"

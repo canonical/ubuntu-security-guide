@@ -58,7 +58,7 @@ RUN apt update
 RUN apt install -y $oscap_deps python3 bash-completion bsdextrautils
 
 # built/testing deps
-RUN apt install -y python3-pytest python3-yaml python3-pytest-cov python3-lxml python3-requests pybuild-plugin-pyproject python3-setuptools
+RUN apt install -y python3-pytest python3-yaml python3-coverage python3-lxml python3-requests pybuild-plugin-pyproject python3-setuptools
 
 # tools
 RUN apt install -y vim-tiny less 
