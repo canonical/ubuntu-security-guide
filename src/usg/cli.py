@@ -14,7 +14,7 @@ from pathlib import Path
 
 from usg import constants
 from usg.config import load_config, override_config_with_cli_args
-from usg.exceptions import StateFileError, USGError, LockError
+from usg.exceptions import LockError, StateFileError, USGError
 from usg.models import Benchmark, Profile, TailoringFile
 from usg.usg import USG
 from usg.utils import acquire_lock, validate_perms
