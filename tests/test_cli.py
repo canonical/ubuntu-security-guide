@@ -7,10 +7,7 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-import usg
-from usg import cli
-from usg import __version__
-from usg.cli import constants
+from usg import cli, exceptions, results, constants, utils, __version__
 from usg.cli import load_benchmark_version_state, save_benchmark_version_state
 from usg.exceptions import StateFileError
 from usg.usg import USG
@@ -38,8 +35,8 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     mp.setattr(constants, "CONFIG_PATH", dummy_cfg)
     mp.setattr(constants, "LOCK_PATH", tmp_state_dir / "usg.lock")
 
-    mp.setattr(usg.utils, "validate_perms", lambda *a, **k: None)
-    mp.setattr(usg.utils, "verify_integrity", lambda *a, **k: None)
+    mp.setattr(utils, "validate_perms", lambda *a, **k: None)
+    mp.setattr(utils, "verify_integrity", lambda *a, **k: None)
 
     class DummyUSG(USG):
         def __init__(self, *args, **kwargs):
