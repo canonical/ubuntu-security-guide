@@ -5,8 +5,8 @@ import pytest
 from pytest import MonkeyPatch
 
 from usg import usg as usg_module
-from usg import constants
-from usg.exceptions import ProfileNotFoundError, USGError
+from usg import constants, config
+from usg.exceptions import BackendError, ProfileNotFoundError, USGError
 from usg.models import Benchmark, Benchmarks, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
 from usg.usg import USG
@@ -133,7 +133,7 @@ def test_usg_init_and_benchmarks(patch_usg, monkeypatch, dummy_benchmarks):
     usg = USG()
     assert isinstance(usg.benchmarks, Benchmarks)
     assert isinstance(usg.get_benchmark_by_id("ubuntu2404_CIS_1"), Benchmark)
-    with pytest.raises(KeyError, match="Benchmark badbenchmark not found"):
+    with pytest.raises(KeyError, match="Benchmark 'badbenchmark' not found"):
         usg.get_benchmark_by_id("badbenchmark")
 
 
@@ -344,3 +344,42 @@ def test_missing_benchmarks_file(monkeypatch, tmp_path):
     monkeypatch.setattr(constants, "BENCHMARK_METADATA_PATH", tmp_path / "nonexistant")
     with pytest.raises(USGError, match="Could not find benchmark data"):
         USG()
+
+
+def test_move_artifacts_error_handling(patch_usg, monkeypatch):
+    # test that moving the file raises USGError
+    monkeypatch.setattr(
+        config, "get_artifact_destination_path", lambda *a: "/dev/null/nonwritable/path"
+        )
+    usg = USG()
+    artifacts = BackendArtifacts()
+    artifacts.add_artifact("test", "test")
+    
+    with pytest.raises(USGError, match="Error moving files"):
+        usg._move_artifacts(artifacts, "test_profile", "test_product")
+
+
+@pytest.mark.parametrize("function_name,backend_error_type,reraised_error_type,error_text", [
+    ["audit", BackendError, USGError, "Failed to run backend operation"],
+    ["fix", BackendError, USGError, "Failed to run backend operation"],
+    ["generate_fix", BackendError, USGError, "Failed to run backend operation"],
+    ["audit", KeyboardInterrupt, KeyboardInterrupt, ""],
+    ["fix", KeyboardInterrupt, KeyboardInterrupt, ""],
+    ["generate_fix", KeyboardInterrupt, KeyboardInterrupt, ""],
+    ["audit", RuntimeError, RuntimeError, ""],
+    ["fix", RuntimeError, RuntimeError, ""],
+    ["generate_fix", RuntimeError, RuntimeError, ""],
+])
+def test_error_handling_in_backend_operations(patch_usg, monkeypatch, caplog, function_name,
+                                              backend_error_type, reraised_error_type, error_text):
+    # test that errors returned by backend are properly handled
+    def backend_function(*a, **kw):
+        raise backend_error_type
+
+    monkeypatch.setattr(usg_module.OpenscapBackend, function_name, backend_function)
+    usg = USG()
+    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    with pytest.raises(reraised_error_type, match=error_text):
+        with caplog.at_level("ERROR"):
+            getattr(usg, function_name)(profile)
+    assert "Storing partial outputs in " in caplog.text
