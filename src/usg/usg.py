@@ -156,8 +156,8 @@ class USG:
 
         raise ProfileNotFoundError(
             f"No profile found matching these criteria: "
-            f"profile={profile_id}, product={product}, "
-            f"version={benchmark_version}."
+            f"name: '{profile_id}', product: '{product}', "
+            f"version: '{benchmark_version}'."
         )
 
     def load_tailoring(
