@@ -147,6 +147,11 @@ def test_cli_non_root_user(monkeypatch, capsys):
         (["audit"], None, "Error: a profile or a tailoring file must be provided.", 2),
         (["fix"], None, "Error: a profile or a tailoring file must be provided.", 2),
         (["generate-fix"], None, "Error: a profile or a tailoring file must be provided.", 2),
+        # failed commands with profile and bad version
+        (["info", "cis_level1_server", "-b", "v10"], None, "No profile found matching", 1),
+        (["audit", "cis_level1_server", "-b", "v10"], None, "No profile found matching", 1),
+        (["fix", "cis_level1_server", "-b", "v10"], None, "No profile found matching", 1),
+        (["generate-fix", "cis_level1_server", "-b", "v10"], None, "No profile found matching", 1),
         # failed commands with both a profile and a tailoring file
         (["info", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         (["audit", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
