@@ -14,7 +14,7 @@ from pathlib import Path
 
 from usg import constants
 from usg.config import load_config, override_config_with_cli_args
-from usg.exceptions import LockError, StateFileError, USGError
+from usg.exceptions import LockError, ProfileNotFoundError, StateFileError, USGError
 from usg.models import Benchmark, Profile, TailoringFile
 from usg.usg import USG
 from usg.utils import acquire_lock, validate_perms
@@ -30,8 +30,7 @@ CLI_INFO_FORMAT = "{:25s}{:s}"
 # CLI help descriptions and usage
 # keep descriptions as close to original bash USG as possible
 EPILOG_COMMON = """\
-Unless the --tailoring-file flag is provided, a profile must be given.
-Run 'usg list' to list avaiable profiles.
+Unless the `--tailoring-file` flag is provided, a profile must be given.
 """
 
 CMD_LIST_HELP = {
@@ -52,7 +51,11 @@ The audit command relies on the oscap command and the USG XCCDF and
 OVAL files to audit the system, verifying if the system is compliant
 with either a provided profile or a provided tailoring file.
 """,
-    "epilog": EPILOG_COMMON,
+    "epilog": EPILOG_COMMON + """
+Examples:
+$ usg audit cis_level1_server
+$ usg audit -t tailoring.xml --html-file report.html --results-file result.xml
+"""
 }
 
 CMD_FIX_HELP = {
@@ -61,12 +64,16 @@ The fix command relies on the oscap command, the XCCDF and OVAL files
 to audit the system and then fix all the rules associated with either
 a provided profile or a provided tailoring file.
 
-The optional flag --only-failed can be used to avoid fixing all the rules,
+The optional flag `--only-failed` can be used to avoid fixing all the rules,
 but to fix only the rules which are marked as Failed during the initial audit.
 Note that due to rule dependencies, the command might need to be rerun
 for all rules to be fixed correctly.
 """,
-    "epilog": EPILOG_COMMON,
+    "epilog": EPILOG_COMMON + """
+Examples:
+$ usg fix cis_level1_server
+$ usg fix -t tailoring.xml --only-failed
+"""
 }
 
 CMD_GENERATE_FIX_HELP = {
@@ -75,7 +82,11 @@ The generate-fix command relies on the oscap command, the XCCDF and
 OVAL files to create a bash script file containing all the fixes
 associated with either a provided profile or a provided tailoring file.
 """,
-    "epilog": EPILOG_COMMON,
+    "epilog": EPILOG_COMMON + """
+Examples:
+$ usg generate-fix cis_level1_server
+$ usg generate-fix -t tailoring.xml
+"""
 }
 
 CMD_GENERATE_TAILORING_HELP = {
@@ -87,7 +98,11 @@ tailoring file the default save it as /etc/usg/default-tailoring.xml
 This command requires a profile upon which the tailoring file will be created.
 All rules present in the base profile will also be present in the tailoring file.
 """,
-    "epilog": "Run 'usg list' to list avaiable profiles.",
+    "epilog": """
+Examples:
+$ usg generate-fix cis_level1_server -o fix.sh
+$ usg generate-fix -t tailoring.xml -o fix.sh
+"""
 }
 
 
@@ -116,7 +131,7 @@ Use usg <command> --help for more information about a command.
 """,
 }
 
-def error_exit(msg: str, rc: int = 1) -> None:
+def error_exit(msg: str = "", rc: int = 1) -> None:
     """Write msg to standard error and exit with return code rc."""
     if msg:
         sys.stderr.write(msg)
@@ -171,9 +186,12 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
         benchmark_version = load_benchmark_version_state(args.profile)
         if hasattr(args, "benchmark_version"):
             benchmark_version = args.benchmark_version
-        usg_profile = usg.get_profile(
-            args.profile, args.product, benchmark_version
-        )
+        try:
+            usg_profile = usg.get_profile(
+                args.profile, args.product, benchmark_version
+            )
+        except ProfileNotFoundError as e:
+            error_exit(f"{e}\nSee `usg list` for list of available profiles.", rc=1)
     print_info_profile(usg_profile)
     print_info_benchmark(usg.get_benchmark_by_id(usg_profile.benchmark_id))
     logger.debug("Finished command_info")
@@ -408,12 +426,15 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
         else:
             benchmark_version = stored_benchmark_version
 
-        # get the profile
-        profile = usg.get_profile(
-            args.profile,
-            args.product,
-            benchmark_version
-            )
+        try:
+            # get the profile
+            profile = usg.get_profile(
+                args.profile,
+                args.product,
+                benchmark_version
+                )
+        except ProfileNotFoundError as e:
+            error_exit(f"{e}\nSee `usg list` for list of available profiles.", rc=1)
 
         # update the benchmark version in the state file
         benchmark = usg.get_benchmark_by_id(profile.benchmark_id)
@@ -621,7 +642,7 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
     # print help if no command is provided (as legacy USG)
     if args.command is None:
         parser.print_help()
-        error_exit("", rc=2)
+        error_exit(rc=2)
 
     # additional check for profile/tailoring file
     if args.command in ["info", "audit", "fix", "generate-fix"]:
@@ -631,8 +652,9 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
             error_exit("You cannot provide both a tailoring file and a profile!", rc=2)
 
         elif not hasattr(args, "profile") and not hasattr(args, "tailoring_file"):
-            error_exit("Error: a profile or a tailoring file must be provided.", rc=2)
+            sys.stderr.write("Error: a profile or a tailoring file must be provided.\n")
             cmd_parsers[args.command].print_help()
+            error_exit(rc=2)
 
     # benchmark_version/product are not compatible with tailoring-file
     if hasattr(args, "tailoring_file") and hasattr(args, "benchmark_version"):
