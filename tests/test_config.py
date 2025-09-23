@@ -1,14 +1,17 @@
+from collections import namedtuple
 import configparser
 import logging
 from pathlib import Path
 
-from usg import config as usg_config
+from usg.config import (
+    load_config, get_artifact_destination_path, override_config_with_cli_args, DEFAULT_CONFIG
+)
 from usg import constants
 
 def test_load_config_defaults():
     # Should load defaults if no config file is provided
-    cfg = usg_config.load_config()
-    for section, options in usg_config.DEFAULT_CONFIG.items():
+    cfg = load_config()
+    for section, options in DEFAULT_CONFIG.items():
         assert cfg.has_section(section)
         for key, value in options.items():
             assert cfg.get(section, key) == str(value)
@@ -22,7 +25,7 @@ def test_load_config_with_file(tmp_path):
 log_file = /tmp/test.log
 product = testproduct
 """)
-    cfg = usg_config.load_config(str(config_file))
+    cfg = load_config(str(config_file))
     assert cfg.get("cli", "log_file") == "/tmp/test.log"
     assert cfg.get("cli", "product") == "testproduct"
 
@@ -31,8 +34,8 @@ def test_load_config_file_not_exist(tmp_path, caplog):
     # Should fall back to defaults
     caplog.set_level(logging.INFO)
     missing_file = tmp_path / "doesnotexist.ini"
-    cfg = usg_config.load_config(str(missing_file))
-    for section in usg_config.DEFAULT_CONFIG:
+    cfg = load_config(str(missing_file))
+    for section in DEFAULT_CONFIG:
         assert cfg.has_section(section)
     assert "does not exist. Using defaults." in caplog.text
 
@@ -43,9 +46,9 @@ def test_load_config_invalid_file(tmp_path, caplog):
     bad_file = tmp_path / "bad.ini"
     bad_file.write_text("[cli\nbad")
     with caplog.at_level("ERROR"):
-        cfg = usg_config.load_config(str(bad_file))
+        cfg = load_config(str(bad_file))
     assert "Failed to load config" in caplog.text
-    for section in usg_config.DEFAULT_CONFIG:
+    for section in DEFAULT_CONFIG:
         assert cfg.has_section(section)
 
 
@@ -63,13 +66,13 @@ def test_get_artifact_path(monkeypatch):
             }
         }
     )
-    report_path = usg_config.get_artifact_destination_path(
+    report_path = get_artifact_destination_path(
         test_config, "audit_report", "TEST_TS", "TEST_ID", "TEST_PRODUCT"
     )
-    results_path = usg_config.get_artifact_destination_path(
+    results_path = get_artifact_destination_path(
         test_config, "audit_results", "TEST_TS", "TEST_ID", "TEST_PRODUCT"
     )
-    oval_results_path = usg_config.get_artifact_destination_path(
+    oval_results_path = get_artifact_destination_path(
         test_config, "audit_oval_results", "TEST_TS", "TEST_ID", "TEST_PRODUCT"
     )
     assert report_path == Path("/test_state_dir/relative_dir/TEST_TS-TEST_ID.html")
@@ -77,3 +80,29 @@ def test_get_artifact_path(monkeypatch):
     assert oval_results_path == Path(
         "/test_state_dir/ssg-TEST_PRODUCT-oval.xml.results-TEST_TS.xml"
     )
+
+
+def test_override_config_with_cli_args():
+    # test that CLI values correctly override the config
+    test_config = configparser.ConfigParser()
+    test_config.read_dict(
+        {
+            "openscap_backend": {
+                "audit_report": "original",
+                "audit_results": "original",
+                "fix_script": "original",
+            }
+        }
+    )
+    for command, option in [
+        ("audit", "html_file"),
+        ("audit", "notavalidoption"),
+        ("generate-fix", "output")
+    ]:
+        args = namedtuple('args', ['command', option])(command, Path('overriden'))
+        override_config_with_cli_args(test_config, args)
+    
+    overriden = str(Path('overriden').resolve())
+    assert test_config.get("openscap_backend", "audit_report") == overriden
+    assert test_config.get("openscap_backend", "audit_results") == "original"
+    assert test_config.get("openscap_backend", "fix_script") == overriden

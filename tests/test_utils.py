@@ -1,9 +1,11 @@
 import os
+import subprocess
 
 import pytest
 import logging
 
-from usg import constants, utils
+from usg import constants
+from usg.utils import acquire_lock, gunzip_file, verify_integrity, validate_perms
 from usg.exceptions import IntegrityError, PermValidationError, LockError
 
 
@@ -13,7 +15,7 @@ def test_verify_integrity_success(tmp_path):
     file.write_bytes(content)
     hexdigest = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
     # Should not raise
-    utils.verify_integrity(file, hexdigest, "sha256")
+    verify_integrity(file, hexdigest, "sha256")
 
 
 def test_verify_integrity_failure(tmp_path):
@@ -21,7 +23,7 @@ def test_verify_integrity_failure(tmp_path):
     file.write_bytes(b"something else")
     wrong_digest = "0" * 64
     with pytest.raises(IntegrityError):
-        utils.verify_integrity(file, wrong_digest, "sha256")
+        verify_integrity(file, wrong_digest, "sha256")
 
 
 def test_validate_perms_file_ok(tmp_path):
@@ -29,27 +31,27 @@ def test_validate_perms_file_ok(tmp_path):
     file.touch()
     os.chmod(file, mode=0o600)
     # Should not raise
-    utils.validate_perms(file)
+    validate_perms(file)
 
 
 def test_validate_perms_dir_ok(tmp_path):
     d = tmp_path / "adir"
     d.mkdir()
     os.chmod(d, mode=0o700)
-    utils.validate_perms(d, is_dir=True)
+    validate_perms(d, is_dir=True)
 
 
 def test_validate_perms_file_not_exist(tmp_path):
     file = tmp_path / "doesnotexist"
     with pytest.raises(PermValidationError):
-        utils.validate_perms(file)
+        validate_perms(file)
 
 
 def test_validate_perms_symlink(tmp_path):
     link = tmp_path / "alink"
     link.symlink_to(".")
     with pytest.raises(PermValidationError):
-        utils.validate_perms(link)
+        validate_perms(link)
 
 
 def test_validate_perms_not_dir(tmp_path):
@@ -57,7 +59,7 @@ def test_validate_perms_not_dir(tmp_path):
     file.touch()
     os.chmod(file, mode=0o600)
     with pytest.raises(PermValidationError):
-        utils.validate_perms(file, is_dir=True)
+        validate_perms(file, is_dir=True)
 
 
 def test_validate_perms_not_file(tmp_path):
@@ -65,7 +67,7 @@ def test_validate_perms_not_file(tmp_path):
     d.mkdir()
     os.chmod(d, mode=0o700)
     with pytest.raises(PermValidationError):
-        utils.validate_perms(d, is_dir=False)
+        validate_perms(d, is_dir=False)
 
 
 def test_validate_perms_world_writable_file(tmp_path):
@@ -73,7 +75,7 @@ def test_validate_perms_world_writable_file(tmp_path):
     file.touch()
     os.chmod(file, mode=0o666)
     with pytest.raises(PermValidationError):
-        utils.validate_perms(file)
+        validate_perms(file)
 
 
 def test_validate_perms_world_writable_dir(tmp_path):
@@ -81,7 +83,7 @@ def test_validate_perms_world_writable_dir(tmp_path):
     d.mkdir()
     os.chmod(d, mode=0o777)
     with pytest.raises(PermValidationError):
-        utils.validate_perms(d, is_dir=True)
+        validate_perms(d, is_dir=True)
 
 
 def test_validate_perms_world_writable_parent(tmp_path):
@@ -92,7 +94,7 @@ def test_validate_perms_world_writable_parent(tmp_path):
     os.chmod(d, mode=0o777)
     os.chmod(file, mode=0o600)
     with pytest.raises(PermValidationError):
-        utils.validate_perms(file)
+        validate_perms(file)
 
 
 def test_validate_perms_not_owned(tmp_path, monkeypatch):
@@ -123,18 +125,18 @@ def test_validate_perms_not_owned(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "stat", fake_stat)
 
     with pytest.raises(PermValidationError):
-        utils.validate_perms(file)
+        validate_perms(file)
 
 def test_aqcuire_lock_fail(monkeypatch, tmp_path):
     # test that failure to acquire lock raises an exception
     tmp_lock = tmp_path / "lockfile"
     monkeypatch.setattr(constants, "LOCK_PATH", tmp_lock)
 
-    utils.acquire_lock()
+    acquire_lock()
     assert tmp_lock.exists()
 
     with pytest.raises(LockError, match="Failed to acquire lock"):
-        utils.acquire_lock()
+        acquire_lock()
 
 def test_aqcuire_lock_failed_creation(monkeypatch, tmp_path, caplog):
     # test that failure to create lock file doesnt fail the program
@@ -142,7 +144,16 @@ def test_aqcuire_lock_failed_creation(monkeypatch, tmp_path, caplog):
     monkeypatch.setattr(constants, "LOCK_PATH", tmp_lock)
 
     with caplog.at_level(logging.ERROR):
-        utils.acquire_lock()
+        acquire_lock()
         assert "Failed to create lock file" in caplog.text
     assert not tmp_lock.exists()
 
+
+def test_gunzip(tmp_path):
+    # test that gunzip function works as expected (assuming gzip works)
+    f = tmp_path / "file"
+    f.write_text("testing gunziping")
+    subprocess.check_call(["gzip", "-kn", f], cwd=tmp_path)
+    f_gunzipped = f.with_suffix(".new")
+    gunzip_file(f.with_suffix(".gz"), f_gunzipped)
+    assert f.read_bytes() == f_gunzipped.read_bytes()

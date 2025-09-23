@@ -16,8 +16,17 @@ def test_usgbenchmarks(dummy_benchmarks):
     assert isinstance(benchmarks["ubuntu2404_CIS_1"], Benchmark)
     assert isinstance(benchmarks["ubuntu2404_STIG_1"], Benchmark)
 
+def test_usgbenchmarks_error_loading_and_parsing(tmp_path):
+    # test that failure to load or parse json file results in BenchmarkError
+    with pytest.raises(BenchmarkError, match="Failed to parse"):
+        Benchmarks.from_json("/dev/null/nonexistent")
 
-def test_usgbenchmarks_from_missing_benchmarks(tmp_path, dummy_benchmarks):
+    bad_json = tmp_path / "benchmarks.json"
+    bad_json.write_text("this won't parse")
+    with pytest.raises(BenchmarkError, match="Failed to parse"):
+        Benchmarks.from_json(bad_json)
+
+def test_usgbenchmarks_error_from_missing_benchmarks(tmp_path, dummy_benchmarks):
     # Test that an error is raised if the benchmarks key is missing
     b = json.loads(dummy_benchmarks.read_text())
     b.pop("benchmarks")
@@ -29,7 +38,7 @@ def test_usgbenchmarks_from_missing_benchmarks(tmp_path, dummy_benchmarks):
         Benchmarks.from_json(json_file)
 
 
-def test_usgbenchmarks_from_missing_version(tmp_path, dummy_benchmarks):
+def test_usgbenchmarks_error_from_missing_version(tmp_path, dummy_benchmarks):
     # Test that an error is raised if the version key is missing
     b = json.loads(dummy_benchmarks.read_text())
     b.pop("version")
@@ -41,7 +50,7 @@ def test_usgbenchmarks_from_missing_version(tmp_path, dummy_benchmarks):
         Benchmarks.from_json(json_file)
 
 
-def test_usgbenchmarks_from_duplicate_benchmark_id(tmp_path, dummy_benchmarks):
+def test_usgbenchmarks_error_from_duplicate_benchmark_id(tmp_path, dummy_benchmarks):
     # Test that an error is raised if the version key is missing
     b = json.loads(dummy_benchmarks.read_text())
     b["benchmarks"].append(b["benchmarks"][0])
