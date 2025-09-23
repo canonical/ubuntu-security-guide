@@ -283,7 +283,7 @@ def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
         with Path(args.output).open("w") as f:
             f.write(contents)
     except OSError as e:
-        print(f"Failed to write file {args.output}: {e}")
+        error_exit(f"Failed to write file {args.output}: {e}")
     else:
         print("USG generate-tailoring command completed.")
     logger.debug("Finished command_generate_tailoring")

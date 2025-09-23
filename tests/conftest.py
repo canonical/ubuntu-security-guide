@@ -6,7 +6,7 @@ import pytest
 @pytest.fixture(scope="session")
 def dummy_benchmarks(tmp_path_factory):
     tmp_path = tmp_path_factory.mktemp("dummy_benchmarks")
-    # Create a dummy benchmarks.json file
+    # Create a dummy benchmarks.json file and corresponding dummy tailoring files
     json_file = tmp_path / "benchmarks.json"
     json_data = {
         "version": 1,
@@ -200,5 +200,22 @@ def dummy_benchmarks(tmp_path_factory):
         ],
     }
 
+    # Write benchmark metadata json
     json_file.write_text(json.dumps(json_data))
+
+    # Write dummy tailoring files
+    for b in json_data["benchmarks"]:
+        benchmark_id = b["benchmark_id"]
+        for tailoring_file in b["tailoring_files"].values():
+            tailoring_path = tmp_path / tailoring_file["path"]
+            tailoring_path.parent.mkdir(parents=True, exist_ok=True)
+            tailoring_path.write_text(
+f"""<?xml version="1.0" encoding="UTF-8"?>
+<Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
+  <benchmark href="{benchmark_id}"/>
+  <Profile id="tailored_profile">
+    <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
+    </Profile>
+</Tailoring>""")
+
     return json_file

@@ -64,6 +64,34 @@ def test_backend_artifact_move(tmp_path):
     assert (new_dir / "test_file").read_text() == "test_file_contents"
 
 
+def test_backend_artifact_move_to_dir(tmp_path):
+    # test that all artifacts are moved to the correct location
+    output_files = BackendArtifacts()
+    test_files = ["test1", "test2", "test3"]
+    for t in test_files:
+        (tmp_path / t).write_text(t)
+        output_files.add_artifact(t, tmp_path / t)
+
+    new_dir = tmp_path / "new_dir"
+    output_files.move_to_dir(new_dir, parent_dir_filter="/")
+    for t in test_files:
+        assert output_files.get_by_type(t).path == new_dir / t
+        assert (new_dir / t).read_text() == t
+
+
+def test_backend_artifact_move_to_dir_bad_filter(tmp_path):
+    # test that files are not moved if parent dir filter doesn't match
+    output_files = BackendArtifacts()
+    test_files = ["test1", "test2", "test3"]
+    for t in test_files:
+        (tmp_path / t).write_text(t)
+        output_files.add_artifact(t, tmp_path / t)
+
+    new_dir = tmp_path / "new_dir"
+    output_files.move_to_dir(new_dir, parent_dir_filter="/notaparentdir")
+    for t in test_files:
+        assert output_files.get_by_type(t).path == tmp_path / t
+
 def test_backend_artifact_missing(tmp_path):
     # test that it fails to move non-existent files
     output_files = BackendArtifacts()
@@ -71,3 +99,19 @@ def test_backend_artifact_missing(tmp_path):
     output_files.add_artifact("test_type", test_file)
     with pytest.raises(FileMoveError):
         output_files[0].move(tmp_path / "missing_dir/test_file")
+
+def test_backend_artifact_kind_exists(tmp_path):
+    # test that error is raised if kind already exists
+    output_files = BackendArtifacts()
+    output_files.add_artifact("test_type", "/test_file")
+    with pytest.raises(ValueError, match="already exists"):
+        output_files.add_artifact("test_type", "/test_file")
+
+def test_backend_artifact_no_such_kind(tmp_path):
+    # test that error is raised if artifact kind doesn't exist
+    output_files = BackendArtifacts()
+    output_files.add_artifact("test_type", "/test_file")
+    output_files.get_by_type("test_type")
+    with pytest.raises(ValueError, match="No file found with kind"):
+        output_files.get_by_type("test_type2")
+

@@ -124,7 +124,7 @@ class OpenscapBackend:
             validate_perms(self._oscap_path)
         except PermValidationError as e:
             raise BackendError(
-                f"Issue with Openscap binary: {e}",
+                f"Permission issue with Openscap binary: {e}",
             ) from e
         if not os.access(self._oscap_path, os.X_OK):
             raise BackendError(
@@ -135,7 +135,7 @@ class OpenscapBackend:
             validate_perms(self._work_dir, is_dir=True)
         except PermValidationError as e:
             raise BackendError(
-                f"Issue with temporary work directory: {e}",
+                f"Permission issue with temporary work directory: {e}",
             ) from e
 
         self._oscap_version = self._get_oscap_version(
@@ -153,7 +153,7 @@ class OpenscapBackend:
             process = run_cmd(cmd, cwd=cwd, timeout=60)
         except BackendCommandError as e:
             raise BackendError(
-                f"Failed to determine oscap version: {e}"
+                f"Failed to call 'oscap --version': {e}"
             ) from e
 
         try:
@@ -250,8 +250,8 @@ class OpenscapBackend:
 
         if not results_path.exists():
             raise BackendError(
-                f"'audit' command failed to produce results file {results_path}. "
-                "Check openscap output for more details.",
+                f"Backend failed to produce audit results file {results_path}. "
+                f"Check openscap output for more details.",
             )
 
         artifacts = BackendArtifacts()

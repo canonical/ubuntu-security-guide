@@ -3,15 +3,18 @@ import json
 import os
 import sys
 from pathlib import Path
+import logging
 
 import pytest
 from pytest import MonkeyPatch
 
 from usg import cli, exceptions, results, constants, utils, __version__
-from usg.cli import load_benchmark_version_state, save_benchmark_version_state
-from usg.exceptions import StateFileError
+from usg.cli import init_logging, load_benchmark_version_state, save_benchmark_version_state
+from usg.exceptions import LockError, StateFileError, USGError
 from usg.usg import USG
 from usg.results import AuditResults, BackendArtifacts
+
+logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
@@ -34,6 +37,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     mp.setattr(constants, "CLI_STATE_FILE", tmp_state_dir / "state.json")
     mp.setattr(constants, "CONFIG_PATH", dummy_cfg)
     mp.setattr(constants, "LOCK_PATH", tmp_state_dir / "usg.lock")
+    mp.setattr(constants, "CLI_LOG_FILE", "usg.log")
 
     mp.setattr(utils, "validate_perms", lambda *a, **k: None)
     mp.setattr(utils, "verify_integrity", lambda *a, **k: None)
@@ -76,7 +80,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
             return output_files
 
     mp.setattr(cli, "USG", DummyUSG)
-    mp.setattr(cli.os, "geteuid", lambda: 0)
+    mp.setattr(os, "geteuid", lambda: 0)
     mp.setattr(cli, "load_benchmark_version_state", lambda *a: "latest")
     mp.setattr(cli, "save_benchmark_version_state", lambda *a: None)
 
@@ -101,8 +105,9 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     mp.undo()
 
 
-def test_cli_non_root_user(monkeypatch, capsys):
-    monkeypatch.setattr(cli.os, "geteuid", lambda: 1000)
+def test_cli_non_root_user_error(monkeypatch, capsys):
+    # test that non-root users cannot run the tool
+    monkeypatch.setattr(os, "geteuid", lambda: 1000)
     with pytest.raises(SystemExit) as e:
         cli.cli()
     assert e.value.code == 1
@@ -112,6 +117,41 @@ def test_cli_non_root_user(monkeypatch, capsys):
         == "Error: this script must be run with super-user privileges."
     )
 
+def test_cli_lock_error(monkeypatch, capsys):
+    # test that failure to acquire lock is properly handled
+    def fake_acquire_lock(*a, **kw):
+        raise LockError("test lock failed")
+    monkeypatch.setattr(os, "geteuid", lambda: 0)
+    monkeypatch.setattr(cli, "acquire_lock", fake_acquire_lock)
+    with pytest.raises(SystemExit) as e:
+        cli.cli()
+    assert e.value.code == 1
+    captured = capsys.readouterr()
+    assert captured.err.strip() == "test lock failed"
+
+def test_command_error(patch_usg_and_cli, monkeypatch, capsys):
+    # test that commands raising USGError are properly handled
+    def fake_list(*a, **kw):
+        raise USGError
+    monkeypatch.setattr(cli, "command_list", fake_list)
+    sys.argv = ["usg", "list"]
+    with pytest.raises(SystemExit) as e:
+        cli.cli()
+    assert e.value.code == 1
+    captured = capsys.readouterr()
+    assert "Error: 'list' command failed" in captured.err
+
+def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
+    # test that USG initialization error is properly handled
+    def fake_init(*a, **kw):
+        raise USGError
+    monkeypatch.setattr(cli.USG, "__init__", fake_init)
+    sys.argv = ["usg", "list"]
+    with pytest.raises(SystemExit) as e:
+        cli.cli()
+    assert e.value.code == 1
+    captured = capsys.readouterr()
+    assert "failed to initialize USG" in captured.err
 
 @pytest.mark.parametrize(
     "cli_args,expected_stdout,expected_stderr,expected_exit_code",
@@ -215,32 +255,23 @@ def test_cli_generate_tailoring(
     patch_usg_and_cli, tmp_path, capsys, cli_args, benchmark_id
 ):
     # Test that the CLI correctly generates a tailoring file
-
-    # Create a dummy tailoring file template in the datastream directory
-    tailoring_file = (
-        constants.BENCHMARK_METADATA_PATH.parent
-        / benchmark_id
-        / "tailoring"
-        / "cis_level1_server-tailoring.xml"
-    )
-    tailoring_file.parent.mkdir(parents=True, exist_ok=True)
-    tailoring_file.write_text(f"""<?xml version="1.0" encoding="UTF-8"?>
-<Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
-  <benchmark id="{benchmark_id}"/>
-  <Profile id="tailored_profile">
-    <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
-    </Profile>
-</Tailoring>""")
-
     sys.argv = ["usg", *cli_args]
-
     cli.cli()
     captured = capsys.readouterr()
     assert Path("gen-tail-out.xml").exists()
     assert "generate-tailoring command completed" in captured.out
-    os.remove(tailoring_file)
-    os.remove("gen-tail-out.xml")
 
+
+def test_cli_generate_tailoring_os_error(patch_usg_and_cli, capsys):
+    # Test error if file cannot be written
+    sys.argv = ["usg", "generate-tailoring", "cis_level1_server", "/dev/null/nonwritable/test.xml"]
+    with pytest.raises(SystemExit) as e:
+        cli.cli()
+    assert e.value.code == 1
+    captured = capsys.readouterr()
+    assert not Path("/dev/null/nonwritable/test.xml").exists()
+    assert "Failed to write file" in captured.err
+    
 
 def test_load_benchmark_version_state(tmp_path, monkeypatch):
     # Test that the benchmark version is correctly loaded from the state file
@@ -307,9 +338,9 @@ def test_save_benchmark_version_state_corrupted_error(tmp_path, monkeypatch):
         save_benchmark_version_state("cis_level1_server", "test_version")
 
 
-def test_save_benchmark_version_state_corrupted_error(tmp_path, monkeypatch):
+def test_save_benchmark_version_state_write_error(tmp_path, monkeypatch):
     # Test that permission failure when saving state file raises error
-    monkeypatch.setattr(constants, "CLI_STATE_FILE", tmp_path / "nonexistantdir/usg.json")
+    monkeypatch.setattr(constants, "CLI_STATE_FILE", "/dev/null/notwritable/usg.json")
     with pytest.raises(StateFileError, match="Failed to write to state file"):
         save_benchmark_version_state("cis_level1_server", "test_version2")
 
@@ -353,3 +384,66 @@ def test_benchmark_version_state_integration(patch_usg_and_cli, capsys, monkeypa
     sys.argv = ["usg", "generate-fix", "cis_level1_server", "--benchmark-version", "latest"]
     cli.cli()
     assert load_benchmark_version_state("cis_level1_server") == "v2.0.0"
+
+
+def test_init_logging(capsys, tmp_path):
+    # test that info logs are written to file and that warning+ go to stderr
+    logfile = tmp_path / "logfile"
+    init_logging(logfile, False)
+    logger.debug("TEST DEBUG")
+    logger.info("TEST INFO")
+    logger.warning("TEST WARNING")
+
+    logs = logfile.read_text()
+    assert "TEST DEBUG" not in logs
+    assert "TEST INFO" in logs
+    assert "TEST WARNING" in logs
+    captured = capsys.readouterr()
+    assert "TEST DEBUG" not in captured.err
+    assert "TEST INFO" not in captured.err
+    assert "TEST WARNING" in captured.err
+
+
+def test_init_logging_debug(capsys, tmp_path):
+    # test that debug logs are written to file
+    logfile = tmp_path / "logfile"
+    init_logging(logfile, True)
+    logger.debug("TEST DEBUG")
+    logger.info("TEST INFO")
+
+    logs = logfile.read_text()
+    assert "TEST DEBUG" in logs
+    assert "TEST INFO" in logs
+    captured = capsys.readouterr()
+    assert "TEST DEBUG" not in captured.err
+
+ 
+def test_init_logging_error_writing_to_file(capsys):
+    # test that logs go to stderr if logfile cannot be written
+    init_logging(Path("/dev/null/nonwritable/logfile"), False)
+    captured = capsys.readouterr()
+    assert not Path("/dev/null/nonwritable/logfile").exists()
+    assert "Writing logs to stderr" in captured.err
+    assert "Initialized logging" in captured.err
+
+def test_main_error_kbd_interrupt(monkeypatch, capsys, tmp_path):
+    def fake_cli():
+        raise KeyboardInterrupt
+    monkeypatch.setattr(cli, "cli", fake_cli)
+    with pytest.raises(SystemExit) as e:
+        cli.main()
+    assert e.value.code == 1
+    captured = capsys.readouterr()
+    assert "Caught keyboard interrupt" in captured.err
+
+def test_main_error_runtime(monkeypatch, capsys, caplog):
+    def fake_cli():
+        raise ValueError("testing error")
+    
+    monkeypatch.setattr(cli, "cli", fake_cli)
+    with pytest.raises(SystemExit) as e:
+        cli.main()
+    assert e.value.code == 1
+    captured = capsys.readouterr()
+    assert "USG encountered an unknown error" in captured.err
+    assert "ValueError: testing error" in caplog.text
