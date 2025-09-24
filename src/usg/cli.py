@@ -157,7 +157,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
             continue
 
         if args.machine_readable:
-            print(":".join([
+            print(":".join([  # noqa: FLY002
                 p.profile_id,
                 benchmark.benchmark_type,
                 benchmark.product,
@@ -729,6 +729,8 @@ def cli() -> None:
 def main() -> None:
     """CLI entry point. Call cli() and catch runtime errors."""
     try:
+        # setup basic logging in case we don't reach initialization
+        logging.basicConfig(level=logging.INFO)
         cli()
     except KeyboardInterrupt:
         error_exit("Caught keyboard interrupt. Exiting USG...")
