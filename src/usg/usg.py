@@ -88,7 +88,7 @@ class USG:
         try:
             return self.benchmarks[benchmark_id]
         except KeyError as e:
-            msg = f"Benchmark {benchmark_id} not found"
+            msg = f"Benchmark '{benchmark_id}' not found"
             raise KeyError(msg) from e
 
     def get_profile(
@@ -186,7 +186,7 @@ class USG:
         # exists in the dataset
         benchmark_id = tailoring.profile.benchmark_id
         try:
-            benchmark = self.benchmarks[benchmark_id]
+            benchmark = self.get_benchmark_by_id(benchmark_id)
         except KeyError as e:
             raise USGError(
                 f"Could not find benchmark referenced in tailoring file: {benchmark_id}"
@@ -241,7 +241,7 @@ class USG:
 
         """
         logger.info(f"Generating tailoring file for profile {profile.profile_id}")
-        benchmark = self.benchmarks[profile.benchmark_id]
+        benchmark = self.get_benchmark_by_id(profile.benchmark_id)
         tailoring_rel_path = benchmark.get_tailoring_file_relative_path(
             profile.profile_id
         )
@@ -251,6 +251,7 @@ class USG:
         logger.info(f"Tailoring file generated at {tailoring_abs_path}")
 
         return tailoring_abs_path.read_text()
+
 
     def _move_artifacts(
         self, artifacts: BackendArtifacts, profile_id: str, product: str
@@ -283,7 +284,7 @@ class USG:
         """
         logger.info(f"Generating fix script for profile {profile.profile_id}")
 
-        benchmark = self.benchmarks[profile.benchmark_id]
+        benchmark = self.get_benchmark_by_id(profile.benchmark_id)
         work_dir = tempfile.mkdtemp(dir=constants.STATE_DIR, prefix="generate-fix_")
         backend = self._init_openscap_backend(benchmark, work_dir)
         try:
@@ -331,7 +332,7 @@ class USG:
         """
         logger.info(f"Remediating profile {profile.profile_id}")
 
-        benchmark = self.benchmarks[profile.benchmark_id]
+        benchmark = self.get_benchmark_by_id(profile.benchmark_id)
         work_dir = tempfile.mkdtemp(dir=constants.STATE_DIR, prefix="fix_")
         backend = self._init_openscap_backend(benchmark, work_dir)
         try:
@@ -403,7 +404,7 @@ class USG:
         """
         logger.info(f"Auditing profile {profile.profile_id}")
 
-        benchmark = self.benchmarks[profile.benchmark_id]
+        benchmark = self.get_benchmark_by_id(profile.benchmark_id)
         work_dir = tempfile.mkdtemp(dir=constants.STATE_DIR, prefix="audit_")
         backend = self._init_openscap_backend(benchmark, work_dir)
         try:
