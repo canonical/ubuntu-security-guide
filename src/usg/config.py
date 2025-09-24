@@ -103,7 +103,7 @@ def get_artifact_destination_path(
 def override_config_with_cli_args(
     config: configparser.ConfigParser, args: argparse.Namespace
 ) -> None:
-    """Override config with CLI args.
+    """Override config paths with CLI args.
 
     Args:
         config: config parser
