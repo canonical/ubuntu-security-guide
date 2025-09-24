@@ -156,7 +156,7 @@ class Benchmarks(dict[str, Benchmark]):
         try:
             with Path(json_path).open() as f:
                 json_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             raise BenchmarkError(f"Failed to parse '{json_path}':{e}") from e
 
         for key in ["benchmarks", "version"]:
