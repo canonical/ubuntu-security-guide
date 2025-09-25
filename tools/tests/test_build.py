@@ -6,9 +6,13 @@ import subprocess
 import shutil
 from pathlib import Path
 import pytest
+import sys
 
-BUILD_SCRIPT_PATH = Path(__file__).resolve().parent.parent / "build.py"
+TOOLS_DIR = Path(__file__).resolve().parent.parent
 TEST_DATA_DIR = importlib.resources.files("tools") / "tests/data"
+
+sys.path.insert(0, str(TOOLS_DIR))
+from build import main as build_main
 
 
 def replace_dynamic_content(expected_text, actual_text, regex):
@@ -51,17 +55,13 @@ def test_build(test_product, tmpdir):
     test_data_dir = TEST_DATA_DIR / test_product
     output_dir = Path(tmpdir) / "output"
 
-    p = subprocess.run(
-        [
-            BUILD_SCRIPT_PATH,
-            "--test-data", test_data_dir,
+    args = [
+            "--test-data", str(test_data_dir),
 #            "--debug",
             "--output-dir",
-            output_dir,
-        ],
-        check=False,
-    )
-    assert p.returncode == 0, f"Build process failed with RC: {p.returncode}"
+            str(output_dir),
+            ]
+    build_main(args)
 
     expected_output_dir = TEST_DATA_DIR / test_product / "expected"
     expected_output_files = sorted(list(expected_output_dir.rglob("*")))

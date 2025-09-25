@@ -235,7 +235,7 @@ def _get_usg_version() -> str:
     return version
 
 
-def main() -> None:
+def main(sys_args) -> None:
     parser = argparse.ArgumentParser()
     mutex_group = parser.add_mutually_exclusive_group(required=True)
     mutex_group.add_argument(
@@ -251,7 +251,7 @@ def main() -> None:
     parser.add_argument(
         "-o", "--output-dir", type=Path, default=PROJECT_ROOT, help="Root output dir"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(sys_args)
 
 
     loglevel = logging.DEBUG if args.debug else logging.INFO
@@ -311,6 +311,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     try:
-        main()
+        main(sys.argv)
     except Exception:
         logger.exception("Uncaught exception raised during build:")
