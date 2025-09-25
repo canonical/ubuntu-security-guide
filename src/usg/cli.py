@@ -22,6 +22,9 @@ from usg.version import __version__
 
 logger = logging.getLogger(__name__)
 
+# Add leading zero (removed by python packaging)
+# to be consistent with usg package versioning
+DISPLAY_VERSION = __version__.replace(".4.", ".04.")
 
 # shared format strings
 CLI_LIST_FORMAT = "{:35s}{:30s}{:s}"
@@ -419,14 +422,16 @@ def save_benchmark_version_state(profile_id: str, benchmark_version: str) -> Non
 
 def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
     """Return a Profile object based on the provided args."""
-    if hasattr(args, "profile"):
+    logger.debug("Loading profile from args: {args}")
 
+    if hasattr(args, "profile"):
         # get previously used benchmark version if defined in state file
         stored_benchmark_version = load_benchmark_version_state(args.profile)
 
         # override with CLI argument if provided
-        if hasattr(args, "benchmark_version"):
-            logger.debug(
+        if hasattr(args, "benchmark_version") and \
+                args.benchmark_version != stored_benchmark_version:
+            logger.info(
                 f"Overriding stored/default benchmark version "
                 f"{stored_benchmark_version} with {args.benchmark_version}"
                 )
@@ -502,6 +507,7 @@ def init_logging(log_path: Path, debug: bool) -> None:
 
     logger.info(80 * "-")
     logger.info(f"Initialized logging on {time.ctime()}")
+    logger.info(f"USG version: {DISPLAY_VERSION}")
 
 
 def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace:
@@ -514,6 +520,8 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
         - args: argparse Namespace
 
     """
+    logger.debug(f"Parsing CLI args: {sys.argv}")
+
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
         description=CLI_USG_HELP["description"],
@@ -522,10 +530,7 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
         prog="usg",
     )
 
-    # Add leading zero (removed by python packaging)
-    # to be consistent with usg package versioning.
-    display_version = __version__.replace(".4.", ".04.")
-    parser.add_argument("-V", "--version", action="version", version=display_version)
+    parser.add_argument("-V", "--version", action="version", version=DISPLAY_VERSION)
 
     subparsers = parser.add_subparsers(dest="command", required=False)
     cmd_parsers = {}
