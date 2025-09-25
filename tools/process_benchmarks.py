@@ -190,6 +190,13 @@ def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
                         f"{child['cac_tag']} should be exactly 1 greater "
                         f"than its parent {release['cac_tag']}"
                     )
+                # sanity check that the benchmark version is different in the breaking release
+                if child["benchmark_data"]["version"] == release["benchmark_data"]["version"]:
+                    raise BenchmarkProcessingError(
+                        f"Error - benchmark version of breaking child "
+                        f"{child['cac_tag']} cannot be the same as the version "
+                        f"of its parent {release['cac_tag']}"
+                    )
                 # reset the compatible upgrade path for the child
                 child["upgrade_paths"]["compatible"] = [
                     child,
