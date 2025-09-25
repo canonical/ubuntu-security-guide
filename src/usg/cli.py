@@ -632,7 +632,7 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
                 help="List deprecated profiles",
             )
             cmd_parser.add_argument(
-                "-n",
+                "-m",
                 "--machine-readable",
                 action="store_true",
                 default=False,
