@@ -52,54 +52,58 @@ def verify_integrity(file: Path | str, hexdigest: str, hash_algorithm: str) -> N
     logger.debug(f"Integrity of {file} is ok.")
 
 
-def validate_perms(filepath: Path | str, is_dir: bool = False) -> None:
-    """Ensure file/dir exists and is not world-writable or a symlink.
+def check_perms(filepath: Path | str, is_dir: bool = False) -> None:
+    """Check and log potentially unsafe file/dir permissions.
 
     Raises:
-       - MissingFileError on missing file
-       - PermValidationError on other issues
+       - MissingFileError on missing file/dir
 
     """
-    logger.debug(f"Validating permissions of {filepath}.")
-
-    filepath = Path(filepath)
+    logger.debug(f"Checking permissions of {filepath}.")
+    filepath = Path(filepath).resolve()
 
     if not filepath.exists():
         raise MissingFileError(f"'{filepath}' doesn't exist.")
-
-    if filepath.is_symlink():
-        raise PermValidationError(f"'{filepath}' is a symlink.")
-
     if is_dir and not filepath.is_dir():
-        raise PermValidationError(f"'{filepath}' is not a directory.")
+        raise MissingFileError(f"'{filepath}' is not a directory.")
     if not is_dir and not filepath.is_file():
-        raise PermValidationError(f"'{filepath}' is not a regular file.")
+        raise MissingFileError(f"'{filepath}' is not a regular file.")
 
-    stat_result = filepath.stat()
-    if bool(stat_result.st_mode & stat.S_IWOTH) and not bool(
-        stat_result.st_mode & stat.S_ISVTX
-    ):
-        raise PermValidationError(f"'{filepath}' is world-writable.")
+    try:
+        uid, gid = os.getuid(), os.getgid()
+        stat_result = filepath.stat()
 
-    if not is_dir:
-        stat_result_parent = filepath.parent.stat()
-        if bool(stat_result_parent.st_mode & stat.S_IWOTH) and not bool(
-            stat_result_parent.st_mode & stat.S_ISVTX
-        ):
-            raise PermValidationError(
-                f"Parent directory of '{filepath}' is world-writable."
+        if _is_world_writable(stat_result):
+            logger.warning(f"'{filepath}' is world-writable.")
+        if not _has_good_ownership(stat_result, uid, gid):
+            logger.warning(
+                f"'{filepath}' is not owned by root or current user."
             )
 
-    if (stat_result.st_uid == 0 and stat_result.st_gid == 0) or (
-        stat_result.st_uid == os.getuid() and stat_result.st_gid == os.getgid()
-    ):
-        pass  # all good
-    else:
-        raise PermValidationError(
-            f"'{filepath}' is not owned by root:root or running user's uid:gid."
-        )
+        for parent in filepath.parents:
+            stat_result_parent = parent.stat()
+            if _is_world_writable(stat_result_parent):
+                logger.warning(
+                    f"Parent directory of '{filepath}' is world-writable: '{parent}'."
+                )
+            if not _has_good_ownership(stat_result_parent, uid, gid):
+                logger.warning(
+                    f"'Parent directory of '{filepath}' is not owned "
+                    f"by root or current user: '{parent}'."
+                )
+    except OSError:
+        logger.error("Failed to check permissions for '{filepath}'.")
 
-    logger.debug(f"Permissions of {filepath} are ok.")
+
+def _is_world_writable(stat_result: os.stat_result) -> bool:
+    # return true if path is world-writable and not sticky
+    return bool(stat_result.st_mode & stat.S_IWOTH) and \
+           not bool(stat_result.st_mode & stat.S_ISVTX)
+
+
+def _has_good_ownership(stat_result: os.stat_result, uid: int, gid: int) -> bool:
+    # return true if owned by root or uid:gid
+    return stat_result.st_uid in [0, uid] and stat_result.st_gid in [0, gid]
 
 
 def gunzip_file(gzipped_file: Path, unzipped_file: Path) -> None:

@@ -8,9 +8,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import ClassVar
 
-from usg.exceptions import BackendCommandError, BackendError, PermValidationError
+from usg.exceptions import BackendCommandError, BackendError
 from usg.results import AuditResults, BackendArtifacts
-from usg.utils import validate_perms
+from usg.utils import check_perms
 
 logger = logging.getLogger(__name__)
 
@@ -120,23 +120,13 @@ class OpenscapBackend:
         self._oscap_path = Path(openscap_bin_path).resolve()
 
         # do sanity checks on oscap binary and work_dir
-        try:
-            validate_perms(self._oscap_path)
-        except PermValidationError as e:
-            raise BackendError(
-                f"Permission issue with Openscap binary: {e}",
-            ) from e
+        check_perms(self._oscap_path)
         if not os.access(self._oscap_path, os.X_OK):
             raise BackendError(
                 f"Openscap binary '{self._oscap_path}' is not executable.",
             )
 
-        try:
-            validate_perms(self._work_dir, is_dir=True)
-        except PermValidationError as e:
-            raise BackendError(
-                f"Permission issue with temporary work directory: {e}",
-            ) from e
+        check_perms(self._work_dir, is_dir=True)
 
         self._oscap_version = self._get_oscap_version(
             self._oscap_path, self._work_dir
