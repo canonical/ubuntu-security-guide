@@ -1,5 +1,5 @@
 usr/lib/*/dist-packages/*                   ${env:USG_MODULE_DIR}/
 src/legacy/usg                              ${env:USG_MODULE_DIR}/legacy/
-sbin/usg                                    usr/sbin/
-etc/usg.conf
-etc/logrotate.d/usg
+src/cli/usg                                 usr/sbin/
+conf/usg.conf                               etc/
+conf/logrotate.d/usg                        etc/logrotate.d/
