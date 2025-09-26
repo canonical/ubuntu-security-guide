@@ -14,10 +14,12 @@ from pathlib import Path
 
 from usg import constants
 from usg.config import load_config, override_config_with_cli_args
-from usg.exceptions import LockError, ProfileNotFoundError, StateFileError, USGError
+from usg.exceptions import (
+        LockError, ProfileNotFoundError, StateFileError, USGError
+        )
 from usg.models import Benchmark, Profile, TailoringFile
 from usg.usg import USG
-from usg.utils import acquire_lock, validate_perms
+from usg.utils import acquire_lock, check_perms
 from usg.version import __version__
 
 logger = logging.getLogger(__name__)
@@ -341,8 +343,8 @@ def load_benchmark_version_state(profile_id: str) -> str:
     cli_state_file = Path(constants.CLI_STATE_FILE)
     json_data = {}
     if cli_state_file.exists():
+        check_perms(cli_state_file)
         try:
-            validate_perms(cli_state_file)
             with cli_state_file.open("r") as f:
                 json_data.update(json.load(f))
             versions = json_data["benchmark_versions"]
