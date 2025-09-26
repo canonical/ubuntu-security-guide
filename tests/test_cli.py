@@ -21,7 +21,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     # patch the usg module:
     # - set benchmarks to dummy benchmarks fixture
     # - set state_dir to a tmp path
-    # - set validate_perms and verify_integrity to no-ops
+    # - set check_perms and verify_integrity to no-ops
     # - patch USG with a dummy USG class overriding audit, generate_fix, fix
     # - change working directory to a tmp dir and create tailoring file in it
     # - patch load state functions to always return "latest" (always clean slate and no state file)
@@ -39,7 +39,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     mp.setattr(constants, "LOCK_PATH", tmp_state_dir / "usg.lock")
     mp.setattr(constants, "CLI_LOG_FILE", "usg.log")
 
-    mp.setattr(utils, "validate_perms", lambda *a, **k: None)
+    mp.setattr(utils, "check_perms", lambda *a, **k: None)
     mp.setattr(utils, "verify_integrity", lambda *a, **k: None)
 
     class DummyUSG(USG):

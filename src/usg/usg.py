@@ -19,7 +19,7 @@ from usg.exceptions import (
 )
 from usg.models import Benchmark, Benchmarks, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
-from usg.utils import gunzip_file, validate_perms, verify_integrity
+from usg.utils import gunzip_file, check_perms, verify_integrity
 
 logger = logging.getLogger(__name__)
 
@@ -55,14 +55,15 @@ class USG:
 
         # do sanity checks on important files
         try:
-            validate_perms(constants.BENCHMARK_METADATA_PATH)
+            check_perms(constants.BENCHMARK_METADATA_PATH)
         except MissingFileError as e:
             msg = (
                 f"Could not find benchmark data {constants.BENCHMARK_METADATA_PATH}. "
                 f"Please ensure the {constants.BENCHMARK_PKG} package is installed."
             )
             raise USGError(msg) from e
-        validate_perms(constants.STATE_DIR, is_dir=True)
+
+        check_perms(constants.STATE_DIR, is_dir=True)
 
         self._benchmarks = Benchmarks.from_json(constants.BENCHMARK_METADATA_PATH)
         self._timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")  # noqa: DTZ005
@@ -178,7 +179,7 @@ class USG:
         """
         logger.debug(f"Loading {tailoring_file_path}")
 
-        validate_perms(tailoring_file_path)
+        check_perms(tailoring_file_path)
 
         tailoring = TailoringFile.from_file(tailoring_file_path)
 
@@ -211,7 +212,7 @@ class USG:
         ds_gz_file = benchmark.data_files["datastream_gz"]
         ds_gz_path = constants.BENCHMARK_METADATA_PATH.parent / ds_gz_file.rel_path
 
-        validate_perms(ds_gz_path)
+        check_perms(ds_gz_path)
 
         verify_integrity(ds_gz_path, ds_gz_file.sha256, "sha256")
 
