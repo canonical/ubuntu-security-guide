@@ -88,12 +88,12 @@ def oscap_backend(
     monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
 ):
     # Fixture to create a dummy OpenscapBackend
-    # - Patch validate_perms to always pass
+    # - Patch check_perms to always pass
     # - Patch os.access to always True
     # - Patch version function to always return (1,3,9)
     # - Return a dummy OpenscapBackend
 
-    monkeypatch.setattr(utils, "validate_perms", lambda path, *a, **kw: None)
+    monkeypatch.setattr(utils, "check_perms", lambda path, *a, **kw: None)
     monkeypatch.setattr(os, "access", lambda path, mode: True)
     monkeypatch.setattr(OpenscapBackend, "_get_oscap_version",
                         lambda *a: (1, 3, 9))
@@ -109,7 +109,7 @@ def oscap_backend(
 def test_oscap_backend_initialization(
     monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
 ):
-    monkeypatch.setattr(backends, "validate_perms", lambda path, *a, **kw: None)
+    monkeypatch.setattr(backends, "check_perms", lambda path, *a, **kw: None)
     monkeypatch.setattr(os, "access", lambda path, mode: True)
 
     oscap = OpenscapBackend(
@@ -127,7 +127,7 @@ def test_oscap_backend_error_on_non_executable_oscap(
 ):
     # Test that a non-executable oscap fails
     os.chmod(dummy_openscap_bin, 0o644)
-    monkeypatch.setattr(backends, "validate_perms", lambda path, *a, **kw: None)
+    monkeypatch.setattr(backends, "check_perms", lambda path, *a, **kw: None)
     with pytest.raises(BackendError):
         OpenscapBackend(
             datastream_file=dummy_datastream,
@@ -136,32 +136,32 @@ def test_oscap_backend_error_on_non_executable_oscap(
         )
 
 
-def test_oscap_backend_error_on_bad_oscap_permissions(
-    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
+def test_oscap_backend_log_on_bad_oscap_permissions(
+    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin, caplog
 ):
-    # Test that a bad permissions oscap fails
+    # Test that a bad permissions oscap is logged
     os.chmod(dummy_openscap_bin, 0o777)
-    with pytest.raises(BackendError,
-                       match="Permission issue with Openscap binary"):
+    with caplog.at_level("WARNING"):
         OpenscapBackend(
             datastream_file=dummy_datastream,
             openscap_bin_path=dummy_openscap_bin,
             work_dir=tmp_path,
         )
+    assert "is world-writable" in caplog.text
 
 
-def test_oscap_backend_error_on_bad_tmp_work_dir_permissions(
-    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
+def test_oscap_backend_log_on_bad_tmp_work_dir_permissions(
+    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin, caplog
 ):
-    # Test that a bad permissions tmp_work_dir fails
+    # Test that a bad permissions tmp_work_dir is logged
     os.chmod(tmp_path, 0o777)
-    with pytest.raises(BackendError,
-                       match="Permission issue with temporary work directory"):
+    with caplog.at_level("WARNING"):
         OpenscapBackend(
             datastream_file=dummy_datastream,
             openscap_bin_path=dummy_openscap_bin,
             work_dir=tmp_path,
         )
+    assert "is world-writable" in caplog.text
 
 # ---- OpenscapBackend audit tests ----
 

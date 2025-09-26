@@ -43,7 +43,7 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
     # - set benchmarks to our dummy benchmarks
     # - set var_dir to our tmp path
     # - set OpenscapBackend to our dummy backend
-    # - set validate_perms, verify_integrity to no-ops
+    # - set check_perms, verify_integrity to no-ops
     # - set gunzip_file to no-op since anyhow using dummy backend
     #   which doesn't use the datastream
     # - set datetime to a fixed date
@@ -113,7 +113,7 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
     mp.setattr(constants, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
     mp.setattr(constants, "STATE_DIR", tmp_path_factory.mktemp("var_dir"))
     mp.setattr(usg_module, "OpenscapBackend", DummyBackend)
-    mp.setattr(usg_module, "validate_perms", lambda *a, **k: None)
+    mp.setattr(usg_module, "check_perms", lambda *a, **k: None)
     mp.setattr(usg_module, "verify_integrity", lambda *a, **k: None)
     mp.setattr(usg_module, "gunzip_file", lambda *a, **k: None)
 
