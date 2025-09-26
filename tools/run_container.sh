@@ -77,12 +77,12 @@ RUN cd /root/usg \
     && rm -rf .pybuild /usr/share/usg \
     && pybuild --install-dir /usr/share/usg --dest-dir / 2>/root/pybuild.log \
     && cp -r ./src/legacy /usr/share/usg \
-    && cp ./sbin/usg /usr/sbin/usg \
+    && cp ./src/cli/usg /usr/sbin/usg \
     && mkdir -p /var/lib/usg \
     && chmod 0700 /var/lib/usg \
-    && cp ./etc/usg.conf /etc/usg.conf \
+    && cp ./conf/usg.conf /etc/usg.conf \
     && mkdir -p /etc/logrotate.d \
-    && cp ./etc/logrotate.d/usg /etc/logrotate.d/ \
+    && cp ./conf/logrotate.d/usg /etc/logrotate.d/ \
     && cp ./debian/usg.bash-completion /usr/share/bash-completion/completions/usg
 
 # run post-install fixes
