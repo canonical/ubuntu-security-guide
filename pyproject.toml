@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools >= 77.0.3"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "usg"
-version = "24.04.6"
+#version = defined in setup.cfg in jammy branch
 requires-python = ">=3.10"
 authors = [
     { name = "Miha Purg" },
