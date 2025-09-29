@@ -6,6 +6,7 @@ Build-Depends:  pandoc,
                 debhelper (>= 13),
                 dh-python,
                 pybuild-plugin-pyproject,
+                python3-setuptools,
                 python3-pytest,
                 python3-all,
                 dh-sequence-bash-completion
