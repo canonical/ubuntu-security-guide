@@ -58,7 +58,7 @@ The `tools/` folder contains several utility scripts for building benchmark data
 #### Build tooling
 
 The build script `build.py` is used call the various tools to:
-- compile [ComplianceAsCode content](https://github.com/ComplianceAsCode/content) based on tags defined in [](tools/release_metadata/)
+- compile [ComplianceAsCode content](https://github.com/ComplianceAsCode/content) based on tags defined in `tools/release_metadata/`
 - extract SCAP datastreams
 - generate tailoring files and manpages from templates
 - generate the necessary metadata files for USG
