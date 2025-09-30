@@ -25,7 +25,7 @@ Please don't forget to add some information such as:
 
 No SCAP content is provided in this repository, but scripts are available in the `tools/` directory that
 assist with building [ComplianceAsCode content](https://github.com/ComplianceAsCode/content) and generating the necessary metadata.
-Please review the instructions in [doc/README.md]() for information on how to use these scripts to prepare Ubuntu Security Guide.
+Please review the instructions in [doc/README.md](doc/README.md) for information on how to use these scripts to prepare Ubuntu Security Guide.
 
 ### Previous Contributors
 
