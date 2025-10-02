@@ -21,7 +21,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     # patch the usg module:
     # - set benchmarks to dummy benchmarks fixture
     # - set state_dir to a tmp path
-    # - set check_perms and verify_integrity to no-ops
+    # - set check_perms, verify_integrity, and acquire_lock to no-ops
     # - patch USG with a dummy USG class overriding audit, generate_fix, fix
     # - change working directory to a tmp dir and create tailoring file in it
     # - patch load state functions to always return "latest" (always clean slate and no state file)
@@ -41,6 +41,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
 
     mp.setattr(utils, "check_perms", lambda *a, **k: None)
     mp.setattr(utils, "verify_integrity", lambda *a, **k: None)
+    mp.setattr(cli, "acquire_lock", lambda: None)
 
     class DummyUSG(USG):
         def __init__(self, *args, **kwargs):
@@ -272,6 +273,31 @@ def test_cli_generate_tailoring_os_error(patch_usg_and_cli, capsys):
     assert not Path("/dev/null/nonwritable/test.xml").exists()
     assert "Failed to write file" in captured.err
     
+
+def test_cli_default_tailoring_file(patch_usg_and_cli, monkeypatch, capsys, caplog, tmp_path):
+    # Test if default tailoring file is loaded
+    default_tailoring_file = tmp_path / "default-tailoring.xml"
+    default_tailoring_file.write_text("""<?xml version="1.0" encoding="UTF-8"?>
+<Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
+  <benchmark href="/usr/share/usg-benchmarks/ubuntu2404_CIS_3"/>
+  <Profile id="tailored_profile">
+    <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
+  </Profile>
+</Tailoring>
+""")
+    sys.argv = ["usg", "info"]
+    
+    # ensure it fails when tailoring doesn't exist
+    monkeypatch.setattr(constants, "DEFAULT_TAILORING_PATH", "/dev/null/tailoring_file")
+    with pytest.raises(SystemExit) as e:
+        cli.cli()    
+
+    monkeypatch.setattr(constants, "DEFAULT_TAILORING_PATH", default_tailoring_file)
+    cli.cli() # should not fail
+    captured = capsys.readouterr()
+    assert f"Using the default tailoring file at {default_tailoring_file}" in captured.out
+    assert "tailored_profile" in captured.out
+
 
 def test_load_benchmark_version_state(tmp_path, monkeypatch):
     # Test that the benchmark version is correctly loaded from the state file
