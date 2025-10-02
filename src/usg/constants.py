@@ -19,6 +19,9 @@
 
 from pathlib import Path
 
+# Default tailoring file location (deprecated)
+DEFAULT_TAILORING_PATH = Path("/etc/usg/default-tailoring.xml")
+
 # CLI configurable options
 CLI_LOG_FILE = "/var/log/usg.log"
 DEFAULT_PRODUCT = "ubuntu2404"
