@@ -58,6 +58,12 @@ sed -e 's/"true"/"false"/g' \
     -e '/file_owner_etc_shadow\|disable_users_coredumps/ s/"false"/"true"/g' \
     -i t1.xml
 
+# test info cmd with tailoring file, without tailoring/profile and with default tailoring file
+test_cmd "usg info -t t1.xml"  0  "Benchmark.*CIS"  ""
+test_cmd "usg info"  2  ""  "a profile or a tailoring file must be provided"
+mkdir -p /etc/usg/ && cp t1.xml /etc/usg/default-tailoring.xml
+test_cmd "usg info"  0  "Using the default tailoring file" ""
+rm /etc/usg/default-tailoring.xml
 
 # Audit with tailoring file, should be 1 pass, 1 fail
 test_cmd "usg audit -t t1.xml"  0  "^Fail:.*1$"  ""
