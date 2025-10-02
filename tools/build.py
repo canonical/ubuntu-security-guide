@@ -312,6 +312,6 @@ def main(sys_args) -> None:
 
 if __name__ == "__main__":
     try:
-        main(sys.argv)
+        main(sys.argv[1:])
     except Exception:
         logger.exception("Uncaught exception raised during build:")
