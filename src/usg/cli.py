@@ -31,9 +31,7 @@ from pathlib import Path
 
 from usg import constants
 from usg.config import load_config, override_config_with_cli_args
-from usg.exceptions import (
-        LockError, ProfileNotFoundError, StateFileError, USGError
-        )
+from usg.exceptions import LockError, ProfileNotFoundError, StateFileError, USGError
 from usg.models import Benchmark, Profile, TailoringFile
 from usg.usg import USG
 from usg.utils import acquire_lock, check_perms
@@ -112,10 +110,10 @@ $ usg generate-fix -t tailoring.xml
 }
 
 CMD_GENERATE_TAILORING_HELP = {
-    "description": """\
+    "description": f"""\
 The generate-tailoring command creates a tailoring file based on the
 provide profile and saves it to the provided output path. To make this
-tailoring file the default save it as /etc/usg/default-tailoring.xml
+tailoring file the default save it as {constants.DEFAULT_TAILORING_PATH}
 
 This command requires a profile upon which the tailoring file will be created.
 All rules present in the base profile will also be present in the tailoring file.
@@ -684,9 +682,17 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
             error_exit("You cannot provide both a tailoring file and a profile!", rc=2)
 
         elif not hasattr(args, "profile") and not hasattr(args, "tailoring_file"):
-            sys.stderr.write("Error: a profile or a tailoring file must be provided.\n")
-            cmd_parsers[args.command].print_help()
-            error_exit(rc=2)
+            # Use default tailoring file if it exists
+            default_tailoring = Path(constants.DEFAULT_TAILORING_PATH)
+            if default_tailoring.exists():
+                print(f"Using the default tailoring file at {default_tailoring}")
+                args.tailoring_file = default_tailoring
+            else:
+                sys.stderr.write(
+                    "Error: a profile or a tailoring file must be provided.\n"
+                    )
+                cmd_parsers[args.command].print_help()
+                error_exit(rc=2)
 
     # benchmark_version/product are not compatible with tailoring-file
     if hasattr(args, "tailoring_file") and hasattr(args, "benchmark_version"):
