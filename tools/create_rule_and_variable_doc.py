@@ -171,4 +171,4 @@ if __name__ == "__main__":
     logging.basicConfig(
         stream=sys.stdout, level=logging.DEBUG, format="%(levelname)s: %(message)s"
     )
-    main(sys.argv)
+    main(sys.argv[1:])
