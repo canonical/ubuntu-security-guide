@@ -5,7 +5,7 @@ general:
 
 benchmark_releases:
   - cac_tag: jammy-stig-1.5
-    parent_tag: 
+    parent_tag:
     breaking_release: False
     tailoring_version: 1
     cac_commit: 02edc5a1bcbf89a6cb7329e13de0aee3717aedab
@@ -15,7 +15,7 @@ benchmark_releases:
       profiles:
           stig:
             legacy_id: disa_stig
-      description: |
+      description: |-
           ComplianceAsCode implementation of STIG Ubuntu 22.04 LTS V2R3 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
       reference_url: https://public.cyber.mil/stigs/downloads/
