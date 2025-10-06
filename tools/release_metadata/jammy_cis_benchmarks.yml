@@ -4,24 +4,6 @@ general:
   product_long: Ubuntu 22.04 LTS (Jammy Jellyfish)
 
 benchmark_releases:
-  - cac_tag: jammy-cis-2
-    parent_tag: jammy-cis-1.12
-    breaking_release: True
-    tailoring_version: 2
-    cac_commit: a83e9467529aba225a2e1a2328f5a2d2903992b5
-    usg_version: 22.04.13
-    benchmark_data:
-      version: v2.0.0
-      profiles:
-          cis_level1_server: {}
-          cis_level2_server: {}
-          cis_level1_workstation: {}
-          cis_level2_workstation: {}
-      description: |-
-          ComplianceAsCode implementation of CIS Ubuntu 22.04 LTS v2.0.0 benchmark.
-      release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/
-      reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
-
   - cac_tag: jammy-cis-1.12
     parent_tag:
     breaking_release: False
