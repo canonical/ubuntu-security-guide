@@ -15,6 +15,7 @@
       "description": "ComplianceAsCode implementation of CIS Ubuntu 22.04 LTS v1.0.0 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/pull/72",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "tailoring_version": 1,
       "benchmark_id": "ubuntu2204_CIS_1",
       "compatible_versions": [],
       "breaking_upgrade_path": [],
