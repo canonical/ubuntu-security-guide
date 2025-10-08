@@ -46,10 +46,52 @@ test_cmd "usg list --all | grep 'Listing available'" 0  "Listing available profi
 test_cmd "usg list --machine-readable"                            0  "cis_level1_server:CIS:"             ""
 test_cmd "usg list --machine-readable | grep 'Listing available'" 1  ""                              ""
 
-# info for profile should work
-test_cmd "usg info cis_level1_server"  0  "Benchmark.*CIS"   ""
+# get list of all available profile names
+all_profiles=($(usg list --machine --all | cut -d: -f1 | sort -u | xargs))
+# add known aliases
+if grep -w "stig" <<<"${all_profiles[@]}"; then
+    all_profiles="${all_profiles} disa_stig"
+fi
 
-# generate tailoring file
+# ensure cis_level1_server exists
+test_cmd "echo ${all_profiles} | grep -w cis_level1_server"  0  "cis_level1_server"
+
+# commands without special args should work for all profiles
+for profile in ${all_profiles[@]}
+do
+    # test that info shows correct benchmark type
+    case $profile in
+        cis_*) btype=CIS; realname=$profile
+            ;;
+        stig) btype=STIG; realname=$profile
+            ;;
+        disa_stig) btype=STIG; realname=stig
+            ;;
+        *) btype=UNKNOWN
+    esac
+    test_cmd "usg info '$profile'"  0  "Benchmark.*$btype"   ""
+
+    # test that generate tailoring works
+    test_cmd "usg generate-tailoring $profile $profile.xml"  0  "generate-tailoring command completed." ""
+    test_cmd "grep \"$realname\" $profile.xml"  0  "<Profile id=" ""
+
+    # test that generate fix works
+    test_cmd "usg generate-fix $profile"  0  "Wrote remediation script to '${realname}-.*sh'"  ""
+    test_cmd "grep 'BEGIN fix' ${realname}-*.sh"  0  "BEGIN fix" ""
+
+    # generate-fix with tailoring file
+    test_cmd "usg generate-fix -t $profile.xml -o fix.sh"  0  "Wrote remediation script to.*fix.sh"  ""
+    test_cmd "grep 'BEGIN fix' fix.sh"  0  "BEGIN fix" ""
+
+    # test that audit starts when using profile (full run is too long and useless, timeout at 2s)
+    test_cmd "timeout 2 usg audit $profile"  124  "Rule.*xccdf_org.ssgproject.content_rule"  ""
+    test_cmd "timeout 2 usg audit -t $profile.xml"  124  "Rule.*xccdf_org.ssgproject.content_rule"  ""
+
+    rm -f *xml *sh
+    rm -rf /var/lib/usg/*
+done
+
+# generate tailoring file with version v1.0.0 (should exist)
 test_cmd "usg generate-tailoring cis_level1_server t1.xml -b v1.0.0"  0  "generate-tailoring command completed." ""
 test_cmd "grep href t1.xml"  0  "href=" "" 
 
@@ -84,19 +126,6 @@ test_cmd "usg fix -t t1.xml"  0  "fix command completed" ""
 # test both rules are in remediation script
 test_cmd "grep -c BEGIN /var/lib/usg/xccdf*sh"  0  "^2$"  ""
 
-
-# generate-fix
-rm -f /var/lib/usg/cis_level1_server*sh
-test_cmd "usg generate-fix cis_level1_server"  0  "Wrote remediation script.*/var/lib/usg/cis_level1_server.*sh"  ""
-test_cmd "grep BEGIN /var/lib/usg/cis_level1_server*.sh"  0  "BEGIN"  ""
-
-# generate-fix with tailoring file
-test_cmd "usg generate-fix -t t1.xml -o fix.sh"  0  "Wrote remediation script.*fix.sh"  ""
-test_cmd "grep -c BEGIN fix.sh"  0  "^2$"  ""
-
-
-# test that audit starts when using profile (full run is too long and useless, timeout at 2s)
-test_cmd "timeout 2 usg audit cis_level1_server"  124  "Rule.*xccdf_org.ssgproject.content_rule"  ""
 
 
 # test that the legacy usg fallback runs ok and fails due to missing benchmark bundle
