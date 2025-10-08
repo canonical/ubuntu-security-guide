@@ -38,6 +38,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     # patch the usg module:
     # - set benchmarks to dummy benchmarks fixture
     # - set state_dir to a tmp path
+    # - set default product to match dummy_benchmarks
     # - set check_perms, verify_integrity, and acquire_lock to no-ops
     # - patch USG with a dummy USG class overriding audit, generate_fix, fix
     # - change working directory to a tmp dir and create tailoring file in it
@@ -55,6 +56,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
     mp.setattr(constants, "CONFIG_PATH", dummy_cfg)
     mp.setattr(constants, "LOCK_PATH", tmp_state_dir / "usg.lock")
     mp.setattr(constants, "CLI_LOG_FILE", "usg.log")
+    mp.setattr(constants, "DEFAULT_PRODUCT", "ubuntu2404")
 
     mp.setattr(utils, "check_perms", lambda *a, **k: None)
     mp.setattr(utils, "verify_integrity", lambda *a, **k: None)
