@@ -19,6 +19,7 @@
       "compatible_versions": [],
       "breaking_upgrade_path": [],
       "is_latest": true,
+      "release_timestamp": 1,
       "data_files": {
         "datastream_gz": {
           "path": "ubuntu2204_CIS_1/ssg-ubuntu2204-ds.xml.gz",

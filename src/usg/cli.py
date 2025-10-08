@@ -21,6 +21,7 @@
 
 import argparse
 import configparser
+import datetime
 import json
 import logging
 import os
@@ -256,6 +257,10 @@ def print_info_benchmark(benchmark: Benchmark) -> None:
     else:
         state = "** Deprecated (see information below)**"
 
+    release_date = datetime.datetime.fromtimestamp(
+        benchmark.release_timestamp,
+        datetime.timezone.utc
+        ).isoformat()
     for k, v in [
         ("Benchmark", benchmark.benchmark_type),
         ("Target product", benchmark.product_long),
@@ -264,6 +269,7 @@ def print_info_benchmark(benchmark: Benchmark) -> None:
         ("State", state),
         ("Upgrade candidates", upgrade_path),
         ("Description", benchmark.description.strip()),
+        ("Release date", release_date),
         ("Release notes", benchmark.release_notes_url),
         ("USG benchmark ID", benchmark.id),
         ("Reference", benchmark.reference_url),
