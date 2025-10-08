@@ -69,6 +69,7 @@ class Benchmark:
     version: str
     description: str
     release_notes_url: str
+    release_timestamp: int
     reference_url: str
     compatible_versions: tuple[str, ...]
     breaking_upgrade_path: tuple[str, ...]
@@ -110,6 +111,7 @@ class Benchmark:
                 version=raw_data["version"],
                 description=raw_data["description"],
                 release_notes_url=raw_data["release_notes_url"],
+                release_timestamp=raw_data["release_timestamp"],
                 reference_url=raw_data["reference_url"],
                 compatible_versions=raw_data["compatible_versions"],
                 breaking_upgrade_path=raw_data["breaking_upgrade_path"],
