@@ -25,6 +25,7 @@ import datetime
 import json
 import logging
 import os
+import shutil
 import sys
 import tempfile
 import time
@@ -317,7 +318,16 @@ def command_generate_fix(usg: USG, args: argparse.Namespace) -> None:
     logger.debug("Starting command_generate_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
     artifacts = usg.generate_fix(usg_profile)
-    print(f"Wrote remediation script to '{artifacts.get_by_type('fix_script').path}'")
+    output_path = artifacts.get_by_type("fix_script").path
+    # Legacy USG writes the default output directly to cwd instead
+    # of /var/lib/usg. Ensure we do the same.
+    if not hasattr(args, "output"):
+        try:
+            shutil.copy(output_path, Path.cwd())
+            output_path = output_path.name
+        except OSError as e:
+            logger.error(f"Failed to write fix script to CWD: {e}")
+    print(f"Wrote remediation script to '{output_path}'")
     logger.debug("Finished command_generate_fix")
 
 
