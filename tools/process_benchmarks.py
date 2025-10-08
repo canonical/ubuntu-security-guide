@@ -432,8 +432,9 @@ def _get_breaking_upgrade_path(
     return breaking_upgrade_path
 
 
-def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> None:
+def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> int:
     # Reset CaC repo to tag==cac_tag and build product cac_product
+    # Return timestamp of commit used to build the product
     # Raises BenchmarkProcessingError on failure to build
 
     logger.debug("Building repo {cac_repo_dir}, tag {cac_tag}, product {cac_product}")
@@ -459,16 +460,18 @@ def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> No
 
     try:
         logger.debug(f"Calling cmd: {cmd}")
-        commit_timestamp = subprocess.check_output(
+        out = subprocess.check_output(
             cmd, cwd=cac_repo_dir, env=env, text=True
             )
-    except subprocess.CalledProcessError as e:
+        commit_timestamp = int(out.strip())
+    except (subprocess.CalledProcessError, ValueError) as e:
         raise BenchmarkProcessingError(
             f"Failed to get timestamp for tag {cac_tag}: {e}"
         ) from e
 
+    logger.debug(f"Commit timestamp: {commit_timestamp}")
     # build CaC product
-    env["SOURCE_DATE_EPOCH"] = commit_timestamp
+    env["SOURCE_DATE_EPOCH"] = str(commit_timestamp)
     cmd = [cac_repo_dir/"build_product", cac_product]
 
     try:
@@ -480,6 +483,7 @@ def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> No
             ) from e
 
     logger.debug("Successfully built CaC release {cac_tag}")
+    return commit_timestamp
 
 
 def _save_compressed_datastream(src: Path, dst_gz: Path) -> None:
@@ -550,7 +554,7 @@ def _build_active_releases(
 
     logger.debug(f"Building {len(all_active_releases)} active releases...")
 
-    for release in all_active_releases:
+    for i, release in enumerate(all_active_releases):
         cac_tag = release["cac_tag"]
         b_data = release["benchmark_data"]
         benchmark_id = b_data["benchmark_id"]
@@ -577,7 +581,7 @@ def _build_active_releases(
                     )
                 logger.debug(f"Copying test data from {release_dir} to {tmp_build_dir}")
                 shutil.copytree(release_dir, tmp_build_dir, dirs_exist_ok=True)
-
+                release_timestamp = i+1 # dummy timestamp
             else:
                 logger.debug(
                     f"Copying the CaC repo {cac_repo_dir} to tmp dir {tmp_build_dir}"
@@ -588,11 +592,13 @@ def _build_active_releases(
                     dirs_exist_ok=True,
                     ignore_dangling_symlinks=True
                     )
-                _build_cac_release(
+                release_timestamp = _build_cac_release(
                     tmp_build_dir,
                     cac_tag,
                     b_data["product"]
                 )
+
+            b_data["release_timestamp"] = release_timestamp
 
             # Compress datastream and save to destination dir
             # (e.g. dst dir/ubuntu2404_CIS_2/...)

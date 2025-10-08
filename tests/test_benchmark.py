@@ -99,6 +99,7 @@ def test_usgbenchmark(dummy_benchmarks):
         benchmark.release_notes_url
         == "https://github.com/canonical/ubuntu-security-guide/"
     )
+    assert benchmark.release_timestamp == 1002
     assert (
         benchmark.reference_url == "https://www.cisecurity.org/benchmark/ubuntu_linux/"
     )

@@ -46,6 +46,7 @@ def dummy_benchmarks(tmp_path_factory):
                 "compatible_versions": [],
                 "breaking_upgrade_path": ["v1.0.1", "v2.0.0"],
                 "is_latest": False,
+                "release_timestamp": 1001,
                 "data_files": {
                     "datastream_gz": {
                         "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-ds.xml.gz",
@@ -90,6 +91,7 @@ def dummy_benchmarks(tmp_path_factory):
                 "compatible_versions": ["v1.0.0.usg1"],
                 "breaking_upgrade_path": ["v2.0.0"],
                 "is_latest": False,
+                "release_timestamp": 1002,
                 "data_files": {
                     "datastream_gz": {
                         "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-ds.xml.gz",
@@ -134,6 +136,7 @@ def dummy_benchmarks(tmp_path_factory):
                 "compatible_versions": [],
                 "breaking_upgrade_path": [],
                 "is_latest": True,
+                "release_timestamp": 1003,
                 "data_files": {
                     "datastream_gz": {
                         "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-ds.xml.gz",
@@ -173,6 +176,7 @@ def dummy_benchmarks(tmp_path_factory):
                 "compatible_versions": [],
                 "breaking_upgrade_path": ["V1R3"],
                 "is_latest": False,
+                "release_timestamp": 1004,
                 "data_files": {
                     "datastream_gz": {
                         "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-ds.xml.gz",
@@ -200,6 +204,7 @@ def dummy_benchmarks(tmp_path_factory):
                 "compatible_versions": ["V1R2"],
                 "breaking_upgrade_path": [],
                 "is_latest": True,
+                "release_timestamp": 1005,
                 "data_files": {
                     "datastream_gz": {
                         "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-ds.xml.gz",
