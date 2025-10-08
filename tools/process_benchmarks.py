@@ -432,18 +432,18 @@ def _get_breaking_upgrade_path(
     return breaking_upgrade_path
 
 
-def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> int:
-    # Reset CaC repo to tag==cac_tag and build product cac_product
-    # Return timestamp of commit used to build the product
+def _build_cac_release(cac_repo_dir: Path, commit: str, cac_product: str) -> int:
+    # Reset CaC repo to commit and build product cac_product
+    # Return timestamp of commit
     # Raises BenchmarkProcessingError on failure to build
 
-    logger.debug("Building repo {cac_repo_dir}, tag {cac_tag}, product {cac_product}")
+    logger.debug("Building repo {cac_repo_dir}, commit {commit}, product {cac_product}")
 
-    # cleanup repo and checkout tag
+    # cleanup repo and checkout commit
     for cmd in (
         ["/usr/bin/git", "reset", "--hard"],
         ["/usr/bin/git", "clean", "-fxd"],
-        ["/usr/bin/git", "checkout", cac_tag],
+        ["/usr/bin/git", "checkout", commit],
     ):
         logger.debug(f"Calling cmd: {cmd}")
         try:
@@ -459,7 +459,7 @@ def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> in
         except subprocess.CalledProcessError as e:
             logger.error(p.stderr)
             raise BenchmarkProcessingError(
-                f"Failed to checkout tag {cac_tag} in repo {cac_repo_dir}: {e}"
+                f"Failed to checkout commit {commit} in repo {cac_repo_dir}: {e}"
                 ) from e
 
 
@@ -476,7 +476,7 @@ def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> in
         commit_timestamp = int(out.strip())
     except (subprocess.CalledProcessError, ValueError) as e:
         raise BenchmarkProcessingError(
-            f"Failed to get timestamp for tag {cac_tag}: {e}"
+            f"Failed to get timestamp for commit {commit}: {e}"
         ) from e
 
     logger.debug(f"Commit timestamp: {commit_timestamp}")
@@ -503,7 +503,7 @@ def _build_cac_release(cac_repo_dir: Path, cac_tag: str, cac_product: str) -> in
 
     logger.debug(f"STDOUT: {p.stdout}")
     logger.debug(f"STDERR: {p.stderr}")
-    logger.debug("Successfully built CaC release {cac_tag}")
+    logger.debug("Successfully built CaC release")
     return commit_timestamp
 
 
@@ -615,7 +615,7 @@ def _build_active_releases(
                     )
                 release_timestamp = _build_cac_release(
                     tmp_build_dir,
-                    cac_tag,
+                    release["cac_commit"],
                     b_data["product"]
                 )
                 logger.info("Successfully built CaC content.")
