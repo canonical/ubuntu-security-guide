@@ -24,6 +24,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Generator
 
 from usg import config as usg_config
 from usg import constants
@@ -36,7 +37,7 @@ from usg.exceptions import (
 )
 from usg.models import Benchmark, Benchmarks, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
-from usg.utils import gunzip_file, check_perms, verify_integrity
+from usg.utils import check_perms, gunzip_file, verify_integrity
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +110,14 @@ class USG:
             msg = f"Benchmark '{benchmark_id}' not found"
             raise KeyError(msg) from e
 
+    def _find_profiles_with_id(self, profile_id: str) -> Generator[Profile, None, None]:
+        # return profiles by id
+        for benchmark in self.benchmarks.values():
+            for profile in benchmark.profiles.values():
+                if profile_id in [profile.profile_id, profile.profile_legacy_id]:
+                    logger.debug(f"Found profile with id {profile_id}: {profile}")
+                    yield profile
+
     def get_profile(
         self, profile_id: str, product: str, benchmark_version: str = "latest"
     ) -> Profile:
@@ -129,53 +138,82 @@ class USG:
         """
         logger.debug(f"Getting profile: {profile_id},{product},{benchmark_version}")
 
-        for benchmark in self.benchmarks.values():
-            for profile in benchmark.profiles.values():
-                logger.debug(f"Checking profile {profile}")
+        # get all profiles with this name
+        matching_profiles = list(self._find_profiles_with_id(profile_id))
+        if not matching_profiles:
+            raise ProfileNotFoundError(
+                f"Could not find benchmark profile '{profile_id}'."
+            )
 
-                if (
-                    profile_id in [profile.profile_id, profile.profile_legacy_id]
-                    and product == benchmark.product
-                ):
-                    # return latest version by default
-                    if benchmark_version == "latest" and benchmark.is_latest:
-                        logger.debug(
-                            f"Found latest version of {profile_id} for {product}"
-                        )
-                        return profile
+        # get all profiles matching the product
+        profiles_matching_product = [
+            p for p in matching_profiles
+            if product == self.get_benchmark_by_id(p.benchmark_id).product
+        ]
+        logger.debug(f" matching product: {profiles_matching_product}")
+        if not profiles_matching_product:
+            raise ProfileNotFoundError(
+                f"Could not find benchmark product '{product}'."
+            )
 
-                    # return specific version if exists
-                    if benchmark_version == benchmark.version:
-                        logger.debug(
-                            f"Found version {benchmark_version} of "
-                            f"{profile_id} for {product}"
-                        )
-                        if not benchmark.is_latest:
-                            logger.warning(
-                                f"Version {benchmark.version} of the benchmark profile "
-                                f"{profile_id} is deprecated."
-                            )
-                        return profile
+        # return profile from 'latest' benchmark, if available
+        if benchmark_version == "latest":
+            profiles_by_tailoring_version = []
+            for profile in profiles_matching_product:
+                benchmark = self.get_benchmark_by_id(profile.benchmark_id)
+                if benchmark.is_latest:
+                    logger.debug(
+                        f"Found latest version of {profile_id} for {product}"
+                    )
+                    return profile
+                profiles_by_tailoring_version.append((
+                        profile,
+                        benchmark.tailoring_version,
+                        benchmark.version
+                        ))
 
-                    # return compatible (non-breaking) version if exists
-                    compatible_versions = list(benchmark.compatible_versions)
+            # fallback to most recent major version containing the profile
+            profile, tailoring_version, version = sorted(
+                profiles_by_tailoring_version,
+                key=lambda x: x[1]
+            )[-1]
+            logger.warning(
+                f"Profile {profile_id} does not exist in latest version of "
+                f"the benchmark. Using latest available version {version}.")
+            return profile
 
-                    if benchmark_version in compatible_versions:
-                        logger.debug(
-                            f"Found compatible version {benchmark.version} of "
-                            f"{profile_id} for {product}"
-                        )
-                        logger.info(
-                            f"Version {benchmark_version} is superseded by "
-                            f"{benchmark.version}. "
-                            f" Automatically selecting the latter."
-                        )
-                        return profile
+        # return specific or compatible version
+        for profile in profiles_matching_product:
+            benchmark = self.get_benchmark_by_id(profile.benchmark_id)
+            # return specific version if exists
+            if benchmark_version == benchmark.version:
+                logger.debug(
+                    f"Found version {benchmark_version} of "
+                    f"{profile_id} for {product}"
+                )
+                if not benchmark.is_latest:
+                    logger.warning(
+                        f"Version {benchmark.version} of the benchmark profile "
+                        f"{profile_id} is deprecated."
+                    )
+                return profile
+
+            # return compatible (non-breaking) version if exists
+            if benchmark_version in list(benchmark.compatible_versions):
+                logger.debug(
+                    f"Found compatible version {benchmark.version} of "
+                    f"{profile_id} for {product}"
+                )
+                logger.info(
+                    f"Version {benchmark_version} is superseded by "
+                    f"{benchmark.version}. "
+                    f" Automatically selecting the latter."
+                )
+                return profile
 
         raise ProfileNotFoundError(
-            f"No profile found matching these criteria: "
-            f"name: '{profile_id}', product: '{product}', "
-            f"version: '{benchmark_version}'."
+            f"Could not find profile '{profile_id}' with "
+            f"benchmark version '{benchmark_version}'."
         )
 
     def load_tailoring(
