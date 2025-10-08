@@ -287,6 +287,7 @@ def _process_yaml(yaml_data: dict[str, Any]) -> list[dict[str, Any]]:
         b_data = {}
         b_data.update(yaml_data["general"])
         b_data.update(release["benchmark_data"])
+        b_data["tailoring_version"] = release["tailoring_version"]
         benchmark_id = "{}_{}_{}".format(
             b_data["product"], b_data["benchmark_type"], release["tailoring_version"]
         )
