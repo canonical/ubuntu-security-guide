@@ -67,6 +67,7 @@ class Benchmark:
     product: str
     product_long: str
     version: str
+    tailoring_version: int
     description: str
     release_notes_url: str
     release_timestamp: int
@@ -109,6 +110,7 @@ class Benchmark:
                 product=raw_data["product"],
                 product_long=raw_data["product_long"],
                 version=raw_data["version"],
+                tailoring_version=raw_data["tailoring_version"],
                 description=raw_data["description"],
                 release_notes_url=raw_data["release_notes_url"],
                 release_timestamp=raw_data["release_timestamp"],

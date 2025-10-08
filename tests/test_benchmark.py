@@ -89,6 +89,7 @@ def test_usgbenchmark(dummy_benchmarks):
     assert benchmark.product == "ubuntu2404"
     assert benchmark.product_long == "Ubuntu 24.04 LTS (Noble Numbat)"
     assert benchmark.version == "v1.0.1"
+    assert benchmark.tailoring_version == 2
     assert (
         benchmark.description
         == "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.\n"
