@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONFIG = {
     "cli": {
         "log_file": constants.CLI_LOG_FILE,
-        "product": constants.DEFAULT_PRODUCT,
         "fix_only_failed": constants.DEFAULT_FIX_ONLY_FAILED,
     },
     "openscap_backend": {

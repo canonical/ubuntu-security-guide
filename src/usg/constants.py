@@ -19,12 +19,13 @@
 
 from pathlib import Path
 
-# Default tailoring file location (deprecated)
+from usg.version import __version__
+
+# Default tailoring file location
 DEFAULT_TAILORING_PATH = Path("/etc/usg/default-tailoring.xml")
 
 # CLI configurable options
 CLI_LOG_FILE = "/var/log/usg.log"
-DEFAULT_PRODUCT = "ubuntu2404"
 DEFAULT_FIX_ONLY_FAILED = False
 
 # Openscap backend options
@@ -46,3 +47,6 @@ STATE_DIR = Path("/var/lib/usg")
 CLI_STATE_FILE = STATE_DIR / ".state.json"
 OPENSCAP_BIN_PATH = Path("/usr/bin/oscap")
 LOCK_PATH = Path("/run/lock/usg.lock")
+
+# Set default benchmark product based on USG version (e.g. ubuntu2404)
+DEFAULT_PRODUCT = f"ubuntu{__version__[:2]}04"
