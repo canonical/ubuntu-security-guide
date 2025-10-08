@@ -187,17 +187,17 @@ def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
         (["list", "--all"], "v1.0.0", None, None),
         (["list", "--machine-readable"], "cis_level1_server:CIS:ubuntu2404:v2.0.0", None, None),
         (["list"], "v2.0.0", None, None),
-        # successfulcommands with profile argument
+        # successful commands with profile argument
         (["info", "cis_level1_server"], "ubuntu2404_CIS_3", None, None),
         (["audit", "cis_level1_server"], "ubuntu2404_CIS_3", None, None),
         (["fix", "cis_level1_server"], "ubuntu2404_CIS_3", None, None),
         (["generate-fix", "cis_level1_server"], "ubuntu2404_CIS_3", None, None),
-        # successfulcommands with profile and version
+        # successful commands with profile and version
         (["info", "cis_level1_server", "-b", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
         (["audit", "cis_level1_server", "-b", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
         (["fix", "cis_level1_server", "-b", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
         (["generate-fix", "cis_level1_server", "-b", "v1.0.0"], "ubuntu2404_CIS_1", None, None),
-        # successfulommands with tailoring file
+        # successful commands with tailoring file
         (["info", "-t", "tailoring.xml"], "ubuntu2404_CIS_1", None, None),
         (["audit", "-t", "tailoring.xml"], "ubuntu2404_CIS_1", None, None),
         (["fix", "-t", "tailoring.xml"], "ubuntu2404_CIS_1", None, None),
@@ -207,11 +207,16 @@ def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
         (["audit"], None, "Error: a profile or a tailoring file must be provided.", 2),
         (["fix"], None, "Error: a profile or a tailoring file must be provided.", 2),
         (["generate-fix"], None, "Error: a profile or a tailoring file must be provided.", 2),
-        # failed commands with profile and bad version
-        (["info", "cis_level1_server", "-b", "v10"], None, "No profile found matching", 1),
-        (["audit", "cis_level1_server", "-b", "v10"], None, "No profile found matching", 1),
-        (["fix", "cis_level1_server", "-b", "v10"], None, "No profile found matching", 1),
-        (["generate-fix", "cis_level1_server", "-b", "v10"], None, "No profile found matching", 1),
+        # failed commands with bad profile
+        (["info", "bad_profile"], None, "See `usg list --all` for list of available profiles.", 1),
+        (["audit", "bad_profile"], None, "See `usg list --all` for list of available profiles.", 1),
+        (["fix", "bad_profile"], None, "See `usg list --all` for list of available profiles.", 1),
+        (["generate-fix", "bad_profile"], None, "See `usg list --all` for list of available profiles.", 1),
+        # failed commands with bad version
+        (["info", "cis_level1_server", "-b", "v10"], None, "See `usg list --all` for list of available profiles.", 1),
+        (["audit", "cis_level1_server", "-b", "v10"], None, "See `usg list --all` for list of available profiles.", 1),
+        (["fix", "cis_level1_server", "-b", "v10"], None, "See `usg list --all` for list of available profiles.", 1),
+        (["generate-fix", "cis_level1_server", "-b", "v10"], None, "See `usg list --all` for list of available profiles.", 1),
         # failed commands with both a profile and a tailoring file
         (["info", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         (["audit", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),

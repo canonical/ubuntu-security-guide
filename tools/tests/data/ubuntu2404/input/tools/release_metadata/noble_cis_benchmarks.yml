@@ -38,7 +38,9 @@ benchmark_releases:
           cis_level1_server: {}
           cis_level2_server: {}
           cis_level1_workstation: {}
-          cis_level2_workstation: {}
+            # remove a profile from the latest release as a test
+            # for missing profiles in newer releases (e.g. EC2)
+            #cis_level2_workstation: {}
       description: |
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/

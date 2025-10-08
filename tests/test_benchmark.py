@@ -105,7 +105,7 @@ def test_usgbenchmark(dummy_benchmarks):
         benchmark.reference_url == "https://www.cisecurity.org/benchmark/ubuntu_linux/"
     )
     assert benchmark.is_latest == False
-    assert len(benchmark.profiles) == 4
+    assert len(benchmark.profiles) == 5
     assert benchmark.tailoring_files["cis_level2_server"] == {
         "path": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
         "sha256": "b1c953719606572f8ab507e9bfbbd570724127e8c87055aca90ebff85817e6f5",
