@@ -15,6 +15,7 @@
       "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "tailoring_version": 1,
       "benchmark_id": "ubuntu2404_CIS_1",
       "compatible_versions": [],
       "breaking_upgrade_path": [
@@ -63,6 +64,7 @@
       "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "tailoring_version": 2,
       "benchmark_id": "ubuntu2404_CIS_2",
       "compatible_versions": [
         "v1.0.0.usg1"
@@ -112,6 +114,7 @@
       "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "tailoring_version": 3,
       "benchmark_id": "ubuntu2404_CIS_3",
       "compatible_versions": [],
       "breaking_upgrade_path": [],
@@ -156,6 +159,7 @@
       "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://public.cyber.mil/stigs/downloads/",
+      "tailoring_version": 1,
       "benchmark_id": "ubuntu2404_STIG_1",
       "compatible_versions": [],
       "breaking_upgrade_path": [
@@ -190,6 +194,7 @@
       "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R3 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://public.cyber.mil/stigs/downloads/",
+      "tailoring_version": 2,
       "benchmark_id": "ubuntu2404_STIG_2",
       "compatible_versions": [
         "V1R2"
