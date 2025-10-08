@@ -220,7 +220,7 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
                 args.profile, args.product, benchmark_version
             )
         except ProfileNotFoundError as e:
-            error_exit(f"{e}\nSee `usg list` for list of available profiles.", rc=1)
+            error_exit(f"{e}\nSee `usg list --all` for list of available profiles.", rc=1)
     print_info_profile(usg_profile)
     print_info_benchmark(usg.get_benchmark_by_id(usg_profile.benchmark_id))
     logger.debug("Finished command_info")
@@ -470,7 +470,7 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
                 benchmark_version
                 )
         except ProfileNotFoundError as e:
-            error_exit(f"{e}\nSee `usg list` for list of available profiles.", rc=1)
+            error_exit(f"{e}\nSee `usg list --all` for list of available profiles.", rc=1)
 
         # update the benchmark version in the state file
         benchmark = usg.get_benchmark_by_id(profile.benchmark_id)
@@ -580,12 +580,10 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
             )
 
         if command in ["info", "audit", "fix", "generate-fix", "generate-tailoring"]:
-            # Not useful until multiple products exist.
-            # Avoid polluting the CLI and hardcode it to the config value for now.
+            # Product argument is not needed until multiple products exist.
+            # Avoid polluting the CLI and hardcode it to the default for now.
             cmd_parser.set_defaults(
-                product=config_defaults.get(
-                    "cli", "product", fallback=constants.DEFAULT_PRODUCT
-                )
+                product=constants.DEFAULT_PRODUCT
             )
             cmd_parser.add_argument(
                 "-b",
