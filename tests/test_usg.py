@@ -191,6 +191,14 @@ def test_usg_init_and_benchmarks(patch_usg, monkeypatch, dummy_benchmarks):
         ),
         # by legacy id
         ("disa_stig", "ubuntu2404", "V1R1", "ubuntu2404_STIG_1", "stig"),
+        # by most recently released (profile not in latest benchmark)
+        (
+            "cis_level1_server_special",
+            "ubuntu2404",
+            None,
+            "ubuntu2404_CIS_2",
+            "cis_level1_server_special"
+        )
     ],
 )
 def test_get_profile_success(
@@ -207,16 +215,16 @@ def test_get_profile_success(
 
 
 @pytest.mark.parametrize(
-    "profile,product,version",
+    "profile,product,version,error_string",
     [
-        ("bad_profile", "ubuntu2404", "v1.0.0"),
-        ("cis_level1_server", "ubuntu2404", "bad_version"),
-        ("cis_level1_server", "bad_product", "v1.0.0"),
+        ("bad_profile", "ubuntu2404", "v1.0.0", "Could not find benchmark profile"),
+        ("cis_level1_server", "bad_product", "v1.0.0", "Could not find benchmark product"),
+        ("cis_level1_server", "ubuntu2404", "bad_version", "Could not find profile.*with benchmark version"),
     ],
 )
-def test_get_profile_not_found(patch_usg, profile, product, version):
+def test_get_profile_not_found(patch_usg, profile, product, version, error_string)  :
     usg = USG()
-    with pytest.raises(ProfileNotFoundError):
+    with pytest.raises(ProfileNotFoundError, match=error_string):
         usg.get_profile(profile, product, benchmark_version=version)
 
 
