@@ -108,8 +108,7 @@
       "profiles": {
         "cis_level1_server": {},
         "cis_level2_server": {},
-        "cis_level1_workstation": {},
-        "cis_level2_workstation": {}
+        "cis_level1_workstation": {}
       },
       "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
@@ -139,10 +138,6 @@
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level1_workstation-tailoring.xml",
           "sha256": "66692fda4821772c8b2e7450de9fbbccd18058d87780d787afe5ef35c19b12f4"
-        },
-        "cis_level2_workstation": {
-          "path": "ubuntu2404_CIS_3/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "ec7751cfc2834a7b9e8adfd23ce81b0498035e14418e2a88ba08231d847a6ccb"
         }
       }
     },
