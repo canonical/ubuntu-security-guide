@@ -1,15 +1,15 @@
 general:
   benchmark_type: CIS
-  product: ubuntu2404
-  product_long: Ubuntu 24.04 LTS (Noble Numbat)
+  product: ubuntu2204
+  product_long: Ubuntu 22.04 LTS (Jammy Jellyfish)
 
 benchmark_releases:
-  - cac_tag: noble-cis-1.5
+  - cac_tag: testing_asd #jammy-cis-1.12
     parent_tag: 
     breaking_release: False
     tailoring_version: 1
-    cac_commit: e40871066ec2edfce046b53241f0e02d4a184ea5
-    usg_version: 24.04.5
+    cac_commit: 02edc5a1bcbf89a6cb7329e13de0aee3717aedab
+    usg_version: 22.04.12
     benchmark_data:
       version: v1.0.0
       profiles:
@@ -18,6 +18,6 @@ benchmark_releases:
           cis_level1_workstation: {}
           cis_level2_workstation: {}
       description: |
-          ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
+          ComplianceAsCode implementation of CIS Ubuntu 22.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
