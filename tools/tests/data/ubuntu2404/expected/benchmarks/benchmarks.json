@@ -34,19 +34,19 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "eab1c25d7565f0d28a51220238ab13e8982eeb4042e912b87caae510534cbeb3"
+          "sha256": "438891148f36607a041ea588fb6a9b3ec91f1900b4722b07ed7e3d4ca3ca2ad9"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "32aa8339f2eee97ce9dbe888b8db9e37f17e36d735d71f6d6f884465a64b1587"
+          "sha256": "3c7d818af152fadfe747393f7875319a8153cfbe12629910bdbbeaff1571192f"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "0b84590aa66f223e49153b359aed2b57578081db8544c77d30ae5a9a50e13470"
+          "sha256": "7b70b208973db366bdde1c6cc455d06837d3e576521d3795db37adac50015364"
         },
         "cis_level2_workstation": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "ab57fa3bde394f15defbf7d90615b2ac60c699571594cf5e8a823afbc6eb76e2"
+          "sha256": "08efa9a5ae8071cfa6419a7af0a81ae072656ef9073773b05590bdb935ed7a77"
         }
       }
     },
@@ -84,19 +84,19 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "ac76e9afc81ff3499090b966d4cdbaaa87a46d6b9133032c2ec195384f44d507"
+          "sha256": "6f7822a16d208271b263de944d52044684986f6eb5b5f8285d739d49809af1df"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "e50bcbf1feceb5271d59f5ec66e00f827f7c5eb9ff40201e8a3d63f72ef09172"
+          "sha256": "6639a70b7a46562379dff864d727d5e9e0d35c8f7f83d141dad230e7e1c4873c"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "0fe3574dbed439d68e5160ee1e681aa4f750e94582647dcad173527602d77c4d"
+          "sha256": "6d7c5a36fd2a6d30b56693092be4407aac88d8fc6aec0e2c4b5defddbac21d2c"
         },
         "cis_level2_workstation": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "48f5b0c969cb3209d97507cd182daedd18b6f0dfd61bf674e32dc53f3e498d9c"
+          "sha256": "adf6e1ee2a6b9de9dd0d0a2465445bf1d5815068cfa5092aaf1c37afc0e5ae7d"
         }
       }
     },
@@ -129,11 +129,11 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "19782c89163a756b372820b7f852bc23074a4578c0526df7a341d3c248e2300d"
+          "sha256": "95e9f13f84d5b468666c278a5220cfa0a86bfb988444514f193a0861de8a1f62"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "d152d7673f43f3c6dee19d5e29cdc393aa352329d474d76af58c06e26d6ac861"
+          "sha256": "9a6953ecc64536c71c45a5745267cb4b343058aa6094d54a8760a0e1b717f364"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level1_workstation-tailoring.xml",
@@ -172,7 +172,7 @@
       "tailoring_files": {
         "stig": {
           "path": "ubuntu2404_STIG_1/tailoring/stig-tailoring.xml",
-          "sha256": "7f9d44a8e8765484e21f9fc800593b0d427f83d37674a443be5fb3e0e33e6531"
+          "sha256": "3d29260a26fb1a5b5913b57ecfab59d9c7c76cf5118d2764c623386358f3d210"
         }
       }
     },
@@ -207,7 +207,7 @@
       "tailoring_files": {
         "stig": {
           "path": "ubuntu2404_STIG_2/tailoring/stig-tailoring.xml",
-          "sha256": "cc996240d5c16263a647a431ac8db0f5179cea8d93eb092e32fb3cbf2139ba38"
+          "sha256": "1c4ec05d39b0fd12f0dada508c978f1e1fa5a9c5bf350d18ecaaad73f8928bd9"
         }
       }
     }
