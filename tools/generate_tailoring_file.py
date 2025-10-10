@@ -103,7 +103,7 @@ def generate_tailoring_file(
         control_map[var.control.control_id]["vars"].append(var)
 
     logger.debug("Inserting rules and variables into tailoring file")
-    for control_id in sorted(control_map):
+    for control_id in control_map:
         logger.debug(f"Processing control {control_id}")
         control_rules = control_map[control_id]["rules"]
         control_vars = control_map[control_id]["vars"]

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2" id="xccdf_scap-workbench_tailoring_default">
   <benchmark href="/usr/share/usg-benchmarks/ubuntu2404_CIS_2"/>
-  <version time="2025-09-05T13:35:51+00:00">1</version>
+  <version time="2025-10-08T21:08:52+00:00">1</version>
   <Profile id="xccdf_org.ssgproject.content_profile_cis_level1_workstation_customized" extends="xccdf_org.ssgproject.content_profile_cis_level1_workstation">
     <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">CIS Ubuntu 24.04 Level 1 Workstation Benchmark [CUSTOMIZED]</title>
     <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">This baseline aligns to the Center for Internet Security Ubuntu 24.04 LTS Benchmark, v1.0.0, released 08-26-2024.</description>
@@ -102,8 +102,6 @@
     <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_etc_issue_net" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_owner_etc_issue_net" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_issue_net" selected="true"/>
-    <!--1.7.10: Ensure XDMCP is not enabled (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_gnome_gdm_disable_xdmcp" selected="true"/>
     <!--1.7.2: Ensure GDM login banner is configured (Automated)-->
     <set-value idref="xccdf_org.ssgproject.content_value_login_banner_text">^Authorized[\s\n]+users[\s\n]+only\.[\s\n]+All[\s\n]+activity[\s\n]+may[\s\n]+be[\s\n]+monitored[\s\n]+and[\s\n]+reported\.$</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_banner_enabled" selected="true"/>
@@ -118,6 +116,30 @@
     <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_delay" selected="true"/>
     <!--1.7.8: Ensure GDM autorun-never is enabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_disable_autorun" selected="true"/>
+    <!--1.7.10: Ensure XDMCP is not enabled (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_gnome_gdm_disable_xdmcp" selected="true"/>
+    <!--2.1.3: Ensure dhcp server services are not in use (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_dhcp_removed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_dhcpd_disabled" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_dhcpd6_disabled" selected="true"/>
+    <!--2.1.4: Ensure dns server services are not in use (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_bind_removed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_named_disabled" selected="true"/>
+    <!--2.1.5: Ensure dnsmasq services are not in use (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_dnsmasq_removed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_dnsmasq_disabled" selected="true"/>
+    <!--2.1.6: Ensure ftp server services are not in use (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_vsftpd_removed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_vsftpd_disabled" selected="true"/>
+    <!--2.1.7: Ensure ldap server services are not in use (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_openldap-servers_removed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_slapd_disabled" selected="true"/>
+    <!--2.1.8: Ensure message access server services are not in use (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_dovecot_removed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_dovecot_disabled" selected="true"/>
+    <!--2.1.9: Ensure network file system services are not in use (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_nfs-kernel-server_removed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_service_nfs_disabled" selected="true"/>
     <!--2.1.10: Ensure nis server services are not in use (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_package_ypserv_removed" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_service_ypserv_disabled" selected="true"/>
@@ -151,28 +173,6 @@
     <set-value idref="xccdf_org.ssgproject.content_value_var_postfix_inet_interfaces">loopback-only</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_has_nonlocal_mta" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_postfix_network_listening_disabled" selected="true"/>
-    <!--2.1.3: Ensure dhcp server services are not in use (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_package_dhcp_removed" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_service_dhcpd_disabled" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_service_dhcpd6_disabled" selected="true"/>
-    <!--2.1.4: Ensure dns server services are not in use (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_package_bind_removed" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_service_named_disabled" selected="true"/>
-    <!--2.1.5: Ensure dnsmasq services are not in use (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_package_dnsmasq_removed" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_service_dnsmasq_disabled" selected="true"/>
-    <!--2.1.6: Ensure ftp server services are not in use (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_package_vsftpd_removed" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_service_vsftpd_disabled" selected="true"/>
-    <!--2.1.7: Ensure ldap server services are not in use (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_package_openldap-servers_removed" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_service_slapd_disabled" selected="true"/>
-    <!--2.1.8: Ensure message access server services are not in use (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_package_dovecot_removed" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_service_dovecot_disabled" selected="true"/>
-    <!--2.1.9: Ensure network file system services are not in use (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_package_nfs-kernel-server_removed" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_service_nfs_disabled" selected="true"/>
     <!--2.2.1: Ensure NIS Client is not installed (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_package_nis_removed" selected="true"/>
     <!--2.2.2: Ensure rsh client is not installed (Automated)-->
@@ -248,11 +248,6 @@
     <!--3.3.1: Ensure ip forwarding is disabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv6_conf_all_forwarding" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_ip_forward" selected="true"/>
-    <!--3.3.10: Ensure tcp syn cookies is enabled (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_tcp_syncookies" selected="true"/>
-    <!--3.3.11: Ensure ipv6 router advertisements are not accepted (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv6_conf_all_accept_ra" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv6_conf_default_accept_ra" selected="true"/>
     <!--3.3.2: Ensure packet redirect sending is disabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_conf_all_send_redirects" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_conf_default_send_redirects" selected="true"/>
@@ -279,6 +274,11 @@
     <!--3.3.9: Ensure suspicious packets are logged (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_conf_all_log_martians" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_conf_default_log_martians" selected="true"/>
+    <!--3.3.10: Ensure tcp syn cookies is enabled (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_tcp_syncookies" selected="true"/>
+    <!--3.3.11: Ensure ipv6 router advertisements are not accepted (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv6_conf_all_accept_ra" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv6_conf_default_accept_ra" selected="true"/>
     <!--4.1.1: Ensure a single firewall configuration utility is in use (Automated)-->
     <set-value idref="xccdf_org.ssgproject.content_value_var_network_filtering_service">nftables</set-value>
     <select idref="xccdf_org.ssgproject.content_rule_firewall_single_service_active" selected="true"/>
@@ -297,9 +297,6 @@
     <select idref="xccdf_org.ssgproject.content_rule_set_ufw_default_rule" selected="true"/>
     <!--4.3.1: Ensure nftables is installed (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_package_nftables_installed" selected="true"/>
-    <!--4.3.10: Ensure nftables rules are permanent (Automated)-->
-    <set-value idref="xccdf_org.ssgproject.content_value_var_nftables_master_config_file">/etc/nftables.conf</set-value>
-    <select idref="xccdf_org.ssgproject.content_rule_nftables_rules_permanent" selected="true"/>
     <!--4.3.2: Ensure ufw is uninstalled or disabled with nftables (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_package_ufw_removed" selected="true"/>
     <!--4.3.4: Ensure a nftables table exists (Automated)-->
@@ -319,6 +316,9 @@
     <select idref="xccdf_org.ssgproject.content_rule_nftables_ensure_default_deny_policy" selected="true"/>
     <!--4.3.9: Ensure nftables service is enabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_service_nftables_enabled" selected="true"/>
+    <!--4.3.10: Ensure nftables rules are permanent (Automated)-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_nftables_master_config_file">/etc/nftables.conf</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_nftables_rules_permanent" selected="true"/>
     <!--4.4.1.1: Ensure iptables packages are installed (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_package_iptables-persistent_installed" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_package_iptables_installed" selected="true"/>
@@ -340,6 +340,25 @@
     <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_sshd_config" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_owner_sshd_config" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_permissions_sshd_config" selected="true"/>
+    <!--5.1.2: Ensure permissions on SSH private host key files are configured (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_sshd_private_key" selected="true"/>
+    <!--5.1.3: Ensure permissions on SSH public host key files are configured (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_sshd_pub_key" selected="true"/>
+    <!--5.1.4: Ensure sshd access is configured (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_limit_user_access" selected="true"/>
+    <!--5.1.5: Ensure sshd Banner is configured (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_warning_banner_net" selected="true"/>
+    <!--5.1.6: Ensure sshd Ciphers are configured (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_use_strong_ciphers" selected="true"/>
+    <!--5.1.7: Ensure sshd ClientAliveInterval and ClientAliveCountMax are configured (Automated)-->
+    <set-value idref="xccdf_org.ssgproject.content_value_sshd_idle_timeout_value">300</set-value>
+    <set-value idref="xccdf_org.ssgproject.content_value_var_sshd_set_keepalive">3</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_set_idle_timeout" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_set_keepalive" selected="true"/>
+    <!--5.1.8: Ensure sshd DisableForwarding is enabled (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_forwarding" selected="true"/>
+    <!--5.1.9: Ensure sshd GSSAPIAuthentication is disabled (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_gssapi_auth" selected="true"/>
     <!--5.1.10: Ensure sshd HostbasedAuthentication is disabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_disable_host_auth" selected="true"/>
     <!--5.1.11: Ensure sshd IgnoreRhosts is enabled (Automated)-->
@@ -366,31 +385,12 @@
     <select idref="xccdf_org.ssgproject.content_rule_sshd_set_maxstartups" selected="true"/>
     <!--5.1.19: Ensure sshd PermitEmptyPasswords is disabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_empty_passwords" selected="true"/>
-    <!--5.1.2: Ensure permissions on SSH private host key files are configured (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_sshd_private_key" selected="true"/>
     <!--5.1.20: Ensure sshd PermitRootLogin is disabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_root_login" selected="true"/>
     <!--5.1.21: Ensure sshd PermitUserEnvironment is disabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_sshd_do_not_permit_user_env" selected="true"/>
     <!--5.1.22: Ensure sshd UsePAM is enabled (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_pam" selected="true"/>
-    <!--5.1.3: Ensure permissions on SSH public host key files are configured (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_sshd_pub_key" selected="true"/>
-    <!--5.1.4: Ensure sshd access is configured (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_sshd_limit_user_access" selected="true"/>
-    <!--5.1.5: Ensure sshd Banner is configured (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_warning_banner_net" selected="true"/>
-    <!--5.1.6: Ensure sshd Ciphers are configured (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_sshd_use_strong_ciphers" selected="true"/>
-    <!--5.1.7: Ensure sshd ClientAliveInterval and ClientAliveCountMax are configured (Automated)-->
-    <set-value idref="xccdf_org.ssgproject.content_value_sshd_idle_timeout_value">300</set-value>
-    <set-value idref="xccdf_org.ssgproject.content_value_var_sshd_set_keepalive">3</set-value>
-    <select idref="xccdf_org.ssgproject.content_rule_sshd_set_idle_timeout" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_sshd_set_keepalive" selected="true"/>
-    <!--5.1.8: Ensure sshd DisableForwarding is enabled (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_forwarding" selected="true"/>
-    <!--5.1.9: Ensure sshd GSSAPIAuthentication is disabled (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_gssapi_auth" selected="true"/>
     <!--5.2.1: Ensure sudo is installed (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_package_sudo_installed" selected="true"/>
     <!--5.2.2: Ensure sudo commands use pty (Automated)-->
@@ -600,18 +600,6 @@
     <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_etc_passwd" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_owner_etc_passwd" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_passwd" selected="true"/>
-    <!--7.1.10: Ensure permissions on /etc/security/opasswd are configured (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_file_owner_etc_security_opasswd" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_etc_security_opasswd" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_security_opasswd" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_file_owner_etc_security_opasswd_old" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_etc_security_opasswd_old" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_security_opasswd_old" selected="true"/>
-    <!--7.1.11: Ensure world writable files and directories are secured (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_unauthorized_world_writable" selected="true"/>
-    <!--7.1.12: Ensure no files or directories without an owner and a group exist (Automated)-->
-    <select idref="xccdf_org.ssgproject.content_rule_no_files_unowned_by_user" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_ungroupowned" selected="true"/>
     <!--7.1.2: Ensure permissions on /etc/passwd- are configured (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_backup_etc_passwd" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_owner_backup_etc_passwd" selected="true"/>
@@ -644,17 +632,20 @@
     <select idref="xccdf_org.ssgproject.content_rule_file_owner_etc_shells" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_etc_shells" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_shells" selected="true"/>
+    <!--7.1.10: Ensure permissions on /etc/security/opasswd are configured (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_owner_etc_security_opasswd" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_etc_security_opasswd" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_security_opasswd" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_owner_etc_security_opasswd_old" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_etc_security_opasswd_old" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_security_opasswd_old" selected="true"/>
+    <!--7.1.11: Ensure world writable files and directories are secured (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_unauthorized_world_writable" selected="true"/>
+    <!--7.1.12: Ensure no files or directories without an owner and a group exist (Automated)-->
+    <select idref="xccdf_org.ssgproject.content_rule_no_files_unowned_by_user" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_ungroupowned" selected="true"/>
     <!--7.2.1: Ensure accounts in /etc/passwd use shadowed passwords (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_accounts_password_all_shadowed" selected="true"/>
-    <!--7.2.10: Ensure local interactive user dot files access is configured (Automated)-->
-    <set-value idref="xccdf_org.ssgproject.content_value_var_user_initialization_files_regex">^\.[\w\- ]+$</set-value>
-    <select idref="xccdf_org.ssgproject.content_rule_no_rsh_trust_files" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_no_forward_files" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_no_netrc_files" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_accounts_user_dot_user_ownership" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_accounts_user_dot_group_ownership" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_file_permission_user_init_files" selected="true"/>
-    <select idref="xccdf_org.ssgproject.content_rule_file_permission_user_bash_history" selected="true"/>
     <!--7.2.2: Ensure /etc/shadow password fields are not empty (Automated)-->
     <select idref="xccdf_org.ssgproject.content_rule_no_empty_passwords_etc_shadow" selected="true"/>
     <!--7.2.3: Ensure all groups in /etc/passwd exist in /etc/group (Automated)-->
@@ -674,5 +665,14 @@
     <select idref="xccdf_org.ssgproject.content_rule_file_groupownership_home_directories" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_ownership_home_directories" selected="true"/>
     <select idref="xccdf_org.ssgproject.content_rule_file_permissions_home_directories" selected="true"/>
+    <!--7.2.10: Ensure local interactive user dot files access is configured (Automated)-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_user_initialization_files_regex">^\.[\w\- ]+$</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_no_rsh_trust_files" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_no_forward_files" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_no_netrc_files" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_user_dot_user_ownership" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_user_dot_group_ownership" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permission_user_init_files" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permission_user_bash_history" selected="true"/>
   </Profile>
 </Tailoring>
