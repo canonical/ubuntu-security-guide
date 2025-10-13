@@ -336,7 +336,16 @@ def command_fix(usg: USG, args: argparse.Namespace) -> None:
     logger.debug("Starting command_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
     print("Running audit and remediation script...")
-    _ = usg.fix(usg_profile, only_failed=args.only_failed)
+
+    _, output_files = usg.audit(
+        usg_profile, debug=args.debug, oval_results=args.oval_results
+    )
+    audit_results_file = None
+    if args.only_failed:
+        audit_results_file = output_files.get_by_type("audit_results").path
+
+    _ = usg.fix(usg_profile, audit_results_file=audit_results_file)
+
     print(
         "USG fix command completed.\n"
         "A system reboot is required to complete the fix process.\n"

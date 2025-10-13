@@ -17,6 +17,7 @@
 
 import datetime
 import configparser
+from pathlib import Path
 
 import pytest
 from pytest import MonkeyPatch
@@ -311,25 +312,21 @@ def test_fix(patch_usg, dummy_benchmarks, capsys):
     profile = usg.get_profile("cis_level1_server", "ubuntu2404")
     _ = usg.fix(profile)
     stdout, _ = capsys.readouterr()
-    assert stdout == (
-        "audit called with profile_id=cis_level1_server, "
-        "tailoring_file=None, debug=False, oval_results=False\n"
+    assert stdout.strip() == (
         "fix called with profile_id=cis_level1_server, "
-        "tailoring_file=None, audit_results_file=None\n"
+        "tailoring_file=None, audit_results_file=None"
     )
 
 
-def test_fix_only_failed(patch_usg, dummy_benchmarks, capsys):
+def test_fix_audit_results_file(patch_usg, dummy_benchmarks, capsys):
     # test that fix only remediates failed rules
     usg = USG()
     profile = usg.get_profile("cis_level1_server", "ubuntu2404")
-    _ = usg.fix(profile, only_failed=True)
+    _ = usg.fix(profile, audit_results_file=Path("/path/to/test_audit_results_file.xml"))
     stdout, stderr = capsys.readouterr()
-    assert stdout == (
-        "audit called with profile_id=cis_level1_server, "
-        "tailoring_file=None, debug=False, oval_results=False\n"
+    assert stdout.strip() == (
         "fix called with profile_id=cis_level1_server, "
-        "tailoring_file=None, audit_results_file=test_backend_results_file.xml\n"
+        "tailoring_file=None, audit_results_file=test_audit_results_file.xml"
     )
 
 
@@ -337,7 +334,7 @@ def test_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, c
     # test that fix creates the correct artifact name and moves it to the correct path
     usg = USG(dummy_config)
     profile = usg.get_profile("cis_level1_server", "ubuntu2404")
-    artifacts = usg.fix(profile, only_failed=True)
+    artifacts = usg.fix(profile)
     expected_name = "test-fix-cis_level1_server-20250715.1200.sh"
     assert artifacts.get_by_type("fix_script").path.name == expected_name
 
