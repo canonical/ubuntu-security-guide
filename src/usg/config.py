@@ -92,7 +92,7 @@ def get_artifact_destination_path(
 
     Args:
         config: config parser
-        option: option name in [opensca_backend] section ofconfig
+        option: option name in [openscap_backend] section of config
         timestamp: timestamp (YYYYMMDD.HHMM)
         cac_profile: profile id (e.g. cis_level1_server)
         product: product name (e.g. ubuntu2404)
@@ -131,6 +131,8 @@ def override_config_with_cli_args(
     map_cli_paths_to_config = {
         "audit.html_file": "openscap_backend.audit_report",
         "audit.results_file": "openscap_backend.audit_results",
+        "fix.html_file": "openscap_backend.audit_report",
+        "fix.results_file": "openscap_backend.audit_results",
         "generate-fix.output": "openscap_backend.fix_script",
     }
     for cli_arg, cfg_opt in map_cli_paths_to_config.items():

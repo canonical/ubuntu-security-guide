@@ -372,12 +372,16 @@ class USG:
 
         return artifacts
 
-    def fix(self, profile: Profile, only_failed: bool = False) -> BackendArtifacts:
+    def fix(
+            self,
+            profile: Profile,
+            audit_results_file: Path | None = None
+            ) -> BackendArtifacts:
         """Prepare environment and backend and remediates profile.
 
         Args:
             profile: Profile object
-            only_failed: if True, only remediate failed rules
+            audit_results_file: if given, only remediate failed rules in the audit
 
         Returns:
             BackendArtifacts: output files from the fix operation
@@ -392,13 +396,8 @@ class USG:
         work_dir = tempfile.mkdtemp(dir=constants.STATE_DIR, prefix="fix_")
         backend = self._init_openscap_backend(benchmark, work_dir)
         try:
-            results, artifacts = backend.audit(
-                profile.profile_id, profile.tailoring_file
-            )
-
             # pass audit results to fix operation to only remediated failed rules
-            if only_failed:
-                audit_results_file = artifacts.get_by_type("audit_results").path
+            if audit_results_file is not None:
                 logger.info(
                     f"Only remediating failed rules from audit results file "
                     f"{audit_results_file.name}"
