@@ -108,7 +108,20 @@ test_cmd "usg info"  0  "Using the default tailoring file" ""
 rm /etc/usg/default-tailoring.xml
 
 # Audit with tailoring file, should be 1 pass, 1 fail
+rm -f /var/lib/usg/*
 test_cmd "usg audit -t t1.xml"  0  "^Fail:.*1$"  ""
+# Ensure default outputs exist
+test_cmd "test -s /var/lib/usg/usg-report-*.html"  0  "" ""
+test_cmd "test -s /var/lib/usg/usg-results-*.xml"  0  "" ""
+# Ensure non-default outputs exist
+rm -f /var/lib/usg/* report.html results.xml
+test_cmd "usg audit -t t1.xml --html-file report.html --results-file results.xml --debug --oval-results"  0  "^Fail:.*1$"  ""
+test_cmd "test -s report.html"  0  "" ""
+test_cmd "test -s results.xml"  0  "" ""
+test_cmd "test -s /var/lib/usg/usg-log-*log"  0  "" ""
+test_cmd "test -s /var/lib/usg/ssg-ubuntu????-oval.xml.result-*.xml"  0  "" ""
+test_cmd "test -s /var/lib/usg/ssg-ubuntu????-cpe-oval.xml.result-*.xml"  0  "" ""
+
 
 # Fix with tailoring file, only failed rules
 rm -f /var/lib/usg/xccdf*sh
@@ -121,11 +134,21 @@ test_cmd "usg audit -t t1.xml"  0  "^Fail:.*0$"  ""
 
 
 # Fix with tailoring file, all rules
-rm -f /var/lib/usg/xccdf*sh
+rm -f /var/lib/usg/*
 test_cmd "usg fix -t t1.xml"  0  "fix command completed" ""
 # test both rules are in remediation script
 test_cmd "grep -c BEGIN /var/lib/usg/xccdf*sh"  0  "^2$"  ""
-
+# Ensure default outputs exist
+test_cmd "test -s /var/lib/usg/usg-report-*.html"  0  "" ""
+test_cmd "test -s /var/lib/usg/usg-results-*.xml"  0  "" ""
+# Ensure non-default outputs exist
+rm -f /var/lib/usg/* report.html results.xml
+test_cmd "usg fix -t t1.xml --html-file report.html --results-file results.xml --debug --oval-results"  0  "fix command completed"  ""
+test_cmd "test -s report.html"  0  "" ""
+test_cmd "test -s results.xml"  0  "" ""
+test_cmd "test -s /var/lib/usg/usg-log-*log"  0  "" ""
+test_cmd "test -s /var/lib/usg/ssg-ubuntu????-oval.xml.result-*.xml"  0  "" ""
+test_cmd "test -s /var/lib/usg/ssg-ubuntu????-cpe-oval.xml.result-*.xml"  0  "" ""
 
 
 # test that the legacy usg fallback runs ok and fails due to missing benchmark bundle
