@@ -13,7 +13,7 @@ Standards-Version: 4.6.2
 
 Package: usg
 Architecture: all
-Depends: usg-benchmarks, openscap-scanner, ${python3:Depends}, ${misc:Depends}
+Depends: usg-benchmarks, libopenscap8, bsdmainutils, ${python3:Depends}, ${misc:Depends}
 Conflicts: usg-common
 Recommends: usg-benchmarks-1
 Description: tool for security auditing and hardening
