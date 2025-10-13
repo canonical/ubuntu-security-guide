@@ -75,7 +75,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
                 f"Benchmark={profile.benchmark_id}"
             )
             output_files = BackendArtifacts()
-            output_files.add_artifact("results", "test_results_contents")
+            output_files.add_artifact("audit_results", "test_results_contents")
             return AuditResults(), output_files
 
         def generate_fix(self, profile) -> BackendArtifacts:
@@ -88,12 +88,13 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
             output_files.add_artifact("fix_script", "test_fix_contents")
             return output_files
 
-        def fix(self, profile, only_failed=False) -> BackendArtifacts:
+        def fix(self, profile, audit_results_file=None) -> BackendArtifacts:
+            fn = audit_results_file.name if audit_results_file else "None"
             print(
                 f"Fix called with profile_id={profile.profile_id},"
                 f"tailoring_file={profile.tailoring_file}."
                 f"Benchmark={profile.benchmark_id}"
-                f"only_failed={only_failed}"
+                f"audit_results_file={fn}"
             )
             output_files = BackendArtifacts()
             output_files.add_artifact("fix_script", "test_fix_contents")
@@ -235,8 +236,8 @@ def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
         (["generate-tailoring"], None, "following arguments are required:", 2),
         (["generate-tailoring", "cis_level1_server"], None, "following arguments are required:", 2),
         # fix command with extra arguments
-        (["fix", "cis_level1_server"], "only_failed=False", None, None),
-        (["fix", "cis_level1_server", "--only-failed"], "only_failed=True", None, None),
+        (["fix", "cis_level1_server"], "audit_results_file=None", None, None),
+        (["fix", "cis_level1_server", "--only-failed"], "audit_results_file=test_results_content", None, None),
     ],
 )
 def test_cli_invocation(
