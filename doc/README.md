@@ -5,11 +5,10 @@ including the USG python module, build tooling, debian maintainer scripts and ot
 
 ### USG
 
-Since https://github.com/canonical/ubuntu-security-guide/pull/76 , the USG tool is written in Python
-while retaining CLI backwards compatibility with the legacy Bash version.
+The USG tool has been rewritten in Python, but it maintains command-line interface (CLI) backward compatibility with the original Bash version.
+See also https://github.com/canonical/ubuntu-security-guide/pull/76
 
-The main functionality of usg is in `src/usg/`, including the USG python module, the CLI wrapper script and the legacy fallback script:
-
+The core functionality resides in src/usg/, which contains the Python module, the CLI wrapper, and a legacy fallback script.
 ```sh
 src/
 ├── cli
@@ -36,7 +35,7 @@ The project version, configuration and metadata is in `pyproject.toml`. On older
 
 ### Data directories
 
-Data files packaged and installed alongside USG (benchmarks, manpages, configs) are in:
+Data files packaged with USG, such as benchmarks, manpages, and configuration files, are located here:
 
 ```
 benchmarks/                  # placeholder for benchmark data (see Build tooling)
@@ -58,20 +57,18 @@ The `tools/` folder contains several utility scripts for building benchmark data
 #### Build tooling
 
 The build script `build.py` is used call the various tools to:
-- compile [ComplianceAsCode content](https://github.com/ComplianceAsCode/content) based on tags defined in `tools/release_metadata/`
-- extract SCAP datastreams
-- generate tailoring files and manpages from templates
-- generate the necessary metadata files for USG
-- populate `benchmarks/` and `docs/` folders
+- Compile [ComplianceAsCode content](https://github.com/ComplianceAsCode/content) based on tags defined in `tools/release_metadata/`.
+- Extract SCAP datastreams.
+- Generate tailoring files and manpages from templates.
+- Generate the necessary metadata files for USG.
+- Populate `benchmarks/` and `docs/` folders.
 
-##### Example build:
+##### Example build
 
 ```
-# install dependencies for building ComplianceAsCode
-# install OpenSCAP
-# install build dependencies
-# (e.g. on Ubuntu 24.04)
-sudo apt install openscap-scanner python3-yaml python3-lxml
+# Install dependencies for ComplianceAsCode and build tooling
+# (Example for Ubuntu 24.04)
+sudo apt install openscap-scanner cmake make python3-jinja2 ninja-build xsltproc libexpat1 python3-yaml python3-lxml
 
 # Obtain a copy of the CaC-content repo
 git clone https://github.com/ComplianceAsCode/content /tmp/CaC-content
@@ -85,11 +82,11 @@ tools/build.py -c /tmp/CaC-content
 
 ##### Benchmark release metadata
 
-The benchmark data is built based on the metadata defined in `tools/release_metadata/`.
-This folder contains `*.yaml` files describing all benchmarks which should be considered for the build,
-their git tags/commits in the ComplianceAsCode project, and their parent releases.
+Benchmark data is built according to metadata defined in `*.yaml` files within `tools/release_metadata/`.
+These files describe each benchmark, its corresponding Git tags/commits in the ComplianceAsCode project,
+and its relationship to parent releases.
 
-Annotated example:
+Here is an annotated example:
 ```yaml
 general:
   benchmark_type: CIS     # type, either CIS or STIG (each type has its own file)
@@ -122,33 +119,34 @@ benchmark_releases:
     ...
 ```
 
-Based on this information, the build tools resolve the benchmark release graph, and build the active releases:
-- the latest release
-- all releases preceding a breaking release (deprecated versions)
+Based on this metadata, the build tools construct a release graph and build the latest releases in each channel as defined by the field `tailoring_version`.
 
-Releases which are superseded by a compatible release (non-breaking; not introducing backwards incompatible changes to the tailoring file)
-are not included in the build.
+Releases that are superseded by a non-breaking update (same `tailoring_version`) are not included in the final build.
 
 
 #### Testing tools
 
-For easy live testing, you can run:
+For quick, live testing, you can use the provided container scripts:
 ```sh
+# Install podman
 sudo apt install podman
+
+# Run a container for Ubuntu 24.04 (Noble) or 22.04 (Jammy)
 ./tools/run_container.sh noble
+# or
 ./tools/run_container.sh jammy
 ```
 The script will setup a Ubuntu 24.04 (noble) or Ubuntu 22.04 (jammy) container with USG and
 sample benchmarks from test data.
 
-Example usg commands:
+You can then run commands like:
 ```sh
 usg list --all
 usg info cis_level1_server
 usg audit cis_level1_server --debug
 ```
 
-To run the unit tests and e2e tests on all supported platforms using containers, run:
+To execute the full suite of unit and end-to-end tests across all supported platforms, run:
 ```sh
 sudo apt install podman
 ./tools/run_tests.sh
@@ -156,15 +154,12 @@ sudo apt install podman
 
 ### Debian packaging
 
-The debian packaging uses the pybuild backend, based on the metadata in `pyproject.toml` (doesn't work
-in jammy due to setuptools<61.0 -> uses setup.cfg instead). 
+The debian packaging uses the pybuild backend, based on the metadata in `pyproject.toml` (or `setup.cfg` on Ubuntu 22.04 and older systems). 
 
 Install locations:
-- The python package `usg` is installed as a *private package* to `/usr/share/usg`.
-- The USG CLI wrappper is installed to `/sbin/usg`
-- Benchmark data is installed to `/usr/share/usg-benchmarks` **
-
-**The legacy `usg-benchmarks-N` binary package was replaced with `usg-benchmarks`, which now contains all the available benchmarks in gzipped format, together with the metadata file `benchmarks.json`.
+- The `usg` python package is installed as a private package to `/usr/share/usg`.
+- The USG CLI wrappper is installed to `/sbin/usg`.
+- Benchmark data is installed to `/usr/share/usg-benchmarks`.
 
 #### Autopkgtests
 
@@ -177,16 +172,17 @@ Bash completions for usg CLI tool are in `debian/usg.bash-completion`.
 
 ## Development
 
-To setup the dev environment: (needs python >= 3.12, tested on Noble)
+To setup the dev environment (requires Python >= 3.12):
 ```
+# Create virtual env and install dependencies
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r dev-requirements.txt
 
-# run tests with coverage
+# Run tests with coverage report
 coverage erase && coverage run --source . -m pytest && coverage html && coverage report -m
 
-# run linting
+# Run the linter
 ruff check .
 ```
 
@@ -195,49 +191,64 @@ ruff check .
 
 #### High-level
 
-The code consists of a python lib that the user can import:
+The project consists of a Python library that can be imported and used programmatically:
 ```python
-# require
-import usg
-usg = usg.USG()
-profile = usg.get_profile('cis_level1_server')
-results, output_files = usg.audit(profile)
-```
-and a CLI which implements the lib:
-```sh
-usg audit -p cis_level1_server
+from usg import USG
+
+# Initialize USG
+# (requires that either the `usg-benchmarks` package is installed
+# or benchmark data has been built using the build tooling as described above)
+usg = USG(benchmark_metadata_path="benchmarks/benchmarks.json", state_dir=".")
+
+# Get profile and run audit
+profile = usg.get_profile("cis_level1_server", "ubuntu2404", "latest")
+results, audit_artifacts = usg.audit(profile)
+
+# Generate tailoring file
+open("tailoring_file.xml", "w").write(usg.generate_tailoring(profile))
+
+# Load tailoring file
+tailoring_file = usg.load_tailoring("tailoring_file.xml")
+
+# Audit using tailoring
+results, audit_artifacts = usg.audit(tailoring_file.profile)
+print(results.get_summary())
+
+# Run fix only on rules which failed in audit
+audit_results_file = audit_artifacts.get_by_type("audit_results").path
+fix_artifacts = usg.fix(tailoring_file.profile, audit_results_file=audit_results_file)
+
 ```
 
+and a CLI that uses this library:
+
+```sh
+usg list --all
+usg info cis_level1_server
+usg audit cis_level1_server
+usg fix cis_level1_server --only-failed
+```
 
 #### Main components
 
 ##### USG
 
-The central processing component in the code is the **usg.USG()** class which owns and manages:
-- Benchmark metadata - loads _benchmarks.json_ and stores it as _Benchmark_ and _Profile_ objects
-- Benchmark data - extracts necessary data files from the benchmark archives _ssg-ubuntu2404-ds.xml.gz_, e.g. datastream
-- Routing commands - routes commands (_audit/fix/generate_fix_) to a backend object, e.g. _OpenscapBackend_
-- Tailoring files - loads tailoring files as _TailoringFile_ and generates tailoring files via archive extraction
+The central processing component in the code is the **usg.USG()** class which manages:
+- **Benchmark metadata** - Loads `benchmarks.json` into `Benchmark` and `Profile` objects.
+- **Tailoring files** - Loads tailoring files as `TailoringFile` and generates tailoring files via archive extraction.
+- **Command routing** - Initializes environment, extracts backend files and routes commands (e.g. `audit`, `fix`, etc.) to a backend object such as `OpenscapBackend`.
 
-Input for the class is a configuration object _ConfigParser_. If None, the configuration defaults to settings defined in the `config` module.
 
 ##### Profile, Benchmarks, Tailoring files
 
-The interface is built around the main data component **Profile** (reason is primarily legacy support).
+The interface is built around the data component **Profile** (reason is primarily legacy support).
 The Profile class contains metadata information about a profile and also references the
-corresponding _Benchmark_ and _TailoringFile_ objects (if any).
-
-Note on the tailoring files - although they are in principle backend-specific, their loading and generation are placed in the USG domain
-because a) Their creation is not related to the backend (static files extracted from the benchmark archive file) b) The `--tailoring-file` is a primary CLI arg, conceptually on the same level as `--profile`, thus the functions `get_profile()` and `load_tailoring()`
+corresponding `Benchmark` and `TailoringFile` objects (if any).
 
 
 ##### Backend and Results
 
-All functions implementing the commands (audit/fix/generate_fix/generate_tailoring) take _Profile_ as the primary argument,
-initialize the backend adapter (**OpenscapBackend**) in a secure temporary dir, and route the necessary information to the adapter.
-This adapter class takes care of setting up command line args, calling the `oscap` binary, and processing and returning the
-auditing output in form of **AuditResults**. All backend output files are created in the secure temporary dir using hardcoded names,
-and are returned to the caller (USG) via the **BackendArtifacts** object.
+Functions like `audit` and `fix` take a **Profile** object, initialize a backend adapter (e.g., `OpenscapBackend`) in a secure temporary directory, and pass the necessary information to it. The adapter class handles the details of calling the `oscap` binary and parsing its output into an `AuditResults` object. All generated files (reports, logs) are returned via a `BackendArtifacts` object.
 
 
 ```mermaid
@@ -300,15 +311,12 @@ UpdateLayoutConfig(4,)
 
 #### CLI
 
-The CLI is implemented in `usg.cli` and does the basic tasks of argument parsing and config loading, but also implements some functionality which does not
-exist in the library (printing information about profiles to screen).
-What the CLI does:
-- Loads configuration via `config.load_config()` from `/etc/usg.conf`, overriding defaults
-- Parses CMDline arguments (ensuring backwards compatibility with legacy USG)
-- Overrides config defaults for report/results/product/version
-- Initializes logging to log file defined in config
-- Initializes `usg.USG()`
-- Routes subcommands `audit/fix/generate-fix/generate-tailoring` to USG
-- Implements subcommand `list` (lists available profiles)
-- Implements subcommand `info` (queries USG for a selected profile or tailoring file object and prints info)
+The CLI, implemented in `usg.cli` performs the following tasks:
+- Parses CMDline arguments, ensuring backwards compatibility with legacy USG.
+- Loads default configuration and overrides with `/etc/usg.conf` and CMDline args.
+- Initializes logging to a log file defined in config.
+- Initializes the main `usg.USG()` class.
+- Routes subcommands (`audit`, `fix`, `generate-fix`, `generate-tailoring`) to USG
+- Implements the `list` subcommand for listing available profiles
+- Implements the `info` subcommand for printing information on a selected profile or tailoring file
 
