@@ -753,7 +753,7 @@ def cli() -> None:
 
     # initialize USG with overriden config
     try:
-        usg = USG(config)
+        usg = USG(config=config)
     except USGError as e:
         error_exit(f"Error: failed to initialize USG: {e}")
 

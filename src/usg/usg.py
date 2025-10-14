@@ -52,6 +52,9 @@ class USG:
     - Providing methods for auditing, remediation, and tailoring file creation
 
     Args:
+        benchmark_metadata_path: (optional) path to json metadata file. Defaults
+                                 to constants.BENCHMARK_METADATA_PATH.
+        state_dir: (optional) path to state dir. Defaults to constants.STATE_DIR.
         config: (optional) A ConfigParser instance to override backend settings.
                 If not provided, defaults from config.py are used.
 
@@ -59,6 +62,8 @@ class USG:
 
     def __init__(
         self,
+        benchmark_metadata_path: Path | None = None,
+        state_dir: Path | None = None,
         config: configparser.ConfigParser | None = None,
     ) -> None:
         """Initialize USG with optional config."""
@@ -68,22 +73,32 @@ class USG:
         else:
             self._config = config
 
+        if benchmark_metadata_path is None:
+            self._benchmark_metadata_path = constants.BENCHMARK_METADATA_PATH
+        else:
+            self._benchmark_metadata_path = Path(benchmark_metadata_path).resolve()
+
+        if state_dir is None:
+            self._state_dir = constants.STATE_DIR
+        else:
+            self._state_dir = Path(state_dir).resolve()
+
         # ensure new files are created with the correct permissions
         os.umask(0o077)
 
         # do sanity checks on important files
         try:
-            check_perms(constants.BENCHMARK_METADATA_PATH)
+            check_perms(self._benchmark_metadata_path)
         except MissingFileError as e:
             msg = (
-                f"Could not find benchmark data {constants.BENCHMARK_METADATA_PATH}. "
+                f"Could not find benchmark data {self._benchmark_metadata_path}. "
                 f"Please ensure the {constants.BENCHMARK_PKG} package is installed."
             )
             raise USGError(msg) from e
 
-        check_perms(constants.STATE_DIR, is_dir=True)
+        check_perms(self._state_dir, is_dir=True)
 
-        self._benchmarks = Benchmarks.from_json(constants.BENCHMARK_METADATA_PATH)
+        self._benchmarks = Benchmarks.from_json(self._benchmark_metadata_path)
         self._timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")  # noqa: DTZ005
 
     @property
@@ -265,7 +280,7 @@ class USG:
         logger.debug(f"Working directory: {work_dir}")
 
         ds_gz_file = benchmark.data_files["datastream_gz"]
-        ds_gz_path = constants.BENCHMARK_METADATA_PATH.parent / ds_gz_file.rel_path
+        ds_gz_path = self._benchmark_metadata_path.parent / ds_gz_file.rel_path
 
         check_perms(ds_gz_path)
 
@@ -302,7 +317,7 @@ class USG:
             profile.profile_id
         )
         tailoring_abs_path = (
-            constants.BENCHMARK_METADATA_PATH.parent / tailoring_rel_path
+            self._benchmark_metadata_path.parent / tailoring_rel_path
         )
         logger.info(f"Tailoring file generated at {tailoring_abs_path}")
 
@@ -341,7 +356,7 @@ class USG:
         logger.info(f"Generating fix script for profile {profile.profile_id}")
 
         benchmark = self.get_benchmark_by_id(profile.benchmark_id)
-        work_dir = tempfile.mkdtemp(dir=constants.STATE_DIR, prefix="generate-fix_")
+        work_dir = tempfile.mkdtemp(dir=self._state_dir, prefix="generate-fix_")
         backend = self._init_openscap_backend(benchmark, work_dir)
         try:
             artifacts = backend.generate_fix(
@@ -393,7 +408,7 @@ class USG:
         logger.info(f"Remediating profile {profile.profile_id}")
 
         benchmark = self.get_benchmark_by_id(profile.benchmark_id)
-        work_dir = tempfile.mkdtemp(dir=constants.STATE_DIR, prefix="fix_")
+        work_dir = tempfile.mkdtemp(dir=self._state_dir, prefix="fix_")
         backend = self._init_openscap_backend(benchmark, work_dir)
         try:
             # pass audit results to fix operation to only remediated failed rules
@@ -460,7 +475,7 @@ class USG:
         logger.info(f"Auditing profile {profile.profile_id}")
 
         benchmark = self.get_benchmark_by_id(profile.benchmark_id)
-        work_dir = tempfile.mkdtemp(dir=constants.STATE_DIR, prefix="audit_")
+        work_dir = tempfile.mkdtemp(dir=self._state_dir, prefix="audit_")
         backend = self._init_openscap_backend(benchmark, work_dir)
         try:
             results, artifacts = backend.audit(

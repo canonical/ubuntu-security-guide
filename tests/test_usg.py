@@ -147,8 +147,9 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
     mp.undo()
 
 
-def test_usg_init_and_benchmarks(patch_usg, monkeypatch, dummy_benchmarks):
-    usg = USG()
+def test_usg_init_and_benchmarks(monkeypatch, dummy_benchmarks, tmp_path):
+    monkeypatch.setattr(usg_module, "check_perms", lambda *a, **k: None)
+    usg = USG(dummy_benchmarks, tmp_path / "state_dir")
     assert isinstance(usg.benchmarks, Benchmarks)
     assert isinstance(usg.get_benchmark_by_id("ubuntu2404_CIS_1"), Benchmark)
     with pytest.raises(KeyError, match="Benchmark 'badbenchmark' not found"):
@@ -298,7 +299,7 @@ def test_generate_fix(patch_usg, dummy_benchmarks, capsys):
 
 def test_generate_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, capsys):
     # test that generate-fix creates the correct artifact name and moves it to the correct path
-    usg = USG(dummy_config)
+    usg = USG(config=dummy_config)
     profile = usg.get_profile("cis_level1_server", "ubuntu2404")
     artifacts = usg.generate_fix(profile)
     expected_name = "test-fix-cis_level1_server-20250715.1200.sh"
@@ -332,7 +333,7 @@ def test_fix_audit_results_file(patch_usg, dummy_benchmarks, capsys):
 
 def test_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, capsys):
     # test that fix creates the correct artifact name and moves it to the correct path
-    usg = USG(dummy_config)
+    usg = USG(config=dummy_config)
     profile = usg.get_profile("cis_level1_server", "ubuntu2404")
     artifacts = usg.fix(profile)
     expected_name = "test-fix-cis_level1_server-20250715.1200.sh"
