@@ -38,7 +38,6 @@ def dummy_benchmarks(tmp_path_factory):
                     "cis_level2_server": {},
                     "cis_level1_workstation": {},
                     "cis_level2_workstation": {},
-                    "cis_level1_server_special": {}
                 },
                 "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.\n",
                 "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
@@ -132,6 +131,7 @@ def dummy_benchmarks(tmp_path_factory):
                     "cis_level2_server": {},
                     "cis_level1_workstation": {},
                     "cis_level2_workstation": {},
+                    "cis_level1_server_special": {}
                 },
                 "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.\n",
                 "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
