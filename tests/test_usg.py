@@ -159,28 +159,28 @@ def test_usg_init_and_benchmarks(monkeypatch, dummy_benchmarks, tmp_path):
 @pytest.mark.parametrize(
     "profile_arg, product, version, expected_benchmark_id,expected_profile_id",
     [
-        # by default, get latest version
+        # by default, get initial version
         (
             "cis_level1_server",
             "ubuntu2404",
             None,
-            "ubuntu2404_CIS_3",
+            "ubuntu2404_CIS_1",
             "cis_level1_server",
         ),
-        # by latest version
+        # by initial version
         (
             "cis_level1_server",
             "ubuntu2404",
-            "latest",
-            "ubuntu2404_CIS_3",
+            "initial",
+            "ubuntu2404_CIS_1",
             "cis_level1_server",
         ),
         # by explicit version
         (
             "cis_level1_server",
             "ubuntu2404",
-            "v1.0.0",
-            "ubuntu2404_CIS_1",
+            "v2.0.0",
+            "ubuntu2404_CIS_3",
             "cis_level1_server",
         ),
         # by compatible version
@@ -193,7 +193,7 @@ def test_usg_init_and_benchmarks(monkeypatch, dummy_benchmarks, tmp_path):
         ),
         # by legacy id
         ("disa_stig", "ubuntu2404", "V1R1", "ubuntu2404_STIG_1", "stig"),
-        # by most recently released (profile not in latest benchmark)
+        # by first released (profile not in first benchmark)
         (
             "cis_level1_server_special",
             "ubuntu2404",

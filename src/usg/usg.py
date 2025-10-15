@@ -134,7 +134,7 @@ class USG:
                     yield profile
 
     def get_profile(
-        self, profile_id: str, product: str, benchmark_version: str = "latest"
+        self, profile_id: str, product: str, benchmark_version: str = "initial"
     ) -> Profile:
         """Return benchmark profile based on the given criteria.
 
@@ -142,7 +142,7 @@ class USG:
             profile_id: benchmark profile id (e.g. cis_level1_server)
             product: name of product (e.g. ubuntu2404)
             benchmark_version: version of benchmark (e.g. v1.0.0, v1r2),
-                               defaults to "latest"
+                               defaults to "initial" (first major version)
 
         Returns:
             profile object matching criteria
@@ -171,30 +171,24 @@ class USG:
                 f"Could not find benchmark product '{product}'."
             )
 
-        # return profile from 'latest' benchmark, if available
-        if benchmark_version == "latest":
+        # By default, return 'initial' benchmark (first major release)
+        if benchmark_version == "initial":
             profiles_by_tailoring_version = []
             for profile in profiles_matching_product:
                 benchmark = self.get_benchmark_by_id(profile.benchmark_id)
-                if benchmark.is_latest:
-                    logger.debug(
-                        f"Found latest version of {profile_id} for {product}"
-                    )
-                    return profile
                 profiles_by_tailoring_version.append((
                         profile,
                         benchmark.tailoring_version,
                         benchmark.version
                         ))
 
-            # fallback to most recent major version containing the profile
             profile, tailoring_version, version = sorted(
                 profiles_by_tailoring_version,
                 key=lambda x: x[1]
-            )[-1]
-            logger.warning(
-                f"Profile {profile_id} does not exist in latest version of "
-                f"the benchmark. Using latest available version {version}.")
+            )[0]
+            logger.debug(
+                f"Defaulting to initial version '{version}' of profile '{profile_id}'."
+            )
             return profile
 
         # return specific or compatible version
