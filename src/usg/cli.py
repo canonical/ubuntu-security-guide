@@ -21,6 +21,7 @@
 
 import argparse
 import configparser
+from copy import deepcopy
 import datetime
 import json
 import logging
@@ -189,17 +190,21 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
                 all_profiles[profile.profile_id].append(profile_info)
             except KeyError:
                 all_profiles[profile.profile_id] = [profile_info,]
+            for compatible_version in benchmark.compatible_versions:
+                compatible_profile = deepcopy(profile_info)
+                compatible_profile["benchmark_version"] = compatible_version
+                all_profiles[profile.profile_id].append(compatible_profile)
 
     profiles_to_print = []
     for benchmark_profiles in all_profiles.values():
         profiles_by_version = sorted(
-            benchmark_profiles, key=lambda x: x["tailoring_version"]
+            benchmark_profiles, key=lambda x: (x["tailoring_version"], x["benchmark_version"])
             )
 
         # always print default
         profile_info_initial = profiles_by_version.pop(0)
         profile_info_initial["default"] = True
-        profiles_to_print.append(profile_info_initial) 
+        profiles_to_print.append(profile_info_initial)
 
         for profile_info in profiles_by_version:
             if args.all or profile_info["latest"]:
@@ -208,7 +213,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
     for profile_info in profiles_to_print:
         state = "latest" if profile_info["latest"] else "deprecated"
         if args.machine_readable:
-            print(":".join([  # noqa: FLY002
+            print(":".join([
                 profile_info["profile_name"],
                 profile_info["benchmark_type"],
                 profile_info["benchmark_product"],
@@ -247,8 +252,17 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
         usg_profile = tailoring.profile
     else:
         usg_profile = get_usg_profile_from_args(usg, args)
+
+    benchmark = usg.get_benchmark_by_id(usg_profile.benchmark_id)
+    if hasattr(args, "benchmark_version") and \
+        args.benchmark_version != benchmark.version:
+        print(
+            f"NOTE: Version {args.benchmark_version} was superseded by "
+            f"{benchmark.version}. Showing information for latter.\n"
+            )
+
     print_info_profile(usg_profile)
-    print_info_benchmark(usg.get_benchmark_by_id(usg_profile.benchmark_id))
+    print_info_benchmark(benchmark)
     logger.debug("Finished command_info")
 
 
