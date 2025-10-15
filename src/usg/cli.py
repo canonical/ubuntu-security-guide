@@ -165,33 +165,66 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
     """List available profiles."""
     logger.debug("Starting command_list")
     if not args.machine_readable:
-        print("Listing available profiles...\n")
+        if args.all:
+            print("\nListing all available profiles...\n")
+        else:
+            print("\nListing latest and default profiles (use `--all` to list all)...\n")
         print(CLI_LIST_FORMAT.format("PROFILE", "BENCHMARK/PRODUCT", "VERSION"))
 
-    profiles = [p for b in usg.benchmarks.values() for p in b.profiles.values()]
-    for p in sorted(profiles, key=lambda p: p.profile_id):
-        benchmark = usg.get_benchmark_by_id(p.benchmark_id)
-        latest = benchmark.is_latest
-        if not latest and not args.all:
-            continue
+    all_profiles = {}
+    for benchmark in usg.benchmarks.values():
+        for profile in benchmark.profiles.values():
+            profile_info = {
+                "tailoring_version": benchmark.tailoring_version,
+                "benchmark_version": benchmark.version,
+                "benchmark_type": benchmark.benchmark_type,
+                "benchmark_product": benchmark.product,
+                "benchmark_id": benchmark.id,
+                "profile_name": profile.profile_id,
+                "latest": benchmark.is_latest,
+                "profile": profile,
+                "default": False
+            }
+            try:
+                all_profiles[profile.profile_id].append(profile_info)
+            except KeyError:
+                all_profiles[profile.profile_id] = [profile_info,]
 
+    profiles_to_print = []
+    for benchmark_profiles in all_profiles.values():
+        profiles_by_version = sorted(
+            benchmark_profiles, key=lambda x: x["tailoring_version"]
+            )
+
+        # always print default
+        profile_info_initial = profiles_by_version.pop(0)
+        profile_info_initial["default"] = True
+        profiles_to_print.append(profile_info_initial) 
+
+        for profile_info in profiles_by_version:
+            if args.all or profile_info["latest"]:
+                profiles_to_print.append(profile_info)
+
+    for profile_info in profiles_to_print:
+        state = "latest" if profile_info["latest"] else "deprecated"
         if args.machine_readable:
             print(":".join([  # noqa: FLY002
-                p.profile_id,
-                benchmark.benchmark_type,
-                benchmark.product,
-                benchmark.version,
-                p.benchmark_id,
+                profile_info["profile_name"],
+                profile_info["benchmark_type"],
+                profile_info["benchmark_product"],
+                profile_info["benchmark_version"],
+                profile_info["benchmark_id"],
+                state,
                 "", "", "", "", "", "" # reserved
                 ]))
 
         else:
-            depr = "" if latest else " *deprecated*"
+            default = " (default)" if profile_info["default"] else ""
             print(
                 CLI_LIST_FORMAT.format(
-                    p.profile_id,
-                    f"{benchmark.benchmark_type}/{benchmark.product}",
-                    benchmark.version + depr,
+                    profile_info["profile_name"],
+                    f"{profile_info['benchmark_type']}/{profile_info["benchmark_product"]}",
+                    f"{profile_info['benchmark_version']}{default}",
                 )
             )
     if not args.machine_readable:
@@ -199,7 +232,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
 
 Use 'usg info' to print information about a specific profile or tailoring file:
 
-$ usg info cis_level1_server
+$ usg info cis_level1_server -b v1.0.0
 $ usg info -t my_tailoring.xml
 """)
     logger.debug("Finished command_list")
@@ -213,15 +246,7 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
         print_info_tailoring(tailoring)
         usg_profile = tailoring.profile
     else:
-        benchmark_version = load_benchmark_version_state(args.profile)
-        if hasattr(args, "benchmark_version"):
-            benchmark_version = args.benchmark_version
-        try:
-            usg_profile = usg.get_profile(
-                args.profile, args.product, benchmark_version
-            )
-        except ProfileNotFoundError as e:
-            error_exit(f"{e}\nSee `usg list --all` for list of available profiles.", rc=1)
+        usg_profile = get_usg_profile_from_args(usg, args)
     print_info_profile(usg_profile)
     print_info_benchmark(usg.get_benchmark_by_id(usg_profile.benchmark_id))
     logger.debug("Finished command_info")
@@ -289,8 +314,8 @@ Available profiles:
         print(f"""
 Note:
 This benchmark version is no longer supported. To upgrade to the latest version use the flag
-'--benchmark-version {latest_version}' when running 'audit,fix,generate-fix' commands.
-If using a tailoring file, create a new file with 'usg generate-tailoring --benchmark-version {latest_version}.
+'-b/--benchmark-version {latest_version}' when running audit, fix, and generate-fix commands.
+If using a tailoring file, create a new file with 'usg generate-tailoring --benchmark-version {latest_version}'.
 """)  # noqa: E501
 
 
@@ -298,6 +323,8 @@ def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
     """Generate a tailoring file and writes it to disk."""
     logger.debug("Starting command_generate_tailoring")
     usg_profile = get_usg_profile_from_args(usg, args)
+    _check_profile_updates(usg, usg_profile)
+
     print(
         f"USG will extract the tailoring file for profile "
         f"'{usg_profile.profile_id}' to '{args.output}'."
@@ -317,6 +344,8 @@ def command_generate_fix(usg: USG, args: argparse.Namespace) -> None:
     """Process args for generate-fix command and runs usg."""
     logger.debug("Starting command_generate_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
+    _check_profile_updates(usg, usg_profile)
+
     artifacts = usg.generate_fix(usg_profile)
     output_path = artifacts.get_by_type("fix_script").path
     # Legacy USG writes the default output directly to cwd instead
@@ -335,8 +364,9 @@ def command_fix(usg: USG, args: argparse.Namespace) -> None:
     """Process args and runs USG audit and USG fix."""
     logger.debug("Starting command_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
-    print("Running audit and remediation script...")
+    _check_profile_updates(usg, usg_profile)
 
+    print("Running audit and remediation script...")
     _, output_files = usg.audit(
         usg_profile, debug=args.debug, oval_results=args.oval_results
     )
@@ -358,6 +388,8 @@ def command_audit(usg: USG, args: argparse.Namespace) -> None:
     """Process args and runs USG audit."""
     logger.debug("Starting command_audit")
     usg_profile = get_usg_profile_from_args(usg, args)
+    _check_profile_updates(usg, usg_profile)
+
     results, output_files = usg.audit(
         usg_profile, debug=args.debug, oval_results=args.oval_results
     )
@@ -365,121 +397,17 @@ def command_audit(usg: USG, args: argparse.Namespace) -> None:
     logger.debug("Finished command_audit")
 
 
-def load_benchmark_version_state(profile_id: str) -> str:
-    """Load USG CLI state file and return benchmark version used in previous run.
-
-    Args:
-        profile_id: profile id (cis_level1_server, stig, ...)
-
-    Returns:
-        benchmark version: returns "latest" if no state file exists or version was
-                           not yet set for this profile
-
-    Raises:
-        StateFileError if state file is corrupted
-
-    """
-    logger.debug(f"Loading benchmark version for profile {profile_id} from state file")
-    cli_state_file = Path(constants.CLI_STATE_FILE)
-    json_data = {}
-    if cli_state_file.exists():
-        check_perms(cli_state_file)
-        try:
-            with cli_state_file.open("r") as f:
-                json_data.update(json.load(f))
-            versions = json_data["benchmark_versions"]
-        except (OSError, json.JSONDecodeError, KeyError) as e:
-            raise StateFileError(
-                f"Corrupted state file {cli_state_file}: {e}. "
-                f"Remove the file to re-initialize USG."
-                ) from e
-
-        logger.debug(f"State file successfully loaded: {json_data}.")
-        # get value from state file if it exists
-        try:
-            prev_benchmark_version = versions[profile_id]
-            logger.debug(
-                f"Found state benchmark version: {prev_benchmark_version}"
-                )
-        except KeyError:
-            logger.debug("Benchmark version not found. Using 'latest'.")
-            prev_benchmark_version = "latest"
-    else:
-        logger.debug("State file doesn't exist. Using 'latest' version.")
-        prev_benchmark_version = "latest"
-
-    return prev_benchmark_version
-
-
-def save_benchmark_version_state(profile_id: str, benchmark_version: str) -> None:
-    """Save the benchmark version to the USG state file.
-
-    Args:
-        profile_id: profile id (cis_level1_server, stig, ...)
-        benchmark_version: version to save
-
-    Raises:
-        StateFileError if state file is corrupted or cannot be written to
-
-    """
-    logger.debug(f"Saving version {benchmark_version} for profile {profile_id}")
-
-    cli_state_file = Path(constants.CLI_STATE_FILE)
-    json_data = {
-        "benchmark_versions": {}
-    }
-
-    # load existing state if exists
-    if cli_state_file.exists():
-        try:
-            with cli_state_file.open("r") as f:
-                json_data.update(json.load(f))
-        except (OSError, json.JSONDecodeError) as e:
-            raise StateFileError(
-                f"Corrupted state file {cli_state_file}: {e}. "
-                f"Remove the file to re-initialize USG."
-                ) from e
-        logger.debug(f"State file successfully loaded: {json_data}.")
-
-    # update state if changed
-    if json_data["benchmark_versions"].get(profile_id, "latest") == benchmark_version:
-        logger.debug("Version is same, not writing to state file.")
-        return
-
-    logger.debug(f"Writing changes to state file {cli_state_file}")
-    json_data["benchmark_versions"][profile_id] = benchmark_version
-    try:
-        with tempfile.NamedTemporaryFile("w", delete=False) as f:
-            json.dump(json_data, f)
-            f.flush()
-            os.fsync(f.fileno())
-            f.close()
-            Path(f.name).replace(cli_state_file)
-    except OSError as e:
-        raise StateFileError(
-            f"Failed to write to state file {cli_state_file}: {e}"
-        ) from e
-    logger.debug(f"Benchmark version updated to {benchmark_version} successfully.")
-
-
 def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
     """Return a Profile object based on the provided args."""
     logger.debug("Loading profile from args: {args}")
 
     if hasattr(args, "profile"):
-        # get previously used benchmark version if defined in state file
-        stored_benchmark_version = load_benchmark_version_state(args.profile)
 
         # override with CLI argument if provided
-        if hasattr(args, "benchmark_version") and \
-                args.benchmark_version != stored_benchmark_version:
-            logger.info(
-                f"Overriding stored/default benchmark version "
-                f"{stored_benchmark_version} with {args.benchmark_version}"
-                )
+        if hasattr(args, "benchmark_version"):
             benchmark_version = args.benchmark_version
         else:
-            benchmark_version = stored_benchmark_version
+            benchmark_version = "initial"
 
         try:
             # get the profile
@@ -489,16 +417,38 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
                 benchmark_version
                 )
         except ProfileNotFoundError as e:
-            error_exit(f"{e}\nSee `usg list --all` for list of available profiles.", rc=1)
-
-        # update the benchmark version in the state file
-        benchmark = usg.get_benchmark_by_id(profile.benchmark_id)
-        save_benchmark_version_state(profile.profile_id, benchmark.version)
-
+            raise USGError(
+                f"{e}\nSee `usg list --all` for list of available profiles."
+                ) from e
     else:
         profile = usg.load_tailoring(args.tailoring_file).profile
 
     return profile
+
+
+def _check_profile_updates(usg: USG, profile: Profile) -> None:
+    """Check for newer profile version and print notice."""
+    logger.debug("Checking for newer version of profile...")
+    benchmark = usg.get_benchmark_by_id(profile.benchmark_id)
+    for newer_version in reversed(benchmark.breaking_upgrade_path):
+        try:
+            _ = usg.get_profile(
+                profile.profile_id,
+                benchmark.product,
+                newer_version
+            )
+        except ProfileNotFoundError as e:
+            logger.debug(
+                f"Profile {profile.profile_id} not found in newer "
+                f"benchmark version {newer_version}."
+                )
+        print(
+            f"\nNOTICE: A new version of profile {profile.profile_id} is available. "
+            f"Use `-b/--benchmark-version {newer_version}` to select it.\n\n"
+            )
+        if sys.stdout.isatty():
+            time.sleep(3)
+        break
 
 
 def init_logging(log_path: Path, debug: bool) -> None:
