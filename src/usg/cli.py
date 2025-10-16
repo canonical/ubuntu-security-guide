@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 DISPLAY_VERSION = __version__.replace(".4.", ".04.")
 
 # shared format strings
-CLI_LIST_FORMAT = "{:35s}{:30s}{:s}"
+CLI_LIST_FORMAT = "{:40s}{:25s}{:25s}{:s}"
 CLI_INFO_FORMAT = "{:25s}{:s}"
 
 # CLI help descriptions and usage
@@ -168,19 +168,24 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
             print("\nListing all available profiles...\n")
         else:
             print("\nListing latest profiles (use `--all` to list all)...\n")
-        print(CLI_LIST_FORMAT.format("PROFILE", "BENCHMARK/PRODUCT", "VERSION"))
+        print(CLI_LIST_FORMAT.format(
+            "PROFILE", "BENCHMARK/PRODUCT", "BENCHMARK VERSION", "STATE"
+            ))
 
-    for profile in usg.profiles.values():
-        is_latest = profile.latest_compatible_id is None and profile.latest_breaking_id is None
+    example_profile = "cis_level1_server"
+    for profile in sorted(usg.profiles.values(), key=lambda p: p.id):
+        is_latest = profile.latest_compatible_id is None and profile.benchmark.is_latest
         if not args.all and not is_latest:
             continue
 
         if profile.latest_compatible_id is not None:
-            state = f"superseded by {profile.latest_compatible_id}"
-        elif profile.latest_breaking_id is not None:
-            state = "deprecated"
+            version = usg.get_profile_by_id(profile.latest_compatible_id).benchmark.version
+            state = f"Superseded by {version}"
+        elif is_latest:
+            state = "Latest stable"
+            example_profile = profile.id
         else:
-            state = "latest"
+            state = "Maintenance"
         if args.machine_readable:
             print(":".join([  # noqa: FLY002
                 profile.id,
@@ -190,6 +195,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
                 profile.benchmark.version,
                 profile.benchmark.id,
                 state,
+                "latest" if is_latest else ""
                 "", "", "", "", "", "" # reserved
                 ]))
 
@@ -198,15 +204,16 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
                 CLI_LIST_FORMAT.format(
                     profile.id,
                     f"{profile.benchmark.benchmark_type}/{profile.benchmark.product}",
-                    f"{profile.benchmark.version} ({state})",
+                    profile.benchmark.version,
+                    state,
                 )
             )
     if not args.machine_readable:
-        print("""
+        print(f"""
 
 Use 'usg info' to print information about a specific profile or tailoring file:
 
-$ usg info cis_level1_server-v1.0.0
+$ usg info {example_profile}
 $ usg info -t my_tailoring.xml
 """)
     logger.debug("Finished command_list")
@@ -258,9 +265,8 @@ def print_info_profile(profile: Profile) -> None:
 def print_info_benchmark(profile: Profile) -> None:
     """Print info about benchmark."""
     benchmark = profile.benchmark
-    # TODO, switch from benchmark.profiles
-    profiles = "\n".join([f"- {p.profile_id}" for p in benchmark.profiles.values()])
-    state = "Latest stable" if benchmark.is_latest else "Deprecated"
+    profiles = "\n".join([f"- {p}" for p in benchmark.profiles])
+    state = "Latest stable" if benchmark.is_latest else "Maintanance (critical patches only)"
 
     release_date = datetime.datetime.fromtimestamp(
         benchmark.release_timestamp,
@@ -301,7 +307,7 @@ def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
 
     print(
         f"USG will extract the tailoring file for profile "
-        f"'{usg_profile.profile_id}' to '{args.output}'."
+        f"'{usg_profile.id}' to '{args.output}'."
     )
     contents = usg.generate_tailoring(usg_profile)
     try:
@@ -395,24 +401,12 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
 def _check_profile_updates(usg: USG, profile: Profile) -> None:
     """Check for newer profile version and print notice."""
     logger.debug("Checking for newer version of profile...")
-    benchmark = profile.benchmark
-    for newer_version in reversed(benchmark.breaking_upgrade_path):
-        try:
-            _ = usg.get_profile_by_id(
-                profile.profile_id,
+    if profile.latest_breaking_id is not None:
+        sys.stderr.write(
+            f"\nNOTICE: A new version of this profile is available: "
+            f"{profile.latest_breaking_id}\n\n"
             )
-        except ProfileNotFoundError as e:
-            logger.debug(
-                f"Profile {profile.profile_id} not found in newer "
-                f"benchmark version {newer_version}."
-                )
-        print(
-            f"\nNOTICE: A new version of profile {profile.profile_id} is available. "
-            f"Use `-b/--benchmark-version {newer_version}` to select it.\n\n"
-            )
-        if sys.stdout.isatty():
-            time.sleep(3)
-        break
+        time.sleep(3)
 
 
 def init_logging(log_path: Path, debug: bool) -> None:

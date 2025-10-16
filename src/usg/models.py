@@ -204,7 +204,8 @@ class Benchmarks(dict[str, Benchmark]):
                 comp_data = deepcopy(benchmark_data)
                 comp_data.update({
                     "benchmark_id": comp_id,
-                    "version": compatible_version
+                    "version": compatible_version,
+                    "compatible_versions": []
                 })
                 benchmarks[comp_id] = Benchmark.from_dict(comp_data)
 

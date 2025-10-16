@@ -24,7 +24,6 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Generator
 
 from usg import config as usg_config
 from usg import constants
@@ -101,19 +100,28 @@ class USG:
         self._benchmarks = Benchmarks.from_json(self._benchmark_metadata_path)
         self._timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")  # noqa: DTZ005
         self._profiles = {}
+
+        def get_profile_id(profile_cac_id: str, product: str, version: str) -> str:
+            # remove product if default and remove trailing .0 in version
+            short_version = version.lower().removesuffix(".0").removesuffix(".0")
+            short_id = f"{profile_cac_id}-{short_version}"
+            if product != constants.DEFAULT_PRODUCT:
+                short_id = f"{product}-{short_id}"
+            return short_id
+
         for benchmark in self._benchmarks.values():
             for profile_id_OLD, legacy_id_OLD in benchmark.profiles.items():
 
                 legacy_ids = []
-                if legacy_id_OLD:
-                    legacy_ids.append(legacy_id_OLD)
 
                 # add original profile id-s to legacy ids if version of benchmark is initial
                 if benchmark.tailoring_version == 1:
                     legacy_ids.append(profile_id_OLD)
+                    if legacy_id_OLD:
+                        legacy_ids.append(legacy_id_OLD)
 
                 profile_id = (
-                    f"{profile_id_OLD}-{benchmark.version}"
+                    get_profile_id(profile_id_OLD, benchmark.product, benchmark.version)
                 )
                 profile = Profile(
                     id=profile_id,
@@ -131,14 +139,22 @@ class USG:
             # add superseded profile versions
             for compatible_version in profile.benchmark.compatible_versions:
                 compatible_profile_id = (
-                    f"{profile.cac_id}-{compatible_version}"
+                    get_profile_id(
+                        profile.cac_id,
+                        profile.benchmark.product,
+                        compatible_version
+                        )
                 )
                 self._profiles[compatible_profile_id].latest_compatible_id = profile.id
 
             # add latest breaking if exists
             if profile.benchmark.breaking_upgrade_path:
                 latest_breaking_id = (
-                    f"{profile.cac_id}-{profile.benchmark.breaking_upgrade_path[-1]}"
+                    get_profile_id(
+                        profile.cac_id,
+                        profile.benchmark.product,
+                        profile.benchmark.breaking_upgrade_path[-1]
+                        )
                 )
                 # the latest breaking benchmark doesn't necessarily have this profile
                 if latest_breaking_id in self._profiles:
@@ -179,7 +195,8 @@ class USG:
         """Return benchmark profile based on the given criteria.
 
         Args:
-            profile_id: benchmark profile id (e.g. cis_level1_server_v1.0.0)
+            profile_id: benchmark profile id (e.g. cis_level1_server_v1.0.0) 
+                        or alias (e.g. disa_stig)
 
         Returns:
             Profile object
@@ -189,9 +206,13 @@ class USG:
 
         """
         logger.debug(f"Getting profile: {profile_id}.")
-        try:
+        if profile_id in self._profiles:
             return self._profiles[profile_id]
-        except KeyError:
+
+        matching = [p for p in self._profiles.values() if profile_id in p.legacy_ids]
+        try:
+            return matching[0]
+        except IndexError:
             raise ProfileNotFoundError(
                 f"Could not find benchmark profile '{profile_id}'."
             ) from None
@@ -262,7 +283,7 @@ class USG:
         """
         logger.info(f"Generating tailoring file for profile {profile.id}")
         tailoring_rel_path = profile.benchmark.get_tailoring_file_relative_path(
-            profile.id
+            profile.cac_id
         )
         tailoring_abs_path = (
             self._benchmark_metadata_path.parent / tailoring_rel_path
@@ -273,7 +294,7 @@ class USG:
 
 
     def _move_artifacts(
-        self, artifacts: BackendArtifacts, profile_id: str, product: str
+        self, artifacts: BackendArtifacts, profile_cac_id: str, product: str
     ) -> None:
         # Move artifacts to the final destination path
         # as resolved by get_artifact_destination_path()
@@ -282,7 +303,7 @@ class USG:
         try:
             for artifact in artifacts:
                 artifact_path = usg_config.get_artifact_destination_path(
-                    self._config, artifact.kind, timestamp, profile_id, product
+                    self._config, artifact.kind, timestamp, profile_cac_id, product
                 )
                 artifact.move(artifact_path)
         except FileMoveError as e:
@@ -307,7 +328,7 @@ class USG:
         backend = self._init_openscap_backend(profile.benchmark, work_dir)
         try:
             artifacts = backend.generate_fix(
-                profile.id,
+                profile.cac_id,
                 profile.tailoring_file,
             )
         except BackendError as e:
@@ -368,7 +389,7 @@ class USG:
                 logger.info("Remediating all rules")
 
             artifacts = backend.fix(
-                profile.id,
+                profile.cac_id,
                 profile.tailoring_file,
                 audit_results_file=audit_results_file,
             )
@@ -424,7 +445,7 @@ class USG:
         backend = self._init_openscap_backend(profile.benchmark, work_dir)
         try:
             results, artifacts = backend.audit(
-                profile.id,
+                profile.cac_id,
                 tailoring_file=profile.tailoring_file,
                 debug=debug,
                 oval_results=oval_results,
