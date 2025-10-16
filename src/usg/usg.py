@@ -100,11 +100,60 @@ class USG:
 
         self._benchmarks = Benchmarks.from_json(self._benchmark_metadata_path)
         self._timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")  # noqa: DTZ005
+        self._profiles = {}
+        for benchmark in self._benchmarks.values():
+            for profile_id_OLD, legacy_id_OLD in benchmark.profiles.items():
+
+                legacy_ids = []
+                if legacy_id_OLD:
+                    legacy_ids.append(legacy_id_OLD)
+
+                # add original profile id-s to legacy ids if version of benchmark is initial
+                if benchmark.tailoring_version == 1:
+                    legacy_ids.append(profile_id_OLD)
+
+                profile_id = (
+                    f"{profile_id_OLD}-{benchmark.version}"
+                )
+                profile = Profile(
+                    id=profile_id,
+                    cac_id=profile_id_OLD,
+                    legacy_ids=legacy_ids,
+                    benchmark=benchmark,
+                    latest_compatible_id=None,
+                    latest_breaking_id=None,
+                    tailoring_file=None,
+                    extends_id=None,
+                    )
+                self._profiles[profile_id] = profile
+
+        for profile in self._profiles.values():
+            # add superseded profile versions
+            for compatible_version in profile.benchmark.compatible_versions:
+                compatible_profile_id = (
+                    f"{profile.cac_id}-{compatible_version}"
+                )
+                self._profiles[compatible_profile_id].latest_compatible_id = profile.id
+
+            # add latest breaking if exists
+            if profile.benchmark.breaking_upgrade_path:
+                latest_breaking_id = (
+                    f"{profile.cac_id}-{profile.benchmark.breaking_upgrade_path[-1]}"
+                )
+                # the latest breaking benchmark doesn't necessarily have this profile
+                if latest_breaking_id in self._profiles:
+                    profile.latest_breaking_id = latest_breaking_id
+
 
     @property
     def benchmarks(self) -> Benchmarks:
         """Getter for benchmarks."""
         return self._benchmarks
+
+    @property
+    def profiles(self) -> dict[str, Profile]:
+        """Getter for benchmarks."""
+        return self._profiles
 
     def get_benchmark_by_id(self, benchmark_id: str) -> Benchmark:
         """Return benchmark object by benchmark id.
@@ -125,105 +174,28 @@ class USG:
             msg = f"Benchmark '{benchmark_id}' not found"
             raise KeyError(msg) from e
 
-    def _find_profiles_with_id(self, profile_id: str) -> Generator[Profile, None, None]:
-        # return profiles by id
-        for benchmark in self.benchmarks.values():
-            for profile in benchmark.profiles.values():
-                if profile_id in [profile.profile_id, profile.profile_legacy_id]:
-                    logger.debug(f"Found profile with id {profile_id}: {profile}")
-                    yield profile
 
-    def get_profile(
-        self, profile_id: str, product: str, benchmark_version: str = "initial"
-    ) -> Profile:
+    def get_profile_by_id(self, profile_id: str) -> Profile:
         """Return benchmark profile based on the given criteria.
 
         Args:
-            profile_id: benchmark profile id (e.g. cis_level1_server)
-            product: name of product (e.g. ubuntu2404)
-            benchmark_version: version of benchmark (e.g. v1.0.0, v1r2),
-                               defaults to "initial" (first major version)
+            profile_id: benchmark profile id (e.g. cis_level1_server_v1.0.0)
 
         Returns:
-            profile object matching criteria
+            Profile object
 
         Raises:
-            ProfileNotFoundError: when no match is found
+            ProfileNotFoundError: when profile is not found
 
         """
-        logger.debug(f"Getting profile: {profile_id},{product},{benchmark_version}")
-
-        # get all profiles with this name
-        matching_profiles = list(self._find_profiles_with_id(profile_id))
-        if not matching_profiles:
+        logger.debug(f"Getting profile: {profile_id}.")
+        try:
+            return self._profiles[profile_id]
+        except KeyError:
             raise ProfileNotFoundError(
                 f"Could not find benchmark profile '{profile_id}'."
-            )
+            ) from None
 
-        # get all profiles matching the product
-        profiles_matching_product = [
-            p for p in matching_profiles
-            if product == self.get_benchmark_by_id(p.benchmark_id).product
-        ]
-        logger.debug(f" matching product: {profiles_matching_product}")
-        if not profiles_matching_product:
-            raise ProfileNotFoundError(
-                f"Could not find benchmark product '{product}'."
-            )
-
-        # By default, return 'initial' benchmark (first major release)
-        if benchmark_version == "initial":
-            profiles_by_tailoring_version = []
-            for profile in profiles_matching_product:
-                benchmark = self.get_benchmark_by_id(profile.benchmark_id)
-                profiles_by_tailoring_version.append((
-                        profile,
-                        benchmark.tailoring_version,
-                        benchmark.version
-                        ))
-
-            profile, tailoring_version, version = sorted(
-                profiles_by_tailoring_version,
-                key=lambda x: x[1]
-            )[0]
-            logger.debug(
-                f"Defaulting to initial version '{version}' of profile '{profile_id}'."
-            )
-            return profile
-
-        # return specific or compatible version
-        for profile in profiles_matching_product:
-            benchmark = self.get_benchmark_by_id(profile.benchmark_id)
-            # return specific version if exists
-            if benchmark_version == benchmark.version:
-                logger.debug(
-                    f"Found version {benchmark_version} of "
-                    f"{profile_id} for {product}"
-                )
-                if not benchmark.is_latest:
-                    logger.warning(
-                        f"Version {benchmark.version} of the benchmark profile "
-                        f"{profile_id} is deprecated."
-                    )
-                return profile
-
-            # return compatible (non-breaking) version if exists
-            if benchmark_version in list(benchmark.compatible_versions):
-                logger.debug(
-                    f"Found compatible version {benchmark.version} of "
-                    f"{profile_id} for {product}"
-                )
-                logger.info(
-                    f"Version {benchmark_version} is superseded by "
-                    f"{benchmark.version}. "
-                    f" Automatically selecting the latter."
-                )
-                return profile
-
-        raise ProfileNotFoundError(
-            f"Could not find profile '{profile_id}' with "
-            f"benchmark version '{benchmark_version}'."
-        )
 
     def load_tailoring(
         self,
@@ -242,26 +214,9 @@ class USG:
 
         """
         logger.debug(f"Loading {tailoring_file_path}")
-
         check_perms(tailoring_file_path)
+        return TailoringFile.from_file(self, tailoring_file_path)
 
-        tailoring = TailoringFile.from_file(tailoring_file_path)
-
-        # check if the benchmark id in the tailoring file
-        # exists in the dataset
-        benchmark_id = tailoring.profile.benchmark_id
-        try:
-            benchmark = self.get_benchmark_by_id(benchmark_id)
-        except KeyError as e:
-            raise USGError(
-                f"Could not find benchmark referenced in tailoring file: {benchmark_id}"
-            ) from e
-        if not benchmark.is_latest:
-            logger.warning(
-                f"The version of the benchmark profile found in tailoring file "
-                f"({benchmark.version}) is deprecated. "
-            )
-        return tailoring
 
     def _init_openscap_backend(
         self,
@@ -305,10 +260,9 @@ class USG:
             string representation of tailoring file
 
         """
-        logger.info(f"Generating tailoring file for profile {profile.profile_id}")
-        benchmark = self.get_benchmark_by_id(profile.benchmark_id)
-        tailoring_rel_path = benchmark.get_tailoring_file_relative_path(
-            profile.profile_id
+        logger.info(f"Generating tailoring file for profile {profile.id}")
+        tailoring_rel_path = profile.benchmark.get_tailoring_file_relative_path(
+            profile.id
         )
         tailoring_abs_path = (
             self._benchmark_metadata_path.parent / tailoring_rel_path
@@ -347,14 +301,13 @@ class USG:
             USGError: if the backend operation fails
 
         """
-        logger.info(f"Generating fix script for profile {profile.profile_id}")
+        logger.info(f"Generating fix script for profile {profile.id}")
 
-        benchmark = self.get_benchmark_by_id(profile.benchmark_id)
         work_dir = tempfile.mkdtemp(dir=self._state_dir, prefix="generate-fix_")
-        backend = self._init_openscap_backend(benchmark, work_dir)
+        backend = self._init_openscap_backend(profile.benchmark, work_dir)
         try:
             artifacts = backend.generate_fix(
-                profile.profile_id,
+                profile.id,
                 profile.tailoring_file,
             )
         except BackendError as e:
@@ -370,7 +323,7 @@ class USG:
                     )
             raise e
 
-        self._move_artifacts(artifacts, profile.profile_id, benchmark.product)
+        self._move_artifacts(artifacts, profile.id,  profile.benchmark.product)
 
         logger.debug(f"Removing temporary directory {work_dir}")
         shutil.rmtree(work_dir)
@@ -399,11 +352,10 @@ class USG:
             USGError: if the backend operation fails
 
         """
-        logger.info(f"Remediating profile {profile.profile_id}")
+        logger.info(f"Remediating profile {profile.id}")
 
-        benchmark = self.get_benchmark_by_id(profile.benchmark_id)
         work_dir = tempfile.mkdtemp(dir=self._state_dir, prefix="fix_")
-        backend = self._init_openscap_backend(benchmark, work_dir)
+        backend = self._init_openscap_backend(profile.benchmark, work_dir)
         try:
             # pass audit results to fix operation to only remediated failed rules
             if audit_results_file is not None:
@@ -416,7 +368,7 @@ class USG:
                 logger.info("Remediating all rules")
 
             artifacts = backend.fix(
-                profile.profile_id,
+                profile.id,
                 profile.tailoring_file,
                 audit_results_file=audit_results_file,
             )
@@ -433,7 +385,7 @@ class USG:
                     )
             raise e
 
-        self._move_artifacts(artifacts, profile.profile_id, benchmark.product)
+        self._move_artifacts(artifacts, profile.id, profile.benchmark.product)
 
         logger.debug(f"Removing temporary directory {work_dir}")
         shutil.rmtree(work_dir)
@@ -466,14 +418,13 @@ class USG:
             USGError: if the backend operation fails
 
         """
-        logger.info(f"Auditing profile {profile.profile_id}")
+        logger.info(f"Auditing profile {profile.id}")
 
-        benchmark = self.get_benchmark_by_id(profile.benchmark_id)
         work_dir = tempfile.mkdtemp(dir=self._state_dir, prefix="audit_")
-        backend = self._init_openscap_backend(benchmark, work_dir)
+        backend = self._init_openscap_backend(profile.benchmark, work_dir)
         try:
             results, artifacts = backend.audit(
-                profile.profile_id,
+                profile.id,
                 tailoring_file=profile.tailoring_file,
                 debug=debug,
                 oval_results=oval_results,
@@ -491,7 +442,7 @@ class USG:
                     )
             raise e
 
-        self._move_artifacts(artifacts, profile.profile_id, benchmark.product)
+        self._move_artifacts(artifacts, profile.id, profile.benchmark.product)
 
         logger.debug(f"Removing temporary directory {work_dir}")
         shutil.rmtree(work_dir)

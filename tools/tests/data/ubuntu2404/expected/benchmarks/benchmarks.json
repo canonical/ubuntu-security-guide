@@ -16,7 +16,8 @@
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
       "tailoring_version": 1,
-      "benchmark_id": "ubuntu2404_CIS_1",
+      "benchmark_id": "ubuntu2404_CIS_1-v1.0.0",
+      "channel_id": "ubuntu2404_CIS_1",
       "compatible_versions": [],
       "breaking_upgrade_path": [
         "v1.0.1",
@@ -65,7 +66,8 @@
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
       "tailoring_version": 2,
-      "benchmark_id": "ubuntu2404_CIS_2",
+      "benchmark_id": "ubuntu2404_CIS_2-v1.0.1",
+      "channel_id": "ubuntu2404_CIS_2",
       "compatible_versions": [
         "v1.0.0.usg1"
       ],
@@ -114,7 +116,8 @@
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
       "tailoring_version": 3,
-      "benchmark_id": "ubuntu2404_CIS_3",
+      "benchmark_id": "ubuntu2404_CIS_3-v2.0.0",
+      "channel_id": "ubuntu2404_CIS_3",
       "compatible_versions": [],
       "breaking_upgrade_path": [],
       "is_latest": true,
@@ -155,7 +158,8 @@
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://public.cyber.mil/stigs/downloads/",
       "tailoring_version": 1,
-      "benchmark_id": "ubuntu2404_STIG_1",
+      "benchmark_id": "ubuntu2404_STIG_1-V1R1",
+      "channel_id": "ubuntu2404_STIG_1",
       "compatible_versions": [],
       "breaking_upgrade_path": [
         "V1R3"
@@ -190,7 +194,8 @@
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://public.cyber.mil/stigs/downloads/",
       "tailoring_version": 2,
-      "benchmark_id": "ubuntu2404_STIG_2",
+      "benchmark_id": "ubuntu2404_STIG_2-V1R3",
+      "channel_id": "ubuntu2404_STIG_2",
       "compatible_versions": [
         "V1R2"
       ],

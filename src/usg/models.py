@@ -21,6 +21,7 @@ import json
 import logging
 import re
 import xml.etree.ElementTree as ET
+from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -29,16 +30,6 @@ from typing import Any
 from usg.exceptions import BenchmarkError, ProfileNotFoundError, TailoringFileError
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class Profile:
-    """Immutable representation of a Benchmark profile."""
-
-    profile_id: str
-    profile_legacy_id: str
-    benchmark_id: str
-    tailoring_file: Path | str | None
 
 
 @dataclass(frozen=True)
@@ -63,6 +54,7 @@ class Benchmark:
     """Immutable representation of a benchmark entry in benchmarks.json."""
 
     id: str
+    channel_id: str
     benchmark_type: BenchmarkType
     product: str
     product_long: str
@@ -76,7 +68,7 @@ class Benchmark:
     breaking_upgrade_path: tuple[str, ...]
     is_latest: bool
     tailoring_files: dict[str, dict[str, str]]
-    profiles: dict[str, Profile]
+    profiles: dict[str, dict]
     data_files: dict[str, DataFile]
 
     @classmethod
@@ -84,15 +76,9 @@ class Benchmark:
         """Create Benchmark object from a dictionary."""
         logger.debug(f"Creating Benchmark object from {raw_data}")
         try:
+            # TODO this needs to be replaced, making profiles first order structures
             profiles = {
-                profile_id: Profile(
-                    profile_id=profile_id,
-                    profile_legacy_id=raw_data["profiles"][profile_id].get(
-                        "legacy_id", profile_id
-                    ),
-                    benchmark_id=raw_data["benchmark_id"],
-                    tailoring_file=None,
-                )
+                profile_id: raw_data["profiles"][profile_id].get("legacy_id", None)
                 for profile_id in raw_data["profiles"]
             }
             data_files = {
@@ -106,6 +92,7 @@ class Benchmark:
             }
             return cls(
                 id=raw_data["benchmark_id"],
+                channel_id=raw_data["channel_id"],
                 benchmark_type=raw_data["benchmark_type"],
                 product=raw_data["product"],
                 product_long=raw_data["product_long"],
@@ -151,6 +138,21 @@ class Benchmark:
             ) from e
 
 
+@dataclass
+class Profile:
+    """Representation of a Benchmark profile."""
+
+    id: str
+    legacy_ids: list[str]
+    cac_id: str
+    benchmark: Benchmark
+    latest_compatible_id: str | None
+    tailoring_file: Path | str | None
+    latest_breaking_id: str | None
+    extends_id: str | None
+
+
+
 class Benchmarks(dict[str, Benchmark]):
     """Collection of benchmarks in form of a dictionary.
 
@@ -189,12 +191,24 @@ class Benchmarks(dict[str, Benchmark]):
         # load benchmark and profile data
         benchmarks = {}
         for benchmark_data in json_data["benchmarks"]:
-            benchmark_id = benchmark_data["benchmark_id"]
+            benchmark_id = benchmark_data["channel_id"]
             if benchmark_id in benchmarks:
                 raise BenchmarkError(
                     f"Malformed dataset - duplicate benchmark ID: {benchmark_id}"
                 )
+            benchmark = Benchmark.from_dict(benchmark_data)
             benchmarks[benchmark_id] = Benchmark.from_dict(benchmark_data)
+            # TODO: these should exist in benchmarks.json, with a field "superseded"
+            for compatible_version in benchmark.compatible_versions:
+                comp_id = f"{benchmark.channel_id}-{compatible_version}"
+                comp_data = deepcopy(benchmark_data)
+                comp_data.update({
+                    "benchmark_id": comp_id,
+                    "version": compatible_version
+                })
+                benchmarks[comp_id] = Benchmark.from_dict(comp_data)
+
+
         obj = cls(benchmarks)
         obj.version = json_data["version"]
         logger.debug(f"Loaded {len(obj)} benchmarks. Version={obj.version}")
@@ -207,13 +221,15 @@ class TailoringFile:
 
     tailoring_file: Path
     profile: Profile
-    benchmark_id: str
 
     @classmethod
-    def from_file(cls, tailoring_file: Path | str) -> "TailoringFile":
+    def from_file(
+        cls, usg: Any, tailoring_file: Path | str
+        ) -> "TailoringFile":
         """Create a TailoringFile object from a tailoring file.
 
         Args:
+            usg: usg object containing profiles
             tailoring_file: path to tailoring file
 
         Returns:
@@ -235,18 +251,61 @@ class TailoringFile:
 
         if re.search(r"<Tailoring\s", tailoring_file_contents):
             logger.debug("Found SCAP tailoring file.")
-            benchmark_id, profile_id = cls._parse_tailoring_scap(
+            channel_id, tailoring_profile_id, base_profile_cac_id = cls._parse_tailoring_scap(
                 tailoring_file_contents
             )
         else:
             raise TailoringFileError("Unknown type of tailoring file.")
 
-        logger.debug(f"Parsed tailoring file: {benchmark_id}, {profile_id}")
+        logger.debug(
+            f"Parsed tailoring file: {channel_id}, "
+            f"{tailoring_profile_id}, {base_profile_cac_id}"
+            )
+
+        try:
+            benchmark = usg.get_benchmark_by_id(channel_id)
+        except KeyError:
+            raise TailoringFileError(
+                f"Invalid tailoring file. Tailoring '{channel_id}' "
+                f"which doesn't exist in available benchmark data."
+            ) from None
+
+        # map channel_id and profile_id to internal usg profile
+        profiles_in_channel = [
+            p for p in usg.profiles.values()  \
+                if (p.benchmark.channel_id == channel_id and p.latest_compatible_id is None)
+            ]
+        if not profiles_in_channel:
+            raise TailoringFileError(
+                f"Invalid tailoring file. Benchmark channel ID '{channel_id}' "
+                f"does not exist in available benchmark data."
+            ) from None
+
+        profiles_matching_base_cac_id = [
+            p for p in profiles_in_channel \
+                if p.cac_id == base_profile_cac_id
+        ]
+        try:
+            base_profile_id = profiles_matching_base_cac_id[0]
+        except IndexError:
+            raise TailoringFileError(
+                f"Invalid tailoring file. Extended profile '{base_profile_cac_id}' "
+                f"doesn't exist in benchmark channel '{channel_id}'."
+            ) from None
+
         return cls(
             tailoring_file,
-            Profile(profile_id, profile_id, benchmark_id, tailoring_file),
-            benchmark_id,
-        )
+            Profile(
+                id=tailoring_profile_id,
+                cac_id=base_profile_cac_id,
+                legacy_ids=[],
+                benchmark=benchmark,
+                latest_compatible_id=None,
+                latest_breaking_id=None,
+                tailoring_file=tailoring_file,
+                extends_id=base_profile_id
+                )
+            )
 
     @classmethod
     def _map_benchmark_id_from_legacy(cls, benchmark_href: str, profile_id: str) -> str:
@@ -301,14 +360,14 @@ class TailoringFile:
         return benchmark_id
 
     @classmethod
-    def _parse_tailoring_scap(cls, tailoring_file_contents: str) -> tuple[str, str]:
+    def _parse_tailoring_scap(cls, tailoring_file_contents: str) -> tuple[str, str, str]:
         """Parse scap tailoring file contents and returns benchmark and profile IDs.
 
         Args:
             tailoring_file_contents: string contents of tailoring file
 
         Returns:
-            (benchmark_id, profile_id)
+            (benchmark_id, tailoring_profile_id, base_profile_name)
 
         Raises:
             TailoringFileError: parsing issues
@@ -339,6 +398,13 @@ class TailoringFile:
             raise TailoringFileError("Malformed tailoring file - no profile id")
         logger.debug(f"Found profile {profile_id}")
 
+        base_profile_id = profiles[0].get("extends")
+        if base_profile_id is None:
+            raise TailoringFileError(
+                "Malformed tailoring file - profile does not extend a base profile."
+                )
+        logger.debug(f"Found base profile name {base_profile_id}")
+
         # get benchmark id
         benchmark = xml_root.find("{*}benchmark")
         if benchmark is None:
@@ -368,4 +434,7 @@ class TailoringFile:
                 f"Unrecognized benchmark.href in tailoring file: '{benchmark_href}'"
             )
 
-        return benchmark_id, profile_id
+        # remove xccdf prefixes
+        profile_id = profile_id.replace("xccdf_org.ssgproject.content_profile_", "")
+        base_profile_id = base_profile_id.replace("xccdf_org.ssgproject.content_profile_", "")
+        return benchmark_id, profile_id, base_profile_id

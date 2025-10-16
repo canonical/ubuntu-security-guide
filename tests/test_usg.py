@@ -25,7 +25,7 @@ from pytest import MonkeyPatch
 from usg import usg as usg_module
 from usg import constants, config
 from usg.exceptions import BackendError, ProfileNotFoundError, USGError
-from usg.models import Benchmark, Benchmarks, Profile, TailoringFile
+from usg.models import Benchmark, Benchmarks, OldProfile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
 from usg.usg import USG
 
@@ -211,9 +211,9 @@ def test_get_profile_success(
         profile = usg.get_profile(profile_arg, product, benchmark_version=version)
     else:
         profile = usg.get_profile(profile_arg, product)
-    assert isinstance(profile, Profile)
+    assert isinstance(profile, OldProfile)
     assert profile.profile_id == expected_profile_id
-    assert profile.benchmark_id == expected_benchmark_id
+    assert profile.benchmark_channel == expected_benchmark_id
 
 
 @pytest.mark.parametrize(
@@ -244,10 +244,10 @@ def test_load_tailoring_returns_tailoring_object(patch_usg, tmp_path, monkeypatc
         def __init__(self):
             self.benchmark_id = "ubuntu2404_CIS_1"
             self.tailoring_file = tailoring_path
-            self.profile = Profile(
+            self.profile = OldProfile(
                 profile_id="cis_level1_server",
                 profile_legacy_id="cis_level1_server_legacy_id",
-                benchmark_id="ubuntu2404_CIS_1",
+                benchmark_channel="ubuntu2404_CIS_1",
                 tailoring_file=tailoring_path,
             )
 
@@ -269,10 +269,10 @@ def test_load_tailoring_benchmark_not_found(patch_usg, monkeypatch, tmp_path):
     # Patch TailoringFile.from_file to return a dummy object
     class DummyTailoring:
         benchmark_id = "badbenchmark"
-        profile = Profile(
+        profile = OldProfile(
             profile_id="cis_level1_server",
             profile_legacy_id="cis_level1_server_legacy_id",
-            benchmark_id="badbenchmark",
+            benchmark_channel="badbenchmark",
             tailoring_file=tailoring_path,
         )
 

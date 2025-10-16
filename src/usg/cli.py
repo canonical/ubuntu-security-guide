@@ -21,20 +21,18 @@
 
 import argparse
 import configparser
-from copy import deepcopy
 import datetime
-import json
 import logging
 import os
 import shutil
 import sys
-import tempfile
 import time
+from copy import deepcopy
 from pathlib import Path
 
 from usg import constants
 from usg.config import load_config, override_config_with_cli_args
-from usg.exceptions import LockError, ProfileNotFoundError, StateFileError, USGError
+from usg.exceptions import LockError, ProfileNotFoundError, USGError
 from usg.models import Benchmark, Profile, TailoringFile
 from usg.usg import USG
 from usg.utils import acquire_lock, check_perms
@@ -169,67 +167,38 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
         if args.all:
             print("\nListing all available profiles...\n")
         else:
-            print("\nListing latest and default profiles (use `--all` to list all)...\n")
+            print("\nListing latest profiles (use `--all` to list all)...\n")
         print(CLI_LIST_FORMAT.format("PROFILE", "BENCHMARK/PRODUCT", "VERSION"))
 
-    all_profiles = {}
-    for benchmark in usg.benchmarks.values():
-        for profile in benchmark.profiles.values():
-            profile_info = {
-                "tailoring_version": benchmark.tailoring_version,
-                "benchmark_version": benchmark.version,
-                "benchmark_type": benchmark.benchmark_type,
-                "benchmark_product": benchmark.product,
-                "benchmark_id": benchmark.id,
-                "profile_name": profile.profile_id,
-                "latest": benchmark.is_latest,
-                "profile": profile,
-                "default": False
-            }
-            try:
-                all_profiles[profile.profile_id].append(profile_info)
-            except KeyError:
-                all_profiles[profile.profile_id] = [profile_info,]
-            for compatible_version in benchmark.compatible_versions:
-                compatible_profile = deepcopy(profile_info)
-                compatible_profile["benchmark_version"] = compatible_version
-                all_profiles[profile.profile_id].append(compatible_profile)
+    for profile in usg.profiles.values():
+        is_latest = profile.latest_compatible_id is None and profile.latest_breaking_id is None
+        if not args.all and not is_latest:
+            continue
 
-    profiles_to_print = []
-    for benchmark_profiles in all_profiles.values():
-        profiles_by_version = sorted(
-            benchmark_profiles, key=lambda x: (x["tailoring_version"], x["benchmark_version"])
-            )
-
-        # always print default
-        profile_info_initial = profiles_by_version.pop(0)
-        profile_info_initial["default"] = True
-        profiles_to_print.append(profile_info_initial)
-
-        for profile_info in profiles_by_version:
-            if args.all or profile_info["latest"]:
-                profiles_to_print.append(profile_info)
-
-    for profile_info in profiles_to_print:
-        state = "latest" if profile_info["latest"] else "deprecated"
+        if profile.latest_compatible_id is not None:
+            state = f"superseded by {profile.latest_compatible_id}"
+        elif profile.latest_breaking_id is not None:
+            state = "deprecated"
+        else:
+            state = "latest"
         if args.machine_readable:
-            print(":".join([
-                profile_info["profile_name"],
-                profile_info["benchmark_type"],
-                profile_info["benchmark_product"],
-                profile_info["benchmark_version"],
-                profile_info["benchmark_id"],
+            print(":".join([  # noqa: FLY002
+                profile.id,
+                profile.cac_id,
+                profile.benchmark.benchmark_type,
+                profile.benchmark.product,
+                profile.benchmark.version,
+                profile.benchmark.id,
                 state,
                 "", "", "", "", "", "" # reserved
                 ]))
 
         else:
-            default = " (default)" if profile_info["default"] else ""
             print(
                 CLI_LIST_FORMAT.format(
-                    profile_info["profile_name"],
-                    f"{profile_info['benchmark_type']}/{profile_info["benchmark_product"]}",
-                    f"{profile_info['benchmark_version']}{default}",
+                    profile.id,
+                    f"{profile.benchmark.benchmark_type}/{profile.benchmark.product}",
+                    f"{profile.benchmark.version} ({state})",
                 )
             )
     if not args.machine_readable:
@@ -237,7 +206,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
 
 Use 'usg info' to print information about a specific profile or tailoring file:
 
-$ usg info cis_level1_server -b v1.0.0
+$ usg info cis_level1_server-v1.0.0
 $ usg info -t my_tailoring.xml
 """)
     logger.debug("Finished command_list")
@@ -253,7 +222,7 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
     else:
         usg_profile = get_usg_profile_from_args(usg, args)
 
-    benchmark = usg.get_benchmark_by_id(usg_profile.benchmark_id)
+    benchmark = usg_profile.benchmark
     if hasattr(args, "benchmark_version") and \
         args.benchmark_version != benchmark.version:
         print(
@@ -262,7 +231,7 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
             )
 
     print_info_profile(usg_profile)
-    print_info_benchmark(benchmark)
+    print_info_benchmark(usg_profile)
     logger.debug("Finished command_info")
 
 
@@ -278,24 +247,20 @@ def print_info_tailoring(tailoring: TailoringFile) -> None:
 def print_info_profile(profile: Profile) -> None:
     """Print info about profile."""
     print()
-    for k, v in [("Profile name", profile.profile_id)]:
+    for k, v in [
+        ("Profile name", profile.cac_id),
+        ("Latest compatible ID", profile.latest_compatible_id or "None (latest)"),
+        ("Latest breaking ID", profile.latest_breaking_id or "None (latest)"),
+        ]:
         print(CLI_INFO_FORMAT.format(k, v))
 
 
-def print_info_benchmark(benchmark: Benchmark) -> None:
+def print_info_benchmark(profile: Profile) -> None:
     """Print info about benchmark."""
+    benchmark = profile.benchmark
+    # TODO, switch from benchmark.profiles
     profiles = "\n".join([f"- {p.profile_id}" for p in benchmark.profiles.values()])
-
-    upgrade_path = ", ".join(benchmark.breaking_upgrade_path)
-    upgrade_path = upgrade_path or "None (latest)"
-
-    compatible_versions = ", ".join(benchmark.compatible_versions)
-    compatible_versions = compatible_versions or "None"
-
-    if benchmark.is_latest:
-        state = "Latest stable"
-    else:
-        state = "** Deprecated (see information below)**"
+    state = "Latest stable" if benchmark.is_latest else "Deprecated"
 
     release_date = datetime.datetime.fromtimestamp(
         benchmark.release_timestamp,
@@ -305,9 +270,7 @@ def print_info_benchmark(benchmark: Benchmark) -> None:
         ("Benchmark", benchmark.benchmark_type),
         ("Target product", benchmark.product_long),
         ("Version", benchmark.version),
-        ("Compatible with", compatible_versions),
         ("State", state),
-        ("Upgrade candidates", upgrade_path),
         ("Description", benchmark.description.strip()),
         ("Release date", release_date),
         ("Release notes", benchmark.release_notes_url),
@@ -323,13 +286,10 @@ Available profiles:
 """
     )
 
-    if not benchmark.is_latest:
-        latest_version = benchmark.breaking_upgrade_path[-1]
+    if profile.latest_breaking_id is not None:
         print(f"""
 Note:
-This benchmark version is no longer supported. To upgrade to the latest version use the flag
-'-b/--benchmark-version {latest_version}' when running audit, fix, and generate-fix commands.
-If using a tailoring file, create a new file with 'usg generate-tailoring --benchmark-version {latest_version}'.
+This profile version is no longer supported. Latest version is {profile.latest_breaking_id}.
 """)  # noqa: E501
 
 
@@ -417,18 +377,10 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
 
     if hasattr(args, "profile"):
 
-        # override with CLI argument if provided
-        if hasattr(args, "benchmark_version"):
-            benchmark_version = args.benchmark_version
-        else:
-            benchmark_version = "initial"
-
         try:
             # get the profile
-            profile = usg.get_profile(
+            profile = usg.get_profile_by_id(
                 args.profile,
-                args.product,
-                benchmark_version
                 )
         except ProfileNotFoundError as e:
             raise USGError(
@@ -443,13 +395,11 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
 def _check_profile_updates(usg: USG, profile: Profile) -> None:
     """Check for newer profile version and print notice."""
     logger.debug("Checking for newer version of profile...")
-    benchmark = usg.get_benchmark_by_id(profile.benchmark_id)
+    benchmark = profile.benchmark
     for newer_version in reversed(benchmark.breaking_upgrade_path):
         try:
-            _ = usg.get_profile(
+            _ = usg.get_profile_by_id(
                 profile.profile_id,
-                benchmark.product,
-                newer_version
             )
         except ProfileNotFoundError as e:
             logger.debug(
@@ -568,13 +518,6 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
             cmd_parser.set_defaults(
                 product=constants.DEFAULT_PRODUCT
             )
-            cmd_parser.add_argument(
-                "-b",
-                "--benchmark-version",
-                type=str,
-                help="Select specific benchmark version",
-                default=argparse.SUPPRESS,
-            )
 
         if command in ["audit", "fix"]:
             cmd_parser.add_argument(
@@ -680,13 +623,6 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
                     )
                 cmd_parsers[args.command].print_help()
                 error_exit(rc=2)
-
-    # benchmark_version/product are not compatible with tailoring-file
-    if hasattr(args, "tailoring_file") and hasattr(args, "benchmark_version"):
-        error_exit(
-            ("Error: --benchmark-version cannot be used with a tailoring file."),
-            rc=2,
-        )
 
     return args
 
