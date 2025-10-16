@@ -57,9 +57,6 @@ class FileMoveError(USGError):
     """Failed to move a file."""
 
 
-class StateFileError(USGError):
-    """Error reading or writing to USG state file."""
-
 class LockError(USGError):
     """Failed to acquire lock on file."""
 
