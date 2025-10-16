@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from usg.exceptions import BenchmarkError, ProfileNotFoundError
-from usg.models import Benchmark, Benchmarks, Profile
+from usg.models import Benchmark, Benchmarks, OldProfile
 
 
 def test_usgbenchmarks(dummy_benchmarks):
@@ -159,8 +159,8 @@ def test_usgbenchmark_profiles(dummy_benchmarks):
     benchmark = benchmarks["ubuntu2404_CIS_1"]
     # Test that profiles contain correct data
     for profile_id, profile in benchmarks["ubuntu2404_CIS_1"].profiles.items():
-        assert isinstance(profile, Profile)
-        assert profile.benchmark_id == "ubuntu2404_CIS_1"
+        assert isinstance(profile, OldProfile)
+        assert profile.benchmark_channel == "ubuntu2404_CIS_1"
         assert profile.profile_id == profile_id
         assert (
             profile.profile_legacy_id
@@ -171,13 +171,13 @@ def test_usgbenchmark_profiles(dummy_benchmarks):
 
 def test_usgprofile():
     # Test Profile initialization and properties
-    profile = Profile(
+    profile = OldProfile(
         profile_id="test_profile",
         profile_legacy_id="test_profile_legacy_id",
-        benchmark_id="test_benchmark_id",
+        benchmark_channel="test_benchmark_id",
         tailoring_file=Path("test_tailoring.xml"),
     )
     assert profile.profile_id == "test_profile"
     assert profile.profile_legacy_id == "test_profile_legacy_id"
-    assert profile.benchmark_id == "test_benchmark_id"
+    assert profile.benchmark_channel == "test_benchmark_id"
     assert profile.tailoring_file == Path("test_tailoring.xml")
