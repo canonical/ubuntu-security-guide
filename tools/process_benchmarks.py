@@ -18,6 +18,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 
 """Functions and CLI for processing USG benchmark releases."""
+from dataclasses import dataclass
 import sys
 
 if sys.version_info < (3,12):
@@ -54,227 +55,100 @@ CAC_TAILORING_NAME = "{}-tailoring.xml"
 class BenchmarkProcessingError(Exception):
     """Error processing benchmark data."""
 
-def _find_release_upgrade_paths(all_releases: list[dict[str, Any]]) -> None:
-    """Search through release graph and map upgrade_paths.
+
+def _get_release_succession(r: dict[str, Any], releases: list[Any]) -> Iterator[dict[str, Any]]:
+    """Search recursively for release succession from latest release backwards."""
+    for r_parent in releases:
+        if r_parent["cac_tag"] == r["parent_tag"]:
+            yield from _get_release_succession(r_parent, releases)
+    yield r
+
+def _get_release_channel_successions(
+        all_releases: list[dict[str, Any]]
+        ) -> dict[int, list[dict[str, Any]]]:
+    """Bin releases into corresponding channels and sort from oldest to newest.
 
     Args:
         all_releases: list of dictionaries representation of CaC releases
 
-    For each release, these items are added to the object, in-place:
-    - compatible: list of releases which are compatible with the current release
-                  (starting at the nearest parent breaking release and
-                   ending at latest compatible release)
-    - latest_compatible: reference to the latest compatible release:
-         - the latest release in a branch (B1, D2, or H in below graph) or
-         - the latest release which precede a breaking release (F in below graph)
-    - next_breaking: reference to the next breaking release, if any
-
-    E.g. looking at below graph, the function would map this to the release objects,
-    into the dictionary "upgrade_paths":
-
-    A:  {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
-    B:  {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
-    B1: {"compatible": (A, B, B1),     "latest_compatible": B1, "next_breaking": C    },
-    C:  {"compatible": (C, D, D1, D2), "latest_compatible": D2, "next_breaking": E    },
-    D2: {"compatible": (C, D, D1, D2), "latest_compatible": D2, "next_breaking": E    },
-    F:  {"compatible": (E, F),         "latest_compatible": F,  "next_breaking": G    },
-    H:  {"compatible": (G, H),         "latest_compatible": H,  "next_breaking": None }
-
-    (D,D1,E,G not shown)
-
-
-       H (latest)
-       |
-       G (breaking)
-     --|--
-       F
-       |
-       E (breaking)
-     --|--
-       D - D1 - D2
-       |
-       C (breaking)
-     --|--
-       B - B1
-       |
-       A (initial)
-
-
-    The release graph must have:
-    - a main branch containing breaking and non-breaking releases and ending with the latest release
-    - side branching only prior to a breaking release (e.g. at B,D, and F in the graph)
-    - side branches which can contain only *non-breaking* releases
+    Returns:
+        dictionary {channel1: list(release1, release2, ...), channel2: ...}
 
     """
-    logger.debug("Entered get_release_upgrade_paths()")
+    logger.debug("Entered get_release_successions()")
 
-    # initialize new vars
-    for release in all_releases:
-        release.update(
-            {
-                "upgrade_paths": {
-                    "compatible": [],
-                    "latest_compatible": None,
-                    "next_breaking": None,
-                }
-            }
+    # sanity check tailoring versions (channels) (should be all from 1 to max())
+    channels = sorted({r["tailoring_version"] for r in all_releases})
+    channels_good = list(range(1, max(channels) + 1))
+    if channels != channels_good:
+        raise BenchmarkProcessingError(
+            f"Corrupt release file. Found tailoring versions {channels}. "
+            f"Should be {channels_good}"
         )
 
-    # find initial release
-    initial_release = None
+    # bin by channel_id
+    releases_by_channels = {channel: [] for channel in channels}
     for release in all_releases:
-        if not release["parent_tag"]:
-            if initial_release:
-                raise BenchmarkProcessingError(
-                    f"Error - found two initial releases (without parent_tag): "
-                    f"{release['cac_tag']}, {initial_release['cac_tag']}"
-                )
-            initial_release = release
-    if not initial_release:
-        raise BenchmarkProcessingError("No initial release found (without parent tag)")
-    logger.debug(f"Found initial release: {initial_release['cac_tag']}")
+        channel = release["tailoring_version"]
+        releases_by_channels[channel].append(release)
 
-    # initialize the search queue and upgrade paths
-    queue = [
-        initial_release,
-    ]
-    initial_release["upgrade_paths"].update(
-        {
-            "compatible": [
-                initial_release,
-            ]
-        }
-    )
+    # sort by release (first to latest) and sanity checks
+    for channel, releases_in_channel in releases_by_channels.items():
 
-    # search
-    while queue:
-        release = queue.pop()
-        cac_tag = release["cac_tag"]
-
-        logger.debug(f"Looking for children of {cac_tag}")
-
-        # get children of release
-        children = [r for r in all_releases if r["parent_tag"] == cac_tag]
-
-        if len(children) > 2:
+        # get the latest in the group (not anyone's parent)
+        parent_tags = [r["parent_tag"] for r in releases_in_channel]
+        not_a_parent_release = [r for r in releases_in_channel if r["cac_tag"] not in parent_tags]
+        if len(not_a_parent_release) != 1:
             raise BenchmarkProcessingError(
-                f"Error - release {cac_tag} has more than two children."
+                f"There should be exactly 1 release without children in channel {channel}. "
+                f"Found: {not_a_parent_release}."
             )
 
-        # count number of children which are breaking releases and ensure the count is 1
-        nbreaking = [c["breaking_release"] for c in children].count(True)
-        if len(children) == 2 and nbreaking != 1:
+        # get succession and ensure all releases are included
+        sorted_releases = list(_get_release_succession(
+            not_a_parent_release[0], releases_in_channel)
+            )
+        orphaned = {r["cac_tag"] for r in releases_in_channel} - {r["cac_tag"] for r in sorted_releases}
+        if orphaned:
             raise BenchmarkProcessingError(
-                f"Error - release {cac_tag} has two children out of which {nbreaking} "
-                f"are breaking. Exactly 1 should be breaking."
+                f"Releases in channel {channel} do not have a valid succession. "
+                f"These releases are orphaned: {','.join(r['cac_tag'] for r in orphaned)}."
             )
+        releases_by_channels[channel] = sorted_releases
 
-        # add child releases to queue and create upgrade path lists
-        for i, child in enumerate(children):
-            child_cac_tag = child["cac_tag"]
-            logger.debug(
-                f"Found child ({i + 1} of {len(children)}) of "
-                f"{cac_tag}: {child_cac_tag}."
-            )
-
-            # add child to search queue
-            queue.insert(0, child)
-
-            # if child is a breaking release
-            if child["breaking_release"]:
-                logger.debug(f"Release {child_cac_tag} is breaking.")
-                # sanity check that the tailoring version for a breaking release is
-                # exactly 1 greater than the parent
-                if child["tailoring_version"] != release["tailoring_version"] + 1:
+    # sanity check that same benchmark version doesn't appear in multiple channels
+    for channel1, releases_in_channel1 in releases_by_channels.items():
+        unique_versions1 = {r["benchmark_data"]["version"] for r in releases_in_channel1}
+        for channel2, releases_in_channel2 in releases_by_channels.items():
+            if channel1 != channel2:
+                unique_versions2 = {r["benchmark_data"]["version"] for r in releases_in_channel2}
+                if unique_versions1 & unique_versions2:
                     raise BenchmarkProcessingError(
-                        f"Error - tailoring_version of breaking child "
-                        f"{child['cac_tag']} should be exactly 1 greater "
-                        f"than its parent {release['cac_tag']}"
+                        f"Same benchmark version cannot appear in different release channels. "
+                        f"Offending versions: {unique_versions1 & unique_versions2}"
                     )
-                # sanity check that the benchmark version is different in the breaking release
-                if child["benchmark_data"]["version"] == release["benchmark_data"]["version"]:
-                    raise BenchmarkProcessingError(
-                        f"Error - benchmark version of breaking child "
-                        f"{child['cac_tag']} cannot be the same as the version "
-                        f"of its parent {release['cac_tag']}"
-                    )
-                # reset the compatible upgrade path for the child
-                child["upgrade_paths"]["compatible"] = [
-                    child,
-                ]
-                # set the child as the next_breaking for the parent
-                release["upgrade_paths"]["next_breaking"] = child
-
-            # else, the child is non-breaking
-            else:
-                logger.debug(f"Release {child_cac_tag} is non-breaking.")
-                # sanity check that the tailoring version for a non-breaking
-                # release is the same as the parent
-                if child["tailoring_version"] != release["tailoring_version"]:
-                    raise BenchmarkProcessingError(
-                        f"Error - tailoring_version of non-breaking child "
-                        f"{child['cac_tag']} should be same as parent "
-                        f"{release['cac_tag']}"
-                    )
-                # add the child to the compatible upgrade path of the parent
-                release["upgrade_paths"]["compatible"].append(child)
-                # copy the compatible upgrade path of the parent to the child
-                child["upgrade_paths"]["compatible"] = release["upgrade_paths"][
-                    "compatible"
-                ]
-
-        # if the release has no children or one child which is a breaking release
-        # mark it as the latest compatible release for all releases
-        # in its compatible upgrade path
-        if not children or (len(children) == 1 and nbreaking == 1):
-            logger.debug(f"Release {cac_tag} is latest compatible in its branch.")
-
-            # set latest compatible release for all releases in the
-            # compatible upgrade path
-            for r in release["upgrade_paths"]["compatible"]:
-                r["upgrade_paths"]["latest_compatible"] = release
-
-    # Now that we have all the upgrade paths and references to "latest_compatible"
-    # releases, set "next_breaking" for all the releases in the compatible upgrade path
-    for release in all_releases:
-        if release["upgrade_paths"][
-            "next_breaking"
-        ]:  # the release is a parent of a breaking release
-            for r in release["upgrade_paths"]["compatible"]:
-                r["upgrade_paths"]["next_breaking"] = release["upgrade_paths"][
-                    "next_breaking"
-                ]
 
     # Debug print
-    logger.debug("--- Listing upgrade paths and candidates")
-    for release in all_releases:
-        logger.debug(f"Release: {release['cac_tag']}")
-        logger.debug("Non-breaking compatible upgrade path:")
-        for j, r in enumerate(release["upgrade_paths"]["compatible"]):
-            logger.debug(f"  {j + 1}: {r['cac_tag']}")
-        latest_compatible = release["upgrade_paths"]["latest_compatible"]
-        logger.debug(f"Latest compatible: {latest_compatible['cac_tag']}")
-        if release["upgrade_paths"]["next_breaking"]:
-            next_breaking = release["upgrade_paths"]["next_breaking"]
-            next_breaking_lc = next_breaking["upgrade_paths"]["latest_compatible"]
-            logger.debug(f"Next breaking: {next_breaking['cac_tag']}")
-            logger.debug(
-                f"Next breaking (latest_compatible): {next_breaking_lc['cac_tag']}"
-            )
-        else:
-            logger.debug("Next breaking: None (latest)")
-        logger.debug("---")
+    logger.debug("--- Listing all releases")
+    for channel, releases_in_channel in releases_by_channels.items():
+        logger.debug(f"Channel: {channel}")
+        for release in releases_in_channel:
+            logger.debug(f" - Release tag: {release['cac_tag']}")
+    logger.debug("---")
+
+    return releases_by_channels
 
 
 
-def _process_yaml(yaml_data: dict[str, Any]) -> list[dict[str, Any]]:
+
+def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     # Process CaC release yaml configuration file
 
-    # - generate benchmark IDs used in USG
-    # - for each latest "active" release in each branch:
-    #   - map compatibility with older releases
+    # Iterate over release list and:
+    # - generate channel and benchmark IDs used in USG
+    # - map compatibility with older releases (same channel)
     #   - generate complete breaking upgrade path
-    # - return list of active releases
+    # - return list of all releases
 
     # Initial iteration over the releases:
     # - initialize several empty fields and generate benchmark_id
@@ -283,154 +157,161 @@ def _process_yaml(yaml_data: dict[str, Any]) -> list[dict[str, Any]]:
     all_releases = sorted(
         yaml_data["benchmark_releases"], key=lambda x: x["usg_version"] + x["cac_tag"]
     )
-    for release in all_releases:
-        b_data = {}
-        b_data.update(yaml_data["general"])
-        b_data.update(release["benchmark_data"])
-        b_data["tailoring_version"] = release["tailoring_version"]
-        benchmark_id = "{}_{}_{}".format(
-            b_data["product"], b_data["benchmark_type"], release["tailoring_version"]
-        )
-        b_data.update(
-            {
-                "benchmark_id": benchmark_id,
-                "compatible_versions": [],
-                "breaking_upgrade_path": [],
-                "is_latest": False,
-            }
-        )
-        release["benchmark_data"] = b_data
 
-    # Traverse release graph and find all upgrade paths
-    _find_release_upgrade_paths(all_releases)
+    # Bin releases to channels and sort the channels and releases in channels from oldest to newest
+    releases_by_channels = _get_release_channel_successions(all_releases)
 
-    # Extract only active releases
-    # (latest in any side branch or latest preceding a breaking release)
-    active_releases = [
-        r for r in all_releases if r == r["upgrade_paths"]["latest_compatible"]
-    ]
-    active_releases.sort(key=lambda r: r["benchmark_data"]["benchmark_id"])
-    logger.debug(
-        "Found these active releases (latest in any side branch or "
-        "latest preceding a breaking release):"
-    )
-    for r in active_releases:
-        logger.debug(f"{r['cac_tag']} (id: {r['benchmark_data']['benchmark_id']})")
+    # Populate base data structures
+    profiles = {}       # cac_profile_id, latest_breaking_id, latest_compatible_id, ...
+    benchmarks = {}     # channel_id, tailoring_version, product, cac_profiles, latest_breaking_id, latest_compatible_id, state, ...
+    release_channels = {}   # benchmark release channel information, latest release tag/commit/timestamp, data files, tailoring files
 
-    # Quick sanity check for tailoring versions (should be all from 1 to max())
-    tailoring_versions = sorted([r["tailoring_version"] for r in active_releases])
-    tailoring_versions_good = list(range(1, max(tailoring_versions) + 1))
-    if tailoring_versions != tailoring_versions_good:
-        raise BenchmarkProcessingError(
-            f"Corrupt release file. Found tailoring versions {tailoring_versions}. "
-            f"Should be {tailoring_versions_good}"
-        )
+    # Preset common values
+    product = yaml_data["general"]["product"]
+    product_long = yaml_data["general"]["product_long"]
+    benchmark_type = yaml_data["general"]["benchmark_type"]
+    latest_release = list(releases_by_channels.values())[-1][-1]
+    latest_version = latest_release["benchmark_data"]["version"]
+    latest_tailoring = latest_release["tailoring_version"]
+    latest_channel_id = f"{product}_{benchmark_type}_{latest_tailoring}"
+    latest_benchmark_id = f"{latest_channel_id}-{latest_version}"
 
-    # For each active release
-    # - find all superseded compatible releases and mark their benchmark_id as
-    #   compatible to the latest release
-    # - find all superseeding breaking releases and generate the breaking_upgrade_path
-    # - fetch datastream, generate tailoring files, generate checksums
-    for release in active_releases:
-        cac_tag = release["cac_tag"]
-        b_data = release["benchmark_data"]
-        benchmark_id = b_data["benchmark_id"]
-        next_breaking_release = release["upgrade_paths"]["next_breaking"]
+    # Add info from latest releases in each channel to 'channel_data'
+    for tailoring_version, releases_in_channel in releases_by_channels.items():
 
-        logger.debug(f"Processing active release {release['cac_tag']}")
+        latest_release = releases_in_channel[-1]
+        channel_id = f"{product}_{benchmark_type}_{tailoring_version}"
+        assert channel_id not in release_channels
+        release_channels[channel_id] = {
+            "id": channel_id,
+            "benchmark_ids": [], # populated below
+            "tailoring_version": tailoring_version,
+            "is_latest": tailoring_version == latest_tailoring,
+            "cac_product": product,
+            "cac_profiles": list(latest_release["benchmark_data"]["profiles"]), # store profiles here to ensure all benchmarks in one channel have same profiles
+            "release_tag": latest_release["cac_tag"],
+            "release_commit": latest_release["cac_commit"],
+            "release_notes_url": latest_release["benchmark_data"]["release_notes_url"],
+            "release_timestamp": None, # added at build time
+            "data_files": None, # added at build time
+            "tailoring_files": None, # added at build time
+        }
 
-        # get superseded compatible releases
-        b_data["compatible_versions"] = _get_superseded_compatible(release)
+    # find all benchmarks with unique IDs (versions) and add info to 'benchmarks' and 'profiles'
+    for tailoring_version, releases_in_channel in releases_by_channels.items():
+        channel_id = f"{product}_{benchmark_type}_{tailoring_version}"
 
-        if next_breaking_release is not None:
-            b_data["breaking_upgrade_path"] = _get_breaking_upgrade_path(
-                release, all_releases
-            )
+        for i, release in enumerate(releases_in_channel):
+
+            benchmark_version = release["benchmark_data"]["version"]
+            benchmark_id = f"{channel_id}-{benchmark_version}"
+
+            # Latest release in channel or latest release with specific version
+            if release == releases_in_channel[-1] or \
+                benchmark_version != releases_in_channel[i+1]["benchmark_data"]["version"]:
+
+                b_data = {
+                    "id": benchmark_id,
+                    "channel_id": channel_id,
+                    "benchmark_type": benchmark_type,
+                    "product": product,
+                    "product_long": product_long,
+                    "tailoring_version": tailoring_version,
+                    "latest_breaking_id": None,
+                    "latest_compatible_id": None,
+                    "state": None,
+                }
+                b_data.update(release["benchmark_data"])
+                assert list(b_data["profiles"]) == release_channels[channel_id]["cac_profiles"]
+                assert benchmark_id not in benchmarks
+
+                benchmarks[benchmark_id] = b_data
+
+                # add backreference to channel object
+                release_channels[channel_id]["benchmark_ids"].append(benchmark_id)
+
+                # get profiles and store them in 'profiles'
+                for cac_profile_id in b_data["profiles"]:
+                    profile_id = f"{benchmark_id}_{cac_profile_id}"
+                    assert profile_id not in profiles
+                    profile = {
+                        "id": profile_id,
+                        "cac_id": cac_profile_id,
+                        "benchmark_id": benchmark_id,
+                        "latest_breaking_id": None,
+                        "latest_compatible_id": None,
+                    }
+                    profiles[profile_id] = profile
+
+
+    # Get relationships and states (latest_compatible_id, latest_breaking_id, maintenance/superseded/latest)
+    for benchmark_id, b_data in benchmarks.items():
+
+        channel_id = b_data["channel_id"]
+        tailoring_version = release_channels[channel_id]["tailoring_version"]
+        latest_release_in_channel = releases_by_channels[tailoring_version][-1]
+        latest_version_in_channel = latest_release_in_channel["benchmark_data"]["version"]
+        latest_benchmark_id_in_channel = f"{channel_id}-{latest_version_in_channel}"
+
+        b_data["state"] = "Latest"
+        # Benchmark is superseded by a newer release in same channel
+        if benchmark_id != latest_benchmark_id_in_channel:
+            b_data["latest_compatible_id"] = latest_benchmark_id_in_channel
+            b_data["state"] = "Superseded"
+
+        # Benchmark is not in latest channel (maintenance mode)
+        if tailoring_version != latest_tailoring:
+            b_data["latest_breaking_id"] = latest_benchmark_id
+            b_data["state"] = "Maintenance"  # overrides superseded
+
+
+    for profile_id, profile in profiles.items():
+        benchmark_id = profile["benchmark_id"]
+        b_data = benchmarks[benchmark_id]
+        cac_profile_id = profile["cac_id"]
+
+        # Superseded benchmark. Profile is superseded by same superseding benchmark.
+        if b_data["latest_compatible_id"]:
+            superseding_benchmark_id = benchmarks[b_data["latest_compatible_id"]]["id"]
+            superseding_profile_id = f"{superseding_benchmark_id}_{cac_profile_id}"
+            assert superseding_profile_id in profiles
+            profile["latest_compatible_id"] = superseding_profile_id
+
+        # Find latest breaking profile via the most latest benchmark which contains the profile
+        latest_breaking_benchmark_id = None
+        # Latest channel (corresponding benchmark has no latest_breaking_id candidate)
+        if b_data["latest_breaking_id"] is None:
+            latest_breaking_benchmark_id = None
+        # Older channel (and the latest benchmark contains the profile id)
+        elif cac_profile_id in benchmarks[b_data["latest_breaking_id"]]["profiles"]:
+            latest_breaking_benchmark_id = b_data["latest_breaking_id"]
+        # Older channel (and the latest benchmark doesn't contain the profile id)
+        # Find the latest benchmark which contains this profile
         else:
-            logger.debug(f"Release {cac_tag} is the latest release.")
-            b_data["is_latest"] = True
+            tailoring_version = b_data["tailoring_version"]
+            for b_data2 in benchmarks.values():
+                tailoring_version2 = b_data2["tailoring_version"]
 
-    logger.debug("--- Listing benchmarks")
-    for r in active_releases:
-        logger.debug(f"Benchmark: {r['benchmark_data']['benchmark_id']}")
+                if tailoring_version2 > tailoring_version and \
+                      b_data2["latest_compatible_id"] is None and \
+                      cac_profile_id in b_data2["profiles"]:
+                    tailoring_version = tailoring_version2
+                    latest_breaking_benchmark_id = b_data2["id"]
 
-    logger.debug("Exiting process_yaml()")
-
-    return active_releases
-
-
-def _get_superseded_compatible(
-    release: dict[str, Any],
-) -> list[str]:
-    # Return the list of releases which are superseded by the given release and
-    # which are compatible with it (non-breaking)
-    logger.debug(f"From _get_superseded_compatible({release['cac_tag']})")
-
-    compatible_versions = set()
-    for r in release["upgrade_paths"]["compatible"]:
-        if r != release:
-            benchmark_version = r["benchmark_data"]["version"]
-            logger.debug(
-                f"Found superseded release with benchmark version: "
-                f"{benchmark_version} (cac_tag: {r['cac_tag']})."
-            )
-            if benchmark_version == release["benchmark_data"]["version"]:
-                logger.debug(
-                    "benchmark version is the same as active release. "
-                    "Not adding it to list of compatible_versions"
-                )
-            else:
-                logger.debug(
-                    f"Adding the release with benchmark version {benchmark_version} to "
-                    f"list of compatible_versions in benchmark in release "
-                    f"{release['cac_tag']}"
-                )
-                compatible_versions.add(benchmark_version)
-    return sorted(compatible_versions)
+        if latest_breaking_benchmark_id:
+            latest_breaking_id = f"{latest_breaking_benchmark_id}_{cac_profile_id}"
+            assert latest_breaking_id in profiles
+        else:
+            latest_breaking_id = None
+        profile["latest_breaking_id"] = latest_breaking_id
 
 
-def _get_breaking_upgrade_path(
-    release: dict[str, Any], all_releases: list[dict[str, Any]]
-) -> list[str]:
-    # return the list of all breaking releases superseding given releases
+    for s in ["profiles", "benchmarks", "release_channels"]:
+        logger.debug(f"---{s}---")
+        for k, v in locals()[s].items():
+            logger.debug(f"{k}: {v}")
 
-    logger.debug(f"From _get_breaking_upgrade_path({release['cac_tag']})")
-
-    def _get_breaking_list(r: dict[str, Any]) -> Iterator[dict[str, Any]]:
-        # recursive search for successive breaking releases
-        # returns succession in reverse order (from newest to oldest release)
-        if r["upgrade_paths"]["next_breaking"]:
-            for r_next in all_releases:
-                if r_next == r["upgrade_paths"]["next_breaking"]:
-                    yield from _get_breaking_list(r_next)
-        yield r
-
-    next_breaking = release["upgrade_paths"]["next_breaking"]
-    next_breaking_latest_compatible = next_breaking["upgrade_paths"][
-        "latest_compatible"
-    ]
-
-    logger.debug(
-        f"Release can be upgraded to the next breaking release with version: "
-        f"{next_breaking_latest_compatible['benchmark_data']['version']} "
-        f"({next_breaking_latest_compatible['cac_tag']})"
-    )
-
-    breaking_succession = list(_get_breaking_list(next_breaking))[::-1]
-
-    logger.debug(f"Printing full upgrade path for release {release['cac_tag']}:")
-    breaking_upgrade_path = []
-    for i, breaking_release in enumerate(breaking_succession):
-        breaking_latest_compatible = breaking_release["upgrade_paths"][
-            "latest_compatible"
-        ]
-        breaking_cac_tag = breaking_latest_compatible["cac_tag"]
-        breaking_benchmark_version = breaking_latest_compatible["benchmark_data"][
-            "version"
-        ]
-        breaking_upgrade_path.append(breaking_benchmark_version)
-        logger.debug(f"  {i + 1}: {breaking_benchmark_version} ({breaking_cac_tag})")
-    return breaking_upgrade_path
+    return profiles, benchmarks, release_channels
 
 
 def _build_cac_release(cac_repo_dir: Path, commit: str, cac_product: str) -> int:
@@ -563,7 +444,7 @@ def _calc_sha256(path: Path) -> str:
 
 
 def _build_active_releases(
-    all_active_releases: list[dict[str, Any]],
+    release_channels: list[dict[str, Any]],
     cac_repo_dir: Path,
     tailoring_templates_dir: Path,
     dst_dir: Path,
@@ -574,16 +455,15 @@ def _build_active_releases(
     # - generate tailoring files
     # - generate checksums
 
-    logger.info(f"Building {len(all_active_releases)} active releases...")
+    logger.info(f"Building {len(release_channels)} active releases...")
 
-    for i, release in enumerate(all_active_releases):
-        cac_tag = release["cac_tag"]
-        b_data = release["benchmark_data"]
-        benchmark_id = b_data["benchmark_id"]
-        logger.info(f"Building CaC release {cac_tag} (benchmark ID = {benchmark_id})")
+    for i, channel_data in enumerate(release_channels):
+        cac_tag = channel_data["release_tag"]
+        channel_id = channel_data["id"]
+        logger.info(f"Building CaC release {cac_tag} (channel ID = {channel_id})")
 
         # Create output directory based on benchmark id (dst_dir/benchmark_id)
-        output_benchmark_dir = dst_dir / benchmark_id
+        output_benchmark_dir = dst_dir / channel_id
         output_benchmark_dir.mkdir(parents=True, exist_ok=True)
 
         # Create new tmp build dir for each release
@@ -616,17 +496,17 @@ def _build_active_releases(
                     )
                 release_timestamp = _build_cac_release(
                     tmp_build_dir,
-                    release["cac_commit"],
-                    b_data["product"]
+                    channel_data["release_commit"],
+                    channel_data["cac_product"]
                 )
                 logger.info("Successfully built CaC content.")
 
 
-            b_data["release_timestamp"] = release_timestamp
+            channel_data["release_timestamp"] = release_timestamp
 
             # Compress datastream and save to destination dir
             # (e.g. dst dir/ubuntu2404_CIS_2/...)
-            datastream_filename = CAC_RELEASE_NAME.format(b_data["product"])
+            datastream_filename = CAC_RELEASE_NAME.format(channel_data["cac_product"])
             datastream_build_path = tmp_build_dir / "build" / datastream_filename
             datastream_dst_gz_path = (
                     output_benchmark_dir / datastream_filename
@@ -634,7 +514,7 @@ def _build_active_releases(
             _save_compressed_datastream(datastream_build_path, datastream_dst_gz_path)
 
             # Calc hashes and set metadata for datastream
-            b_data["data_files"] = {
+            channel_data["data_files"] = {
                 "datastream_gz": {
                     "path": str(datastream_dst_gz_path.relative_to(dst_dir)),
                     "sha256": _calc_sha256(datastream_dst_gz_path),
@@ -646,12 +526,12 @@ def _build_active_releases(
             logger.debug("Generating tailoring files for benchmark {benchmark_id}...")
             output_tailoring_files_dir = output_benchmark_dir / "tailoring"
             output_tailoring_files_dir.mkdir()
-            b_data["tailoring_files"] = {}
+            channel_data["tailoring_files"] = {}
 
             cac_profiles_dir = (
-                tmp_build_dir / "products" / b_data["product"] / "profiles"
+                tmp_build_dir / "products" / channel_data["cac_product"] / "profiles"
             )
-            for profile_id in b_data["profiles"]:
+            for profile_id in channel_data["cac_profiles"]:
                 logger.info(f"Generating tailoring file for profile {profile_id}")
 
                 profile_path = cac_profiles_dir / f"{profile_id}.profile"
@@ -666,12 +546,12 @@ def _build_active_releases(
                     profile_path,
                     datastream_build_path,
                     tailoring_template_path,
-                    benchmark_id,
+                    channel_id,
                     output_tailoring_path
                 )
 
                 # Calc hashes and set metadata
-                b_data["tailoring_files"][profile_id] = {
+                channel_data["tailoring_files"][profile_id] = {
                     "path": str(output_tailoring_path.relative_to(dst_dir)),
                     "sha256": _calc_sha256(output_tailoring_path)
                 }
@@ -723,9 +603,9 @@ def process_benchmarks(
 ) -> None:
     """Process benchmark releases defined in benchmark_yaml_files.
 
-    - Parse yaml files and get list of active CaC releases (_process_yaml)
-    - Build active ComplianceAsCode releases
-    - Write benchmark metadata json
+    - Parse yaml files and get profile,benchmark,and channel data on CaC releases (_process_yaml)
+    - Build active ComplianceAsCode releases (latest in each channel)
+    - Write data to benchmark metadata json
     """
     if out_dir.exists() and list(out_dir.rglob("*.xml")):
         raise BenchmarkProcessingError(
@@ -746,7 +626,11 @@ def process_benchmarks(
     }
 
     # parse and process benchmark yaml files
-    all_active_releases = []
+    data = {
+        "profiles": [],
+        "benchmarks": [],
+        "release_channels": [],
+    }
     for benchmark_yaml in sorted(benchmark_yaml_files):
         logger.info(f"Processing yaml - {benchmark_yaml}")
         with Path(benchmark_yaml).open() as f:
@@ -765,17 +649,18 @@ def process_benchmarks(
                     f"Error: Key general.{k} not found in {benchmark_yaml}."
                 )
 
-        # process yaml and store active releases
-        active_releases = _process_yaml(yaml_data)
-        all_active_releases.extend(active_releases)
-        _log_upgrade_paths(active_releases)
-
+        # get available profiles,benchmarks,channels
+        profiles, benchmarks, release_channels = _process_yaml(yaml_data)
+        data["profiles"].extend(profiles.values())
+        data["benchmarks"].extend(benchmarks.values())
+        data["release_channels"].extend(release_channels.values())
+#        _log_upgrade_paths(active_releases)
 
     # build data for active releases
     with tempfile.TemporaryDirectory() as tmp_dst_dir:
         logger.info(f"Building benchmark data in {tmp_dst_dir}")
         _build_active_releases(
-            all_active_releases,
+            data["release_channels"],
             cac_repo_dir,
             tailoring_templates_dir,
             Path(tmp_dst_dir),
@@ -784,15 +669,8 @@ def process_benchmarks(
         logger.info(f"Copying benchmark files and folders to {out_dir}")
         shutil.copytree(tmp_dst_dir, out_dir, dirs_exist_ok=True)
 
-        # build CaC datastreams and
-        # Get the actual benchmark data and files
-      #   - download release datastream
-    #   - generate tailoring files and whatever else is needed
-
-    # extract benchmark metadata and store in json
-    benchmarks_metadata = [r["benchmark_data"] for r in all_active_releases]
-    benchmarks_json_data["benchmarks"].extend(benchmarks_metadata)
-
+    # update benchmark metadata and store in json
+    benchmarks_json_data.update(data)
     json_output = out_dir / OUTPUT_JSON_NAME
     json_output.write_text(
         json.dumps(benchmarks_json_data, indent=2) + "\n"
@@ -803,6 +681,10 @@ def process_benchmarks(
     with (out_dir / OUTPUT_JSON_NAME).open("rb") as f:
         digest = hashlib.file_digest(f, "sha256")
     logger.info(f"sha256({OUTPUT_JSON_NAME}): {digest.hexdigest()}")
+
+
+
+
 
 
 def main() -> None:
