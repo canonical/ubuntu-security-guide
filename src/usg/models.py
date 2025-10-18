@@ -27,7 +27,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from usg.exceptions import BenchmarkError, ProfileNotFoundError, TailoringFileError
+from usg.exceptions import MetadataError, ProfileNotFoundError, TailoringFileError
 
 logger = logging.getLogger(__name__)
 
@@ -50,68 +50,93 @@ class BenchmarkType(str, Enum):
 
 
 @dataclass(frozen=True)
+class ReleaseChannel:
+    """Immutable representation of a benchmark release channel."""
+
+    id: str
+    benchmark_ids: list[str]
+    tailoring_version: int
+    is_latest: bool
+    release_tag: str
+    release_commit: str
+    release_notes_url: str
+    release_timestamp: int
+    data_files: dict[str, DataFile]
+    tailoring_files: dict[str, dict[str, str]]
+
+    @classmethod
+    def from_data(cls, data: dict[str, Any]) -> "ReleaseChannel":
+        """Create ReleaseChannel object from dictionary data."""
+        logger.debug(f"Creating Benchmark object from {data}")
+        try:
+            data_files = {
+                data_file_type: DataFile(
+                    data_file_type,
+                    Path(data["data_files"][data_file_type]["path"]),
+                    data["data_files"][data_file_type]["sha256"],
+                    data["data_files"][data_file_type]["sha256_orig"]
+                )
+                for data_file_type in data["data_files"]
+            }
+            return cls(
+                id=data["id"],
+                benchmark_ids=data["benchmark_ids"],
+                tailoring_version=data["tailoring_version"],
+                is_latest=data["is_latest"],
+                release_tag=data["release_tag"],
+                release_commit=data["release_commit"],
+                release_notes_url=data["release_notes_url"],
+                release_timestamp=data["release_timestamp"],
+                data_files=data_files,
+                tailoring_files=data["tailoring_files"],
+            )
+        except (KeyError, ValueError, TypeError) as e:
+            raise MetadataError(
+                f"Failed to create ReleaseChannel object: {e}"
+            ) from e
+
+
+@dataclass(frozen=True)
 class Benchmark:
     """Immutable representation of a benchmark entry in benchmarks.json."""
 
     id: str
-    channel_id: str
+    channel: ReleaseChannel
     benchmark_type: BenchmarkType
     product: str
     product_long: str
-    version: str
     tailoring_version: int
-    description: str
-    release_notes_url: str
-    release_timestamp: int
-    reference_url: str
-    compatible_versions: tuple[str, ...]
-    breaking_upgrade_path: tuple[str, ...]
-    is_latest: bool
-    tailoring_files: dict[str, dict[str, str]]
+    version: str
     profiles: dict[str, dict]
-    data_files: dict[str, DataFile]
+    description: str
+    reference_url: str
+    latest_compatible_id: str | None
+    latest_breaking_id: str | None
+    state: str
 
     @classmethod
-    def from_dict(cls, raw_data: dict[str, Any]) -> "Benchmark":
-        """Create Benchmark object from a dictionary."""
-        logger.debug(f"Creating Benchmark object from {raw_data}")
+    def from_dict(cls, channel: ReleaseChannel, data: dict[str, Any]) -> "Benchmark":
+        """Create Benchmark object from dictionary data and channel object."""
+        logger.debug(f"Creating Benchmark object from {data} and {channel}")
         try:
-            # TODO this needs to be replaced, making profiles first order structures
-            profiles = {
-                profile_id: raw_data["profiles"][profile_id].get("legacy_id", None)
-                for profile_id in raw_data["profiles"]
-            }
-            data_files = {
-                data_file_type: DataFile(
-                    data_file_type,
-                    Path(raw_data["data_files"][data_file_type]["path"]),
-                    raw_data["data_files"][data_file_type]["sha256"],
-                    raw_data["data_files"][data_file_type]["sha256_orig"]
-                )
-                for data_file_type in raw_data["data_files"]
-            }
             return cls(
-                id=raw_data["benchmark_id"],
-                channel_id=raw_data["channel_id"],
-                benchmark_type=raw_data["benchmark_type"],
-                product=raw_data["product"],
-                product_long=raw_data["product_long"],
-                version=raw_data["version"],
-                tailoring_version=raw_data["tailoring_version"],
-                description=raw_data["description"],
-                release_notes_url=raw_data["release_notes_url"],
-                release_timestamp=raw_data["release_timestamp"],
-                reference_url=raw_data["reference_url"],
-                compatible_versions=raw_data["compatible_versions"],
-                breaking_upgrade_path=raw_data["breaking_upgrade_path"],
-                is_latest=raw_data["is_latest"],
-                tailoring_files=raw_data["tailoring_files"],
-                profiles=profiles,
-                data_files=data_files,
+                id=data["id"],
+                channel=channel,
+                benchmark_type=data["benchmark_type"],
+                product=data["product"],
+                product_long=data["product_long"],
+                tailoring_version=data["tailoring_version"],
+                version=data["version"],
+                profiles=data["profiles"],
+                description=data["description"],
+                reference_url=data["reference_url"],
+                latest_compatible_id=data["latest_compatible_id"],
+                latest_breaking_id=data["latest_breaking_id"],
+                state=data["state"],
             )
         except (KeyError, ValueError, TypeError) as e:
-            raise BenchmarkError(
-                f"Failed to create Benchmark object from {raw_data}: {e}"
+            raise MetadataError(
+                f"Failed to create Benchmark object: {e}"
             ) from e
 
     def get_tailoring_file_relative_path(self, profile_id: str) -> Path:
@@ -129,7 +154,7 @@ class Benchmark:
         """
         logger.debug(f"Getting tailoring file relative path for profile {profile_id}")
         try:
-            path = Path(self.tailoring_files[profile_id]["path"])
+            path = Path(self.channel.tailoring_files[profile_id]["path"])
             logger.debug(f"Tailoring file relative path: {path}")
             return path
         except KeyError as e:
@@ -143,74 +168,112 @@ class Profile:
     """Representation of a Benchmark profile."""
 
     id: str
-    legacy_ids: list[str]
     cac_id: str
+    alias_ids: list[str]
     benchmark: Benchmark
     latest_compatible_id: str | None
     tailoring_file: Path | str | None
     latest_breaking_id: str | None
     extends_id: str | None
 
+    @classmethod
+    def from_data(cls, benchmark: Benchmark, data: dict[str, Any]) -> "Profile":
+        """Create Profile object from dictionary data and benchmark object."""
+        logger.debug(f"Creating Profile object from {data} and {benchmark}")
+        try:
+            return cls(
+                id = data["id"],
+                cac_id = data["cac_id"],
+                alias_ids = data["alias_ids"],
+                benchmark = benchmark,
+                latest_compatible_id = data["latest_compatible_id"],
+                latest_breaking_id = data["latest_breaking_id"],
+                tailoring_file = None,
+                extends_id = None,
+            )
+        except (KeyError, ValueError, TypeError) as e:
+            raise MetadataError(
+                f"Failed to create profile object: {e}"
+            ) from e
 
 
-class Benchmarks(dict[str, Benchmark]):
-    """Collection of benchmarks in form of a dictionary.
 
-    Keys are benchmark IDs and values are Benchmark objects.
+class Profiles(dict[str, Benchmark]):
+    """Collection of profiles in form of a dictionary.
+
+    Keys are profile IDs and values are Profile objects.
     """
 
     version: int
 
     @classmethod
-    def from_json(cls, json_path: str | Path) -> "Benchmarks":
-        """Create a Benchmarks object from a JSON file.
+    def from_json(cls, json_path: str | Path) -> "Profiles":
+        """Parse JSON metadata file and create Profiles object.
 
         Args:
-            json_path: path to JSON file containing benchmark metadata
+            json_path: path to JSON file containing profile and benchmark metadata
 
         Returns:
-            Benchmarks
+            Profiles
 
         Raises:
-            BenchmarkError: if the JSON file is invalid or the contents are invalid
+            MetadataError: if the JSON file is invalid or the contents are invalid
 
         """
-        logger.debug(f"Loading benchmark metadata file{json_path}")
+        logger.debug(f"Loading metadata file {json_path}")
         try:
             with Path(json_path).open() as f:
                 json_data = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
-            raise BenchmarkError(f"Failed to parse '{json_path}':{e}") from e
+            raise MetadataError(f"Failed to parse '{json_path}':{e}") from e
 
-        for key in ["benchmarks", "version"]:
+        for key in ["profiles", "benchmarks", "release_channels", "version"]:
             if key not in json_data:
-                raise BenchmarkError(
+                raise MetadataError(
                     f"Invalid '{json_path}' contents. Could not find key '{key}'"
                 )
 
-        # load benchmark and profile data
+        # load release_channels data
+        release_channels = {}
+        for channel_data in json_data["release_channels"]:
+            channel_id = channel_data["id"]
+            if channel_id in release_channels:
+                raise MetadataError(
+                    f"Malformed dataset - duplicate channel ID: {channel_id}"
+                )
+            channel = ReleaseChannel.from_data(channel_data)
+            release_channels[channel_id] = channel
+
+
+        # load benchmark data
         benchmarks = {}
         for benchmark_data in json_data["benchmarks"]:
-            benchmark_id = benchmark_data["channel_id"]
+            benchmark_id = benchmark_data["id"]
             if benchmark_id in benchmarks:
-                raise BenchmarkError(
+                raise MetadataError(
                     f"Malformed dataset - duplicate benchmark ID: {benchmark_id}"
                 )
-            benchmark = Benchmark.from_dict(benchmark_data)
-            benchmarks[benchmark_id] = Benchmark.from_dict(benchmark_data)
-            # TODO: these should exist in benchmarks.json, with a field "superseded"
-            for compatible_version in benchmark.compatible_versions:
-                comp_id = f"{benchmark.channel_id}-{compatible_version}"
-                comp_data = deepcopy(benchmark_data)
-                comp_data.update({
-                    "benchmark_id": comp_id,
-                    "version": compatible_version,
-                    "compatible_versions": []
-                })
-                benchmarks[comp_id] = Benchmark.from_dict(comp_data)
+            channel = release_channels[benchmark_data["channel_id"]]
+            benchmark = Benchmark.from_dict(channel, benchmark_data)
+            benchmarks[benchmark_id] = benchmark
 
+        # load profile data
+        profiles = {}
+        for profile_data in json_data["profiles"]:
+            profile_id = profile_data["id"]
+            if profile_id in profiles:
+                raise MetadataError(
+                    f"Malformed dataset - duplicate benchmark ID: {profile_id}"
+                )
+            profile_data.update({
+                "tailoring_file": None,
+                "extends_id": None,
+            })
+            benchmark = benchmarks[profile_data["benchmark_id"]]
+            profile = Profile.from_data(benchmark, profile_data)
+            profiles[profile_id] = profile
 
-        obj = cls(benchmarks)
+        obj = cls(profiles)
         obj.version = json_data["version"]
         logger.debug(f"Loaded {len(obj)} benchmarks. Version={obj.version}")
         return obj
@@ -299,7 +362,7 @@ class TailoringFile:
             Profile(
                 id=tailoring_profile_id,
                 cac_id=base_profile_cac_id,
-                legacy_ids=[],
+                alias_ids=[],
                 benchmark=benchmark,
                 latest_compatible_id=None,
                 latest_breaking_id=None,
