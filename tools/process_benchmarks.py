@@ -164,9 +164,9 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
     # Populate base data structures
     profiles = {}       # cac_profile_id, latest_breaking_id, latest_compatible_id, ...
     benchmarks = {}     # channel_id, tailoring_version, product, cac_profiles, latest_breaking_id, latest_compatible_id, state, ...
-    channel_releases = {}   # latest release info, data files
+    release_channels = {}   # benchmark release channel information, latest release tag/commit/timestamp, data files, tailoring files
 
-    # Preassign a few common values
+    # Preset common values
     product = yaml_data["general"]["product"]
     product_long = yaml_data["general"]["product_long"]
     benchmark_type = yaml_data["general"]["benchmark_type"]
@@ -176,20 +176,19 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
     latest_channel_id = f"{product}_{benchmark_type}_{latest_tailoring}"
     latest_benchmark_id = f"{latest_channel_id}-{latest_version}"
 
-    # add info from latest releases in each channel to 'channel_data'
+    # Add info from latest releases in each channel to 'channel_data'
     for tailoring_version, releases_in_channel in releases_by_channels.items():
 
         latest_release = releases_in_channel[-1]
         channel_id = f"{product}_{benchmark_type}_{tailoring_version}"
-        assert channel_id not in channel_releases
-        channel_releases[channel_id] = {
+        assert channel_id not in release_channels
+        release_channels[channel_id] = {
             "id": channel_id,
-            "cac_profiles": list(latest_release["benchmark_data"]["profiles"]), # all benchmarks in one channel must have same profiles
-            "benchmark_type": benchmark_type,
-            "product": product,
-            "product_long": product_long,
+            "benchmark_ids": [], # populated below
             "tailoring_version": tailoring_version,
             "is_latest": tailoring_version == latest_tailoring,
+            "cac_product": product,
+            "cac_profiles": list(latest_release["benchmark_data"]["profiles"]), # store profiles here to ensure all benchmarks in one channel have same profiles
             "release_tag": latest_release["cac_tag"],
             "release_commit": latest_release["cac_commit"],
             "release_notes_url": latest_release["benchmark_data"]["release_notes_url"],
@@ -202,11 +201,15 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
     for tailoring_version, releases_in_channel in releases_by_channels.items():
         channel_id = f"{product}_{benchmark_type}_{tailoring_version}"
 
-        for release in reversed(releases_in_channel):
+        for i, release in enumerate(releases_in_channel):
+
             benchmark_version = release["benchmark_data"]["version"]
             benchmark_id = f"{channel_id}-{benchmark_version}"
 
-            if benchmark_id not in benchmarks:
+            # Latest release in channel or latest release with specific version
+            if release == releases_in_channel[-1] or \
+                benchmark_version != releases_in_channel[i+1]["benchmark_data"]["version"]:
+
                 b_data = {
                     "id": benchmark_id,
                     "channel_id": channel_id,
@@ -219,9 +222,13 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
                     "state": None,
                 }
                 b_data.update(release["benchmark_data"])
-                assert list(b_data["profiles"]) == channel_releases[channel_id]["cac_profiles"]
+                assert list(b_data["profiles"]) == release_channels[channel_id]["cac_profiles"]
+                assert benchmark_id not in benchmarks
 
                 benchmarks[benchmark_id] = b_data
+
+                # add backreference to channel object
+                release_channels[channel_id]["benchmark_ids"].append(benchmark_id)
 
                 # get profiles and store them in 'profiles'
                 for cac_profile_id in b_data["profiles"]:
@@ -240,8 +247,8 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
     # Get relationships and states (latest_compatible_id, latest_breaking_id, maintenance/superseded/latest)
     for benchmark_id, b_data in benchmarks.items():
 
-        tailoring_version = b_data["tailoring_version"]
-        channel_id = f"{product}_{benchmark_type}_{tailoring_version}"
+        channel_id = b_data["channel_id"]
+        tailoring_version = release_channels[channel_id]["tailoring_version"]
         latest_release_in_channel = releases_by_channels[tailoring_version][-1]
         latest_version_in_channel = latest_release_in_channel["benchmark_data"]["version"]
         latest_benchmark_id_in_channel = f"{channel_id}-{latest_version_in_channel}"
@@ -281,14 +288,15 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
         # Older channel (and the latest benchmark doesn't contain the profile id)
         # Find the latest benchmark which contains this profile
         else:
-            benchmarks_sorted_by_channels = sorted(
-                benchmarks.values(), key=lambda b: b["tailoring_version"]
-                )
-            for b in reversed(benchmarks_sorted_by_channels):
-                if b["tailoring_version"] > b_data["tailoring_version"] and \
-                    cac_profile_id in b["profiles"]:
-                    latest_breaking_benchmark_id = b["id"]
-                    break
+            tailoring_version = b_data["tailoring_version"]
+            for b_data2 in benchmarks.values():
+                tailoring_version2 = b_data2["tailoring_version"]
+
+                if tailoring_version2 > tailoring_version and \
+                      b_data2["latest_compatible_id"] is None and \
+                      cac_profile_id in b_data2["profiles"]:
+                    tailoring_version = tailoring_version2
+                    latest_breaking_benchmark_id = b_data2["id"]
 
         if latest_breaking_benchmark_id:
             latest_breaking_id = f"{latest_breaking_benchmark_id}_{cac_profile_id}"
@@ -298,12 +306,12 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
         profile["latest_breaking_id"] = latest_breaking_id
 
 
-    for s in ["profiles", "benchmarks", "channel_releases"]:
+    for s in ["profiles", "benchmarks", "release_channels"]:
         logger.debug(f"---{s}---")
         for k, v in locals()[s].items():
             logger.debug(f"{k}: {v}")
 
-    return profiles, benchmarks, channel_releases
+    return profiles, benchmarks, release_channels
 
 
 def _build_cac_release(cac_repo_dir: Path, commit: str, cac_product: str) -> int:
@@ -436,7 +444,7 @@ def _calc_sha256(path: Path) -> str:
 
 
 def _build_active_releases(
-    channel_releases: list[dict[str, Any]],
+    release_channels: list[dict[str, Any]],
     cac_repo_dir: Path,
     tailoring_templates_dir: Path,
     dst_dir: Path,
@@ -447,9 +455,9 @@ def _build_active_releases(
     # - generate tailoring files
     # - generate checksums
 
-    logger.info(f"Building {len(channel_releases)} active releases...")
+    logger.info(f"Building {len(release_channels)} active releases...")
 
-    for i, channel_data in enumerate(channel_releases):
+    for i, channel_data in enumerate(release_channels):
         cac_tag = channel_data["release_tag"]
         channel_id = channel_data["id"]
         logger.info(f"Building CaC release {cac_tag} (channel ID = {channel_id})")
@@ -489,7 +497,7 @@ def _build_active_releases(
                 release_timestamp = _build_cac_release(
                     tmp_build_dir,
                     channel_data["release_commit"],
-                    channel_data["product"]
+                    channel_data["cac_product"]
                 )
                 logger.info("Successfully built CaC content.")
 
@@ -498,7 +506,7 @@ def _build_active_releases(
 
             # Compress datastream and save to destination dir
             # (e.g. dst dir/ubuntu2404_CIS_2/...)
-            datastream_filename = CAC_RELEASE_NAME.format(channel_data["product"])
+            datastream_filename = CAC_RELEASE_NAME.format(channel_data["cac_product"])
             datastream_build_path = tmp_build_dir / "build" / datastream_filename
             datastream_dst_gz_path = (
                     output_benchmark_dir / datastream_filename
@@ -521,7 +529,7 @@ def _build_active_releases(
             channel_data["tailoring_files"] = {}
 
             cac_profiles_dir = (
-                tmp_build_dir / "products" / channel_data["product"] / "profiles"
+                tmp_build_dir / "products" / channel_data["cac_product"] / "profiles"
             )
             for profile_id in channel_data["cac_profiles"]:
                 logger.info(f"Generating tailoring file for profile {profile_id}")
@@ -621,7 +629,7 @@ def process_benchmarks(
     data = {
         "profiles": [],
         "benchmarks": [],
-        "channel_releases": [],
+        "release_channels": [],
     }
     for benchmark_yaml in sorted(benchmark_yaml_files):
         logger.info(f"Processing yaml - {benchmark_yaml}")
@@ -642,17 +650,17 @@ def process_benchmarks(
                 )
 
         # get available profiles,benchmarks,channels
-        profiles, benchmarks, channel_releases = _process_yaml(yaml_data)
+        profiles, benchmarks, release_channels = _process_yaml(yaml_data)
         data["profiles"].extend(profiles.values())
         data["benchmarks"].extend(benchmarks.values())
-        data["channel_releases"].extend(channel_releases.values())
+        data["release_channels"].extend(release_channels.values())
 #        _log_upgrade_paths(active_releases)
 
     # build data for active releases
     with tempfile.TemporaryDirectory() as tmp_dst_dir:
         logger.info(f"Building benchmark data in {tmp_dst_dir}")
         _build_active_releases(
-            data["channel_releases"],
+            data["release_channels"],
             cac_repo_dir,
             tailoring_templates_dir,
             Path(tmp_dst_dir),
