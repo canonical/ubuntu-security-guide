@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from usg.exceptions import BenchmarkError, ProfileNotFoundError
+from usg.exceptions import MetadataError, ProfileNotFoundError
 from usg.models import Benchmark, Benchmarks, OldProfile
 
 
@@ -34,13 +34,13 @@ def test_usgbenchmarks(dummy_benchmarks):
     assert isinstance(benchmarks["ubuntu2404_STIG_1"], Benchmark)
 
 def test_usgbenchmarks_error_loading_and_parsing(tmp_path):
-    # test that failure to load or parse json file results in BenchmarkError
-    with pytest.raises(BenchmarkError, match="Failed to parse"):
+    # test that failure to load or parse json file results in MetadataError
+    with pytest.raises(MetadataError, match="Failed to parse"):
         Benchmarks.from_json("/dev/null/nonexistent")
 
     bad_json = tmp_path / "benchmarks.json"
     bad_json.write_text("this won't parse")
-    with pytest.raises(BenchmarkError, match="Failed to parse"):
+    with pytest.raises(MetadataError, match="Failed to parse"):
         Benchmarks.from_json(bad_json)
 
 def test_usgbenchmarks_error_from_missing_benchmarks(tmp_path, dummy_benchmarks):
@@ -50,7 +50,7 @@ def test_usgbenchmarks_error_from_missing_benchmarks(tmp_path, dummy_benchmarks)
     json_file = tmp_path / "benchmarks.json"
     json_file.write_text(json.dumps(b))
     with pytest.raises(
-        BenchmarkError, match="Invalid '.*' contents. Could not find key 'benchmarks'"
+        MetadataError, match="Invalid '.*' contents. Could not find key 'benchmarks'"
     ):
         Benchmarks.from_json(json_file)
 
@@ -62,7 +62,7 @@ def test_usgbenchmarks_error_from_missing_version(tmp_path, dummy_benchmarks):
     json_file = tmp_path / "benchmarks.json"
     json_file.write_text(json.dumps(b))
     with pytest.raises(
-        BenchmarkError, match="Invalid '.*' contents. Could not find key 'version'"
+        MetadataError, match="Invalid '.*' contents. Could not find key 'version'"
     ):
         Benchmarks.from_json(json_file)
 
@@ -74,7 +74,7 @@ def test_usgbenchmarks_error_from_duplicate_benchmark_id(tmp_path, dummy_benchma
     json_file = tmp_path / "benchmarks.json"
     json_file.write_text(json.dumps(b))
     with pytest.raises(
-        BenchmarkError,
+        MetadataError,
         match="Malformed dataset - duplicate benchmark ID: ubuntu2404_CIS_1",
     ):
         Benchmarks.from_json(json_file)
@@ -106,7 +106,7 @@ def test_usgbenchmark(dummy_benchmarks):
     )
     assert benchmark.is_latest == False
     assert len(benchmark.profiles) == 5
-    assert benchmark.tailoring_files["cis_level2_server"] == {
+    assert benchmark.channel.tailoring_files["cis_level2_server"] == {
         "path": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
         "sha256": "b1c953719606572f8ab507e9bfbbd570724127e8c87055aca90ebff85817e6f5",
     }
@@ -115,7 +115,7 @@ def test_usgbenchmark(dummy_benchmarks):
         "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml"
     )
 
-    ds_file = benchmark.data_files["datastream_gz"]
+    ds_file = benchmark.channel.data_files["datastream_gz"]
     assert ds_file.type == "datastream_gz"
     assert ds_file.rel_path == Path("ubuntu2404_CIS_2/ssg-ubuntu2404-ds.xml.gz")
     assert (
@@ -130,7 +130,7 @@ def test_usgbenchmark_bad_data(dummy_benchmarks, missing_key):
     raw_data = json.loads(dummy_benchmarks.read_text())
     raw_data["benchmarks"][0].pop(missing_key)
     with pytest.raises(
-        BenchmarkError,
+        MetadataError,
         match=f"Failed to create Benchmark object from.*: '{missing_key}",
     ):
         Benchmark.from_dict(raw_data["benchmarks"][0])

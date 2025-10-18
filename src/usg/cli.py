@@ -174,18 +174,9 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
 
     example_profile = "cis_level1_server"
     for profile in sorted(usg.profiles.values(), key=lambda p: p.id):
-        is_latest = profile.latest_compatible_id is None and profile.benchmark.is_latest
+        is_latest = profile.latest_compatible_id is None and profile.benchmark.channel.is_latest
         if not args.all and not is_latest:
             continue
-
-        if profile.latest_compatible_id is not None:
-            version = usg.get_profile_by_id(profile.latest_compatible_id).benchmark.version
-            state = f"Superseded by {version}"
-        elif is_latest:
-            state = "Latest stable"
-            example_profile = profile.id
-        else:
-            state = "Maintenance"
         if args.machine_readable:
             print(":".join([  # noqa: FLY002
                 profile.id,
@@ -194,7 +185,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
                 profile.benchmark.product,
                 profile.benchmark.version,
                 profile.benchmark.id,
-                state,
+                profile.benchmark.state,
                 "latest" if is_latest else ""
                 "", "", "", "", "", "" # reserved
                 ]))
@@ -205,7 +196,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
                     profile.id,
                     f"{profile.benchmark.benchmark_type}/{profile.benchmark.product}",
                     profile.benchmark.version,
-                    state,
+                    profile.benchmark.state,
                 )
             )
     if not args.machine_readable:
@@ -266,10 +257,10 @@ def print_info_benchmark(profile: Profile) -> None:
     """Print info about benchmark."""
     benchmark = profile.benchmark
     profiles = "\n".join([f"- {p}" for p in benchmark.profiles])
-    state = "Latest stable" if benchmark.is_latest else "Maintanance (critical patches only)"
+    state = "Latest stable" if benchmark.channel.is_latest else "Maintanance (critical patches only)"
 
     release_date = datetime.datetime.fromtimestamp(
-        benchmark.release_timestamp,
+        benchmark.channel.release_timestamp,
         datetime.timezone.utc
         ).isoformat()
     for k, v in [
@@ -279,7 +270,7 @@ def print_info_benchmark(profile: Profile) -> None:
         ("State", state),
         ("Description", benchmark.description.strip()),
         ("Release date", release_date),
-        ("Release notes", benchmark.release_notes_url),
+        ("Release notes", benchmark.channel.release_notes_url),
         ("USG benchmark ID", benchmark.id),
         ("Reference", benchmark.reference_url),
     ]:

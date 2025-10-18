@@ -34,7 +34,7 @@ from usg.exceptions import (
     ProfileNotFoundError,
     USGError,
 )
-from usg.models import Benchmark, Benchmarks, Profile, TailoringFile
+from usg.models import Benchmark, Profile, Profiles, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
 from usg.utils import check_perms, gunzip_file, verify_integrity
 
@@ -97,74 +97,9 @@ class USG:
 
         check_perms(self._state_dir, is_dir=True)
 
-        self._benchmarks = Benchmarks.from_json(self._benchmark_metadata_path)
+        self._profiles = Profiles.from_json(self._benchmark_metadata_path)
         self._timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")  # noqa: DTZ005
-        self._profiles = {}
 
-        def get_profile_id(profile_cac_id: str, product: str, version: str) -> str:
-            # remove product if default and remove trailing .0 in version
-            short_version = version.lower().removesuffix(".0").removesuffix(".0")
-            short_id = f"{profile_cac_id}-{short_version}"
-            if product != constants.DEFAULT_PRODUCT:
-                short_id = f"{product}-{short_id}"
-            return short_id
-
-        for benchmark in self._benchmarks.values():
-            for profile_id_OLD, legacy_id_OLD in benchmark.profiles.items():
-
-                legacy_ids = []
-
-                # add original profile id-s to legacy ids if version of benchmark is initial
-                if benchmark.tailoring_version == 1:
-                    legacy_ids.append(profile_id_OLD)
-                    if legacy_id_OLD:
-                        legacy_ids.append(legacy_id_OLD)
-
-                profile_id = (
-                    get_profile_id(profile_id_OLD, benchmark.product, benchmark.version)
-                )
-                profile = Profile(
-                    id=profile_id,
-                    cac_id=profile_id_OLD,
-                    legacy_ids=legacy_ids,
-                    benchmark=benchmark,
-                    latest_compatible_id=None,
-                    latest_breaking_id=None,
-                    tailoring_file=None,
-                    extends_id=None,
-                    )
-                self._profiles[profile_id] = profile
-
-        for profile in self._profiles.values():
-            # add superseded profile versions
-            for compatible_version in profile.benchmark.compatible_versions:
-                compatible_profile_id = (
-                    get_profile_id(
-                        profile.cac_id,
-                        profile.benchmark.product,
-                        compatible_version
-                        )
-                )
-                self._profiles[compatible_profile_id].latest_compatible_id = profile.id
-
-            # add latest breaking if exists
-            if profile.benchmark.breaking_upgrade_path:
-                latest_breaking_id = (
-                    get_profile_id(
-                        profile.cac_id,
-                        profile.benchmark.product,
-                        profile.benchmark.breaking_upgrade_path[-1]
-                        )
-                )
-                # the latest breaking benchmark doesn't necessarily have this profile
-                if latest_breaking_id in self._profiles:
-                    profile.latest_breaking_id = latest_breaking_id
-
-
-    @property
-    def benchmarks(self) -> Benchmarks:
-        """Getter for benchmarks."""
-        return self._benchmarks
 
     @property
     def profiles(self) -> dict[str, Profile]:
@@ -209,7 +144,7 @@ class USG:
         if profile_id in self._profiles:
             return self._profiles[profile_id]
 
-        matching = [p for p in self._profiles.values() if profile_id in p.legacy_ids]
+        matching = [p for p in self._profiles.values() if profile_id in p.alias_ids]
         try:
             return matching[0]
         except IndexError:
@@ -249,7 +184,7 @@ class USG:
         logger.debug(f"Initializing Openscap backend for {benchmark.id}")
         logger.debug(f"Working directory: {work_dir}")
 
-        ds_gz_file = benchmark.data_files["datastream_gz"]
+        ds_gz_file = benchmark.channel.data_files["datastream_gz"]
         ds_gz_path = self._benchmark_metadata_path.parent / ds_gz_file.rel_path
 
         check_perms(ds_gz_path)
