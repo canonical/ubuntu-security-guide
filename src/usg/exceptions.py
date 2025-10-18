@@ -25,7 +25,7 @@ class ProfileNotFoundError(USGError):
     """Requested profile cannot be found."""
 
 
-class BenchmarkError(USGError):
+class MetadataError(USGError):
     """Invalid benchmark data."""
 
 
