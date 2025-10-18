@@ -270,11 +270,11 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
         latest_version_in_channel = latest_release_in_channel["benchmark_data"]["version"]
         latest_benchmark_id_in_channel = f"{channel_id}-{latest_version_in_channel}"
 
-        benchmark["state"] = "Latest"
+        benchmark["state"] = "Latest Stable"
         # Benchmark is superseded by a newer release in same channel
         if benchmark_id != latest_benchmark_id_in_channel:
             benchmark["latest_compatible_id"] = latest_benchmark_id_in_channel
-            benchmark["state"] = "Superseded"
+            benchmark["state"] = f"Superseded by {latest_version_in_channel}"
 
         # Benchmark is not in latest channel (maintenance mode)
         if tailoring_version != latest_tailoring:
