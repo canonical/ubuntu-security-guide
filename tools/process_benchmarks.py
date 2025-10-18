@@ -210,7 +210,7 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
             if release == releases_in_channel[-1] or \
                 benchmark_version != releases_in_channel[i+1]["benchmark_data"]["version"]:
 
-                b_data = {
+                benchmark = {
                     "id": benchmark_id,
                     "channel_id": channel_id,
                     "benchmark_type": benchmark_type,
@@ -221,85 +221,103 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
                     "latest_compatible_id": None,
                     "state": None,
                 }
-                b_data.update(release["benchmark_data"])
-                assert list(b_data["profiles"]) == release_channels[channel_id]["cac_profiles"]
+                benchmark.update(release["benchmark_data"])
+                assert list(benchmark["profiles"]) == release_channels[channel_id]["cac_profiles"]
                 assert benchmark_id not in benchmarks
 
-                benchmarks[benchmark_id] = b_data
+                benchmarks[benchmark_id] = benchmark
 
                 # add backreference to channel object
                 release_channels[channel_id]["benchmark_ids"].append(benchmark_id)
 
                 # get profiles and store them in 'profiles'
-                for cac_profile_id in b_data["profiles"]:
-                    profile_id = f"{benchmark_id}_{cac_profile_id}"
+                for cac_profile_id in benchmark["profiles"]:
+                    profile_id = f"{cac_profile_id}-{benchmark_version.lower()}"
+                    if "ubuntu" not in product:
+                        profile_id = f"{product}_{profile_id}"
+
                     assert profile_id not in profiles
+
+                    # add original profile id-s to alias ids if initial version of benchmark
+                    # to keep beackwards compatibility
+                    alias_ids = []
+                    if benchmark["tailoring_version"] == 1:
+                        alias_ids.append(cac_profile_id)
+                        # also add 'disa_stig' which is legacy name for stig
+                        if cac_profile_id == "stig":
+                            alias_ids.append("disa_stig")
+
                     profile = {
                         "id": profile_id,
                         "cac_id": cac_profile_id,
+                        "alias_ids": alias_ids,
                         "benchmark_id": benchmark_id,
                         "latest_breaking_id": None,
                         "latest_compatible_id": None,
                     }
                     profiles[profile_id] = profile
 
+                    # add backreference to benchmark
+                    benchmarks[benchmark_id]["profiles"][cac_profile_id] = profile_id
 
-    # Get relationships and states (latest_compatible_id, latest_breaking_id, maintenance/superseded/latest)
-    for benchmark_id, b_data in benchmarks.items():
 
-        channel_id = b_data["channel_id"]
+    # Get latest compatible and breaking versions of benchmarks
+    for benchmark_id, benchmark in benchmarks.items():
+
+        channel_id = benchmark["channel_id"]
         tailoring_version = release_channels[channel_id]["tailoring_version"]
         latest_release_in_channel = releases_by_channels[tailoring_version][-1]
         latest_version_in_channel = latest_release_in_channel["benchmark_data"]["version"]
         latest_benchmark_id_in_channel = f"{channel_id}-{latest_version_in_channel}"
 
-        b_data["state"] = "Latest"
+        benchmark["state"] = "Latest"
         # Benchmark is superseded by a newer release in same channel
         if benchmark_id != latest_benchmark_id_in_channel:
-            b_data["latest_compatible_id"] = latest_benchmark_id_in_channel
-            b_data["state"] = "Superseded"
+            benchmark["latest_compatible_id"] = latest_benchmark_id_in_channel
+            benchmark["state"] = "Superseded"
 
         # Benchmark is not in latest channel (maintenance mode)
         if tailoring_version != latest_tailoring:
-            b_data["latest_breaking_id"] = latest_benchmark_id
-            b_data["state"] = "Maintenance"  # overrides superseded
+            benchmark["latest_breaking_id"] = latest_benchmark_id
+            benchmark["state"] = "Maintenance"  # overrides superseded
 
-
+    # Get latest compatible and breaking versions of profiles
     for profile_id, profile in profiles.items():
         benchmark_id = profile["benchmark_id"]
-        b_data = benchmarks[benchmark_id]
+        benchmark = benchmarks[benchmark_id]
         cac_profile_id = profile["cac_id"]
 
         # Superseded benchmark. Profile is superseded by same superseding benchmark.
-        if b_data["latest_compatible_id"]:
-            superseding_benchmark_id = benchmarks[b_data["latest_compatible_id"]]["id"]
-            superseding_profile_id = f"{superseding_benchmark_id}_{cac_profile_id}"
+        if benchmark["latest_compatible_id"]:
+            superseding_benchmark = benchmarks[benchmark["latest_compatible_id"]]
+            superseding_profile_id = superseding_benchmark["profiles"][cac_profile_id]
             assert superseding_profile_id in profiles
             profile["latest_compatible_id"] = superseding_profile_id
 
         # Find latest breaking profile via the most latest benchmark which contains the profile
-        latest_breaking_benchmark_id = None
+        latest_breaking_benchmark = None
         # Latest channel (corresponding benchmark has no latest_breaking_id candidate)
-        if b_data["latest_breaking_id"] is None:
-            latest_breaking_benchmark_id = None
+        if benchmark["latest_breaking_id"] is None:
+            latest_breaking_benchmark = None
         # Older channel (and the latest benchmark contains the profile id)
-        elif cac_profile_id in benchmarks[b_data["latest_breaking_id"]]["profiles"]:
-            latest_breaking_benchmark_id = b_data["latest_breaking_id"]
+        elif cac_profile_id in benchmarks[benchmark["latest_breaking_id"]]["profiles"]:
+            latest_breaking_benchmark = benchmarks[benchmark["latest_breaking_id"]]
         # Older channel (and the latest benchmark doesn't contain the profile id)
         # Find the latest benchmark which contains this profile
         else:
-            tailoring_version = b_data["tailoring_version"]
-            for b_data2 in benchmarks.values():
-                tailoring_version2 = b_data2["tailoring_version"]
+            tailoring_version = benchmark["tailoring_version"]
+            for benchmark2 in benchmarks.values():
+                tailoring_version2 = benchmark2["tailoring_version"]
 
                 if tailoring_version2 > tailoring_version and \
-                      b_data2["latest_compatible_id"] is None and \
-                      cac_profile_id in b_data2["profiles"]:
+                      benchmark2["latest_compatible_id"] is None and \
+                      cac_profile_id in benchmark2["profiles"]:
                     tailoring_version = tailoring_version2
-                    latest_breaking_benchmark_id = b_data2["id"]
+                    latest_breaking_benchmark = benchmark2
 
-        if latest_breaking_benchmark_id:
-            latest_breaking_id = f"{latest_breaking_benchmark_id}_{cac_profile_id}"
+        if latest_breaking_benchmark:
+            print(latest_breaking_benchmark)
+            latest_breaking_id = latest_breaking_benchmark["profiles"][cac_profile_id]
             assert latest_breaking_id in profiles
         else:
             latest_breaking_id = None
@@ -622,15 +640,12 @@ def process_benchmarks(
     logger.info(f"Schema version is: {SCHEMA_VERSION}")
     benchmarks_json_data = {
         "version": SCHEMA_VERSION,
-        "benchmarks": [],
-    }
-
-    # parse and process benchmark yaml files
-    data = {
         "profiles": [],
         "benchmarks": [],
         "release_channels": [],
     }
+
+    # parse and process benchmark yaml files
     for benchmark_yaml in sorted(benchmark_yaml_files):
         logger.info(f"Processing yaml - {benchmark_yaml}")
         with Path(benchmark_yaml).open() as f:
@@ -651,16 +666,16 @@ def process_benchmarks(
 
         # get available profiles,benchmarks,channels
         profiles, benchmarks, release_channels = _process_yaml(yaml_data)
-        data["profiles"].extend(profiles.values())
-        data["benchmarks"].extend(benchmarks.values())
-        data["release_channels"].extend(release_channels.values())
+        benchmarks_json_data["profiles"].extend(profiles.values())
+        benchmarks_json_data["benchmarks"].extend(benchmarks.values())
+        benchmarks_json_data["release_channels"].extend(release_channels.values())
 #        _log_upgrade_paths(active_releases)
 
     # build data for active releases
     with tempfile.TemporaryDirectory() as tmp_dst_dir:
         logger.info(f"Building benchmark data in {tmp_dst_dir}")
         _build_active_releases(
-            data["release_channels"],
+            benchmarks_json_data["release_channels"],
             cac_repo_dir,
             tailoring_templates_dir,
             Path(tmp_dst_dir),
@@ -670,7 +685,6 @@ def process_benchmarks(
         shutil.copytree(tmp_dst_dir, out_dir, dirs_exist_ok=True)
 
     # update benchmark metadata and store in json
-    benchmarks_json_data.update(data)
     json_output = out_dir / OUTPUT_JSON_NAME
     json_output.write_text(
         json.dumps(benchmarks_json_data, indent=2) + "\n"
