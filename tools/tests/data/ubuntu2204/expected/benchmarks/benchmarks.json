@@ -1,25 +1,88 @@
 {
   "version": 1,
+  "profiles": [
+    {
+      "id": "cis_level1_server-v1.0.0",
+      "cac_id": "cis_level1_server",
+      "alias_ids": [
+        "cis_level1_server"
+      ],
+      "benchmark_id": "ubuntu2204_CIS_1-v1.0.0",
+      "latest_breaking_id": null,
+      "latest_compatible_id": null
+    },
+    {
+      "id": "cis_level2_server-v1.0.0",
+      "cac_id": "cis_level2_server",
+      "alias_ids": [
+        "cis_level2_server"
+      ],
+      "benchmark_id": "ubuntu2204_CIS_1-v1.0.0",
+      "latest_breaking_id": null,
+      "latest_compatible_id": null
+    },
+    {
+      "id": "cis_level1_workstation-v1.0.0",
+      "cac_id": "cis_level1_workstation",
+      "alias_ids": [
+        "cis_level1_workstation"
+      ],
+      "benchmark_id": "ubuntu2204_CIS_1-v1.0.0",
+      "latest_breaking_id": null,
+      "latest_compatible_id": null
+    },
+    {
+      "id": "cis_level2_workstation-v1.0.0",
+      "cac_id": "cis_level2_workstation",
+      "alias_ids": [
+        "cis_level2_workstation"
+      ],
+      "benchmark_id": "ubuntu2204_CIS_1-v1.0.0",
+      "latest_breaking_id": null,
+      "latest_compatible_id": null
+    }
+  ],
   "benchmarks": [
     {
+      "id": "ubuntu2204_CIS_1-v1.0.0",
+      "channel_id": "ubuntu2204_CIS_1",
       "benchmark_type": "CIS",
       "product": "ubuntu2204",
       "product_long": "Ubuntu 22.04 LTS (Jammy Jellyfish)",
+      "channel_number": 1,
+      "latest_breaking_id": null,
+      "latest_compatible_id": null,
+      "state": "Latest stable",
       "version": "v1.0.0",
       "profiles": {
-        "cis_level1_server": {},
-        "cis_level2_server": {},
-        "cis_level1_workstation": {},
-        "cis_level2_workstation": {}
+        "cis_level1_server": "cis_level1_server-v1.0.0",
+        "cis_level2_server": "cis_level2_server-v1.0.0",
+        "cis_level1_workstation": "cis_level1_workstation-v1.0.0",
+        "cis_level2_workstation": "cis_level2_workstation-v1.0.0"
       },
       "description": "ComplianceAsCode implementation of CIS Ubuntu 22.04 LTS v1.0.0 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/pull/72",
-      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
-      "tailoring_version": 1,
-      "benchmark_id": "ubuntu2204_CIS_1",
-      "compatible_versions": [],
-      "breaking_upgrade_path": [],
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
+    }
+  ],
+  "release_channels": [
+    {
+      "id": "ubuntu2204_CIS_1",
+      "benchmark_ids": [
+        "ubuntu2204_CIS_1-v1.0.0"
+      ],
+      "channel_number": 1,
       "is_latest": true,
+      "cac_product": "ubuntu2204",
+      "cac_profiles": [
+        "cis_level1_server",
+        "cis_level2_server",
+        "cis_level1_workstation",
+        "cis_level2_workstation"
+      ],
+      "release_tag": "jammy-cis-1.12",
+      "release_commit": "02edc5a1bcbf89a6cb7329e13de0aee3717aedab",
+      "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/pull/72",
       "release_timestamp": 1,
       "data_files": {
         "datastream_gz": {
@@ -31,19 +94,19 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2204_CIS_1/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "f057cfcf05029f7eda4eccc988a650e9fece6a014fc6cb56a91568dbea32dbb8"
+          "sha256": "8e21dbf26af2cca82677762a0538d6e80a2c9d7460c0f0ccfbd452a4c5fe8515"
         },
         "cis_level2_server": {
           "path": "ubuntu2204_CIS_1/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "c71cfb7a7c96abc935303c7ed5479c8871ab0cd5aecc74dda340b48bb6b0e382"
+          "sha256": "b853d52b5b0f74e83526572140a2d86c530e3dd4306f1e51ce15dd1958f4a7b2"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2204_CIS_1/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "2141ff47dc8c47a980b60d2528443275860820b842fa51ec4379c4c739137cc4"
+          "sha256": "e53604488f0b3471cb4077f53e8a4fbfad4e65b17981aee9d87f4445bb5121bf"
         },
         "cis_level2_workstation": {
           "path": "ubuntu2204_CIS_1/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "187deba578498e03169703d712e5fd30c74e32722b6470d2001d2299e752b997"
+          "sha256": "d4035350c83f06a571c8c86dda9bb814609d9e61414d28726f7a30a35ac35c48"
         }
       }
     }
