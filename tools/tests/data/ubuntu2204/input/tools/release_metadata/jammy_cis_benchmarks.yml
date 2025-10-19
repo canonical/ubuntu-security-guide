@@ -6,8 +6,7 @@ general:
 benchmark_releases:
   - cac_tag: jammy-cis-1.12
     parent_tag: 
-    breaking_release: False
-    tailoring_version: 1
+    release_channel: 1
     cac_commit: 02edc5a1bcbf89a6cb7329e13de0aee3717aedab
     usg_version: 22.04.12
     benchmark_data:
