@@ -25,29 +25,21 @@ def test_tailoringfile_load(tmp_path):
     tailoring_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
   <benchmark href="/usr/share/usg-benchmarks/ubuntu2404_CIS_1"/>
-  <Profile id="xccdf_org.ssgproject.content_profile_test">
+  <Profile id="xccdf_org.ssgproject.content_profile_test" extends="xccdf_org.ssgproject.content_profile_cis_level1_server">
     <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
   </Profile>
 </Tailoring>
 """
     tailoring_path = tmp_path / "tailoring.xml"
     tailoring_path.write_text(tailoring_xml, encoding="utf-8")
-    tailoring = TailoringFile.from_file(tailoring_path)
-    assert tailoring is not None
-    assert tailoring.tailoring_file == tailoring_path
-    assert tailoring.profile.profile_id == "xccdf_org.ssgproject.content_profile_test"
-    assert (
-        tailoring.profile.profile_legacy_id
-        == "xccdf_org.ssgproject.content_profile_test"
-    )
-    assert tailoring.profile.benchmark_id == "ubuntu2404_CIS_1"
-    assert tailoring.profile.tailoring_file == tailoring_path
-    assert tailoring.benchmark_id == "ubuntu2404_CIS_1"
-
+    channel_id, profile_id, base_profile_id = TailoringFile.parse_tailoring_file(tailoring_path)
+    assert channel_id == "ubuntu2404_CIS_1"
+    assert profile_id == "test"
+    assert base_profile_id == "cis_level1_server"
 
 def test_tailoringfile_missing_file():
     with pytest.raises(TailoringFileError):
-        TailoringFile.from_file("missing.xml")
+        TailoringFile.parse_tailoring_file("missing.xml")
 
 
 def test_tailoringfile_invalid_type(tmp_path):
@@ -55,7 +47,7 @@ def test_tailoringfile_invalid_type(tmp_path):
     tailoring_path = tmp_path / "tailoring.json"
     tailoring_path.write_text(tailoring_json, encoding="utf-8")
     with pytest.raises(TailoringFileError):
-        TailoringFile.from_file(tailoring_path)
+        TailoringFile.parse_tailoring_file(tailoring_path)
 
 
 def test_tailoringfile_parse_legacy_cis():
@@ -63,14 +55,15 @@ def test_tailoringfile_parse_legacy_cis():
     tailoring_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
   <benchmark href="/usr/share/ubuntu-scap-security-guides/1/benchmarks/ssg-ubuntu2404-xccdf.xml"/>
-  <Profile id="xccdf_org.ssgproject.content_profile_cis_level1_server_test">
-    <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
+  <Profile id="xccdf_org.ssgproject.content_profile_cis_level1_server_test" extends="xccdf_org.ssgproject.content_profile_cis_level1_server">
+      <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
   </Profile>
 </Tailoring>
 """
-    benchmark_id, profile_id = TailoringFile._parse_tailoring_scap(tailoring_xml)
-    assert benchmark_id == "ubuntu2404_CIS_1"
-    assert profile_id == "xccdf_org.ssgproject.content_profile_cis_level1_server_test"
+    channel_id, profile_id, base_profile_id = TailoringFile._parse_tailoring_scap(tailoring_xml)
+    assert channel_id == "ubuntu2404_CIS_1"
+    assert profile_id == "cis_level1_server_test"
+    assert base_profile_id == "cis_level1_server"
 
 
 def test_tailoringfile_parse_legacy_stig():
@@ -78,15 +71,15 @@ def test_tailoringfile_parse_legacy_stig():
     tailoring_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
   <benchmark href="/usr/share/ubuntu-scap-security-guides/2/benchmarks/ssg-ubuntu2404-xccdf.xml"/>
-  <Profile id="xccdf_org.ssgproject.content_profile_stig_test">
+  <Profile id="xccdf_org.ssgproject.content_profile_stig_test" extends="xccdf_org.ssgproject.content_profile_stig">
     <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
   </Profile>
 </Tailoring>
 """
-    benchmark_id, profile_id = TailoringFile._parse_tailoring_scap(tailoring_xml)
-    assert benchmark_id == "ubuntu2404_STIG_2"
-    assert profile_id == "xccdf_org.ssgproject.content_profile_stig_test"
-
+    channel_id, profile_id, base_profile_id = TailoringFile._parse_tailoring_scap(tailoring_xml)
+    assert channel_id == "ubuntu2404_STIG_2"
+    assert profile_id == "stig_test"
+    assert base_profile_id == "stig"
 
 def test_tailoringfile_parse_invalid_xml():
     # Test that invalid XML raises an error
@@ -145,7 +138,7 @@ def test_tailoringfile_parse_no_benchmark():
     # Test that no benchmark raises an error
     tailoring_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
-  <Profile id="xccdf_org.ssgproject.content_profile_test">
+  <Profile id="xccdf_org.ssgproject.content_profile_cis_level1_server_test" extends="xccdf_org.ssgproject.content_profile_cis_level1_server">
     <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
   </Profile>
 </Tailoring>
@@ -159,7 +152,7 @@ def test_tailoringfile_parse_no_benchmark_id_or_href():
     tailoring_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
   <benchmark/>
-  <Profile id="xccdf_org.ssgproject.content_profile_test"/>
+  <Profile id="xccdf_org.ssgproject.content_profile_test" extends="xccdf_org.ssgproject.content_profile_cis_level1_server"/>
 </Tailoring>
 """
     with pytest.raises(TailoringFileError, match="Missing benchmark.href"):
@@ -171,7 +164,7 @@ def test_tailoringfile_parse_unsupported_legacy_profile_id():
     tailoring_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
   <benchmark href="/usr/share/ubuntu-scap-security-guides/2/benchmarks/ssg-ubuntu2404-xccdf.xml"/>
-  <Profile id="xccdf_org.ssgproject.content_profile_unsupported_stig_test">
+  <Profile id="xccdf_org.ssgproject.content_profile_unsupported_stig_test" extends="xccdf_org.ssgproject.content_profile_stig">
     <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
   </Profile>
 </Tailoring>
@@ -188,7 +181,7 @@ def test_tailoringfile_parse_malformed_benchmark_href():
     tailoring_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
   <benchmark href="missing.xml"/>
-  <Profile id="xccdf_org.ssgproject.content_profile_test"/>
+  <Profile id="xccdf_org.ssgproject.content_profile_test" extends="xccdf_org.ssgproject.content_profile_cis_level1_server"/>
 </Tailoring>
 """
     with pytest.raises(TailoringFileError, match="Unrecognized benchmark.href"):
