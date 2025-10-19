@@ -197,18 +197,18 @@ class Profile:
             ) from e
 
 
-
-class Profiles(dict[str, Profile]):
-    """Collection of profiles in form of a dictionary.
-
-    Keys are profile IDs and values are Profile objects.
-    """
+@dataclass
+class Metadata:
+    """Benchmark metadata (profiles, benchmarks, channels)."""
 
     version: int
+    profiles: dict[str, Any]
+    benchmarks: dict[str, Any]
+    channels: dict[str, Any]
 
     @classmethod
-    def from_json(cls, json_path: str | Path) -> "Profiles":
-        """Parse JSON metadata file and create Profiles object.
+    def from_json(cls, json_path: str | Path) -> "Metadata":
+        """Parse JSON metadata file and create Metadata object.
 
         Args:
             json_path: path to JSON file containing profile and benchmark metadata
@@ -273,10 +273,18 @@ class Profiles(dict[str, Profile]):
             profile = Profile.from_data(benchmark, profile_data)
             profiles[profile_id] = profile
 
-        obj = cls(profiles)
-        obj.version = json_data["version"]
-        logger.debug(f"Loaded {len(obj)} benchmarks. Version={obj.version}")
-        return obj
+        metadata = cls(
+            version=json_data["version"],
+            profiles=profiles,
+            benchmarks=benchmarks,
+            channels=release_channels
+            )
+
+        logger.debug(
+            f"Loaded {len(profiles)} profiles from {len(benchmarks)} benchmarks. "
+            f"Version={metadata.version}"
+            )
+        return metadata
 
 
 @dataclass(frozen=True)
