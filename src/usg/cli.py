@@ -397,7 +397,8 @@ def _check_profile_updates(usg: USG, profile: Profile) -> None:
             f"\nNOTICE: A new version of this profile is available: "
             f"{profile.latest_breaking_id}\n\n"
             )
-        time.sleep(3)
+        if sys.stdout.isatty():
+            time.sleep(3)
 
 
 def init_logging(log_path: Path, debug: bool) -> None:
