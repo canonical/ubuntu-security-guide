@@ -55,7 +55,7 @@ class ReleaseChannel:
 
     id: str
     benchmark_ids: list[str]
-    tailoring_version: int
+    channel_number: int
     is_latest: bool
     release_tag: str
     release_commit: str
@@ -81,7 +81,7 @@ class ReleaseChannel:
             return cls(
                 id=data["id"],
                 benchmark_ids=data["benchmark_ids"],
-                tailoring_version=data["tailoring_version"],
+                channel_number=data["channel_number"],
                 is_latest=data["is_latest"],
                 release_tag=data["release_tag"],
                 release_commit=data["release_commit"],
@@ -96,16 +96,41 @@ class ReleaseChannel:
             ) from e
 
 
+    def get_tailoring_file_relative_path(self, cac_profile_id: str) -> Path:
+        """Return relative tailoring file path by profile id.
+
+        Args:
+            cac_profile_id: CaC profile id (e.g. cis_level1_server)
+
+        Returns:
+            relative path to tailoring file
+
+        Raises:
+            ProfileNotFoundError: if the profile id is not found in the benchmark
+                                  release channel
+
+        """
+        logger.debug(f"Getting tailoring file relative path for profile {cac_profile_id}")
+        try:
+            path = Path(self.tailoring_files[cac_profile_id]["path"])
+            logger.debug(f"Tailoring file relative path: {path}")
+            return path
+        except KeyError as e:
+            raise ProfileNotFoundError(
+                f"Profile {cac_profile_id} not found in channel {self.id}"
+            ) from e
+
+
 @dataclass(frozen=True)
 class Benchmark:
     """Immutable representation of a benchmark entry in benchmarks.json."""
 
     id: str
-    channel: ReleaseChannel
     benchmark_type: BenchmarkType
     product: str
     product_long: str
-    tailoring_version: int
+    channel: ReleaseChannel
+    channel_number: int
     version: str
     profiles: dict[str, dict]
     description: str
@@ -121,11 +146,11 @@ class Benchmark:
         try:
             return cls(
                 id=data["id"],
-                channel=channel,
                 benchmark_type=data["benchmark_type"],
                 product=data["product"],
                 product_long=data["product_long"],
-                tailoring_version=data["tailoring_version"],
+                channel=channel,
+                channel_number=data["channel_number"],
                 version=data["version"],
                 profiles=data["profiles"],
                 description=data["description"],
@@ -137,29 +162,6 @@ class Benchmark:
         except (KeyError, ValueError, TypeError) as e:
             raise MetadataError(
                 f"Failed to create Benchmark object: {e}"
-            ) from e
-
-    def get_tailoring_file_relative_path(self, profile_id: str) -> Path:
-        """Return relative tailoring file path by profile id.
-
-        Args:
-            profile_id: profile id (e.g. cis_level1_server)
-
-        Returns:
-            relative path to tailoring file
-
-        Raises:
-            ProfileNotFoundError: if the profile id is not found in the benchmark
-
-        """
-        logger.debug(f"Getting tailoring file relative path for profile {profile_id}")
-        try:
-            path = Path(self.channel.tailoring_files[profile_id]["path"])
-            logger.debug(f"Tailoring file relative path: {path}")
-            return path
-        except KeyError as e:
-            raise ProfileNotFoundError(
-                f"Profile {profile_id} not found in benchmark {self.id}"
             ) from e
 
 
@@ -263,7 +265,7 @@ class Metadata:
             profile_id = profile_data["id"]
             if profile_id in profiles:
                 raise MetadataError(
-                    f"Malformed dataset - duplicate benchmark ID: {profile_id}"
+                    f"Malformed dataset - duplicate profile ID: {profile_id}"
                 )
             profile_data.update({
                 "tailoring_file": None,
@@ -368,7 +370,7 @@ class TailoringFile:
                 "Could not find a valid benchmark reference in tailoring file"
             )
 
-        tailoring_version = legacy_fields.group(1)
+        channel_number = legacy_fields.group(1)
         product = legacy_fields.group(2)
 
         if "profile_cis_" in profile_id:
@@ -380,7 +382,7 @@ class TailoringFile:
                 f"Cannot infer benchmark type from profile {profile_id}"
             )
 
-        benchmark_id = f"{product}_{benchmark_type}_{tailoring_version}"
+        benchmark_id = f"{product}_{benchmark_type}_{channel_number}"
         logger.debug(
             f"Extracted benchmark id from legacy tailoring file: {benchmark_id}"
         )
