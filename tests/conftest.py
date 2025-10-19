@@ -19,7 +19,7 @@ import pytest
 import importlib.resources
 
 @pytest.fixture(scope="session")
-def dummy_benchmarks():
+def test_metadata():
     base_test_data_dir = importlib.resources.files("tools") / "tests/data"
     test_metadata_file = (
         base_test_data_dir / "ubuntu2404/expected/benchmarks/benchmarks.json"
