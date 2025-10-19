@@ -6,8 +6,7 @@ general:
 benchmark_releases:
   - cac_tag: ubuntu2404_STIG_V1R3_24.04.7
     parent_tag: ubuntu2404_STIG_V1R2_24.04.6
-    breaking_release: False
-    tailoring_version: 2
+    release_channel: 2
     cac_commit: hash3
     cac_branch: noble-stig-v1r3
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -15,17 +14,15 @@ benchmark_releases:
     benchmark_data:
       version: V1R3
       profiles:
-          stig:
-            legacy_id: disa_stig
-      description: |
+          stig: {}
+      description: |-
           ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R3 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://public.cyber.mil/stigs/downloads/
 
   - cac_tag: ubuntu2404_STIG_V1R2_24.04.6
     parent_tag: ubuntu2404_STIG_V1R1_24.04.5
-    breaking_release: True
-    tailoring_version: 2
+    release_channel: 2
     cac_commit: hash2
     cac_branch: noble-stig-v1r2
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -33,17 +30,15 @@ benchmark_releases:
     benchmark_data:
       version: V1R2
       profiles:
-          stig:
-            legacy_id: disa_stig
-      description: |
+          stig: {}
+      description: |-
           ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R2 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://public.cyber.mil/stigs/downloads/
 
   - cac_tag: ubuntu2404_STIG_V1R1_24.04.5
     parent_tag: 
-    breaking_release: False
-    tailoring_version: 1
+    release_channel: 1
     cac_commit: hash1
     cac_branch: noble-stig-v1r1
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -51,9 +46,8 @@ benchmark_releases:
     benchmark_data:
       version: V1R1
       profiles:
-          stig:
-            legacy_id: disa_stig
-      description: |
+          stig: {}
+      description: |-
           ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://public.cyber.mil/stigs/downloads/

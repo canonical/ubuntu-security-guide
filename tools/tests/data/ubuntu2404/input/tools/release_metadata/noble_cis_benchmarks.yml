@@ -6,8 +6,7 @@ general:
 benchmark_releases:
   - cac_tag: ubuntu2404_CIS_v1.0.1_24.04.9
     parent_tag: ubuntu2404_CIS_v1.0.1_24.04.6
-    breaking_release: False
-    tailoring_version: 2
+    release_channel: 2
     cac_commit: hash9
     cac_branch: noble-cis-v1.0.1
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -19,15 +18,14 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: ubuntu2404_CIS_v2.0.0_24.04.8
     parent_tag: ubuntu2404_CIS_v2.0.0_24.04.7
-    breaking_release: False
-    tailoring_version: 3
+    release_channel: 3
     cac_commit: hash8
     cac_branch: noble-cis-v2.0.0
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -41,15 +39,14 @@ benchmark_releases:
             # remove a profile from the latest release as a test
             # for missing profiles in newer releases (e.g. EC2)
             #cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: ubuntu2404_CIS_v2.0.0_24.04.7
     parent_tag: ubuntu2404_CIS_v1.0.1_24.04.6
-    breaking_release: True
-    tailoring_version: 3
+    release_channel: 3
     cac_commit: hash7
     cac_branch: noble-cis-v2.0.0
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -61,15 +58,14 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: ubuntu2404_CIS_v1.0.1_24.04.6
     parent_tag: ubuntu2404_CIS_v1.0.1_24.04.5
-    breaking_release: False
-    tailoring_version: 2
+    release_channel: 2
     cac_commit: hash6
     cac_branch: noble-cis-v1.0.1
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -81,15 +77,14 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: ubuntu2404_CIS_v1.0.1_24.04.5
     parent_tag: ubuntu2404_CIS_v1.0.0.usg1_24.04.4
-    breaking_release: False
-    tailoring_version: 2
+    release_channel: 2
     cac_commit: hash5
     cac_branch: noble-cis-v1.0.1
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -101,15 +96,14 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: ubuntu2404_CIS_v1.0.0.usg1_24.04.4
     parent_tag: ubuntu2404_CIS_v1.0.0.usg1_24.04.3
-    breaking_release: False
-    tailoring_version: 2
+    release_channel: 2
     cac_commit: hash4
     cac_branch: noble-cis-v1.0.0.usg1
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -121,15 +115,14 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: ubuntu2404_CIS_v1.0.0.usg1_24.04.3
     parent_tag: ubuntu2404_CIS_v1.0.0_24.04.2
-    breaking_release: True
-    tailoring_version: 2
+    release_channel: 2
     cac_commit: hash3
     cac_branch: noble-cis-v1.0.0.usg1
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -141,15 +134,14 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: ubuntu2404_CIS_v1.0.0_24.04.2
     parent_tag: ubuntu2404_CIS_v1.0.0_24.04.1
-    breaking_release: False
-    tailoring_version: 1
+    release_channel: 1
     cac_commit: hash2
     cac_branch: noble-cis-v1.0.0
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -161,15 +153,14 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: ubuntu2404_CIS_v1.0.0_24.04.1
     parent_tag: 
-    breaking_release: False
-    tailoring_version: 1
+    release_channel: 1
     cac_commit: hash1
     cac_branch: noble-cis-v1.0.0
     cac_release_gz_sha256: f20bb75f3648dae0b1587a7db712c3936b9f95814a53ac9e6173e9a569089c1d
@@ -181,7 +172,7 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/

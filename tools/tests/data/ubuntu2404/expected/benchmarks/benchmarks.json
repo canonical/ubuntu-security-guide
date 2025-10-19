@@ -164,7 +164,7 @@
       "benchmark_type": "CIS",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
-      "tailoring_version": 1,
+      "channel_number": 1,
       "latest_breaking_id": "ubuntu2404_CIS_3-v2.0.0",
       "latest_compatible_id": null,
       "state": "Maintenance",
@@ -175,7 +175,7 @@
         "cis_level1_workstation": "cis_level1_workstation-v1.0.0",
         "cis_level2_workstation": "cis_level2_workstation-v1.0.0"
       },
-      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.\n",
+      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
     },
@@ -185,7 +185,7 @@
       "benchmark_type": "CIS",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
-      "tailoring_version": 2,
+      "channel_number": 2,
       "latest_breaking_id": "ubuntu2404_CIS_3-v2.0.0",
       "latest_compatible_id": "ubuntu2404_CIS_2-v1.0.1",
       "state": "Maintenance",
@@ -196,7 +196,7 @@
         "cis_level1_workstation": "cis_level1_workstation-v1.0.0.usg1",
         "cis_level2_workstation": "cis_level2_workstation-v1.0.0.usg1"
       },
-      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.\n",
+      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
     },
@@ -206,7 +206,7 @@
       "benchmark_type": "CIS",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
-      "tailoring_version": 2,
+      "channel_number": 2,
       "latest_breaking_id": "ubuntu2404_CIS_3-v2.0.0",
       "latest_compatible_id": null,
       "state": "Maintenance",
@@ -217,7 +217,7 @@
         "cis_level1_workstation": "cis_level1_workstation-v1.0.1",
         "cis_level2_workstation": "cis_level2_workstation-v1.0.1"
       },
-      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.\n",
+      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
     },
@@ -227,17 +227,17 @@
       "benchmark_type": "CIS",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
-      "tailoring_version": 3,
+      "channel_number": 3,
       "latest_breaking_id": null,
       "latest_compatible_id": null,
-      "state": "Latest",
+      "state": "Latest stable",
       "version": "v2.0.0",
       "profiles": {
         "cis_level1_server": "cis_level1_server-v2.0.0",
         "cis_level2_server": "cis_level2_server-v2.0.0",
         "cis_level1_workstation": "cis_level1_workstation-v2.0.0"
       },
-      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.\n",
+      "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
     },
@@ -247,7 +247,7 @@
       "benchmark_type": "STIG",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
-      "tailoring_version": 1,
+      "channel_number": 1,
       "latest_breaking_id": "ubuntu2404_STIG_2-V1R3",
       "latest_compatible_id": null,
       "state": "Maintenance",
@@ -255,7 +255,7 @@
       "profiles": {
         "stig": "stig-v1r1"
       },
-      "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.\n",
+      "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://public.cyber.mil/stigs/downloads/"
     },
@@ -265,15 +265,15 @@
       "benchmark_type": "STIG",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
-      "tailoring_version": 2,
+      "channel_number": 2,
       "latest_breaking_id": null,
       "latest_compatible_id": "ubuntu2404_STIG_2-V1R3",
-      "state": "Superseded",
+      "state": "Superseded by V1R3",
       "version": "V1R2",
       "profiles": {
         "stig": "stig-v1r2"
       },
-      "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R2 benchmark.\n",
+      "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R2 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://public.cyber.mil/stigs/downloads/"
     },
@@ -283,15 +283,15 @@
       "benchmark_type": "STIG",
       "product": "ubuntu2404",
       "product_long": "Ubuntu 24.04 LTS (Noble Numbat)",
-      "tailoring_version": 2,
+      "channel_number": 2,
       "latest_breaking_id": null,
       "latest_compatible_id": null,
-      "state": "Latest",
+      "state": "Latest stable",
       "version": "V1R3",
       "profiles": {
         "stig": "stig-v1r3"
       },
-      "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R3 benchmark.\n",
+      "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R3 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
       "reference_url": "https://public.cyber.mil/stigs/downloads/"
     }
@@ -302,7 +302,7 @@
       "benchmark_ids": [
         "ubuntu2404_CIS_1-v1.0.0"
       ],
-      "tailoring_version": 1,
+      "channel_number": 1,
       "is_latest": false,
       "cac_product": "ubuntu2404",
       "cac_profiles": [
@@ -325,19 +325,19 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "386c01f422fdcb96b9486e1f4de2cfd607403c44cc496d48852b84b15f4dec6c"
+          "sha256": "40fdfe10a2bd09db8a4ff00f423da15d5dfe6abd7947f63d454858e61f838acb"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "7d85ac81bb538afb545471a711f6cd146bed1c48361ac17c33e3f357977cbef1"
+          "sha256": "e99ff55293caf4112cf8507136a8a50985386521314a09f8d02684acf2ee871c"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "50a06a982460a8e950486919f6a3d971575950cd1e686194478e237624e3f704"
+          "sha256": "a6ed77738a5e97bc152027f3790cbda92cc6f171ed6d620ec30fa2e7c05ac2f1"
         },
         "cis_level2_workstation": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "07945e518233510fadaf104efa2c882228d82868de0b45aedbd26cad92558392"
+          "sha256": "4848e8aa8da869dff3419e7c8b8dccf89fce094dd4b9af4af22a27232c03f6b9"
         }
       }
     },
@@ -347,7 +347,7 @@
         "ubuntu2404_CIS_2-v1.0.0.usg1",
         "ubuntu2404_CIS_2-v1.0.1"
       ],
-      "tailoring_version": 2,
+      "channel_number": 2,
       "is_latest": false,
       "cac_product": "ubuntu2404",
       "cac_profiles": [
@@ -370,19 +370,19 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "bed81e30f263afd4e9ddd629c7a36674ca3fa3e7e8cc2b106973d1e9e4827430"
+          "sha256": "d91b9fd28372d617b1e86af5a7fbadd9644708e40e1ca669062083181638d6d2"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "bd06094023e42ea3674212ad96d1e8f5fec90dc69971a7e10f3210e9ca5a32fb"
+          "sha256": "a47d4e557e7c3a3e0fa14f320a2550db2a9ed52766239e11fedb6bf56273b578"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "9a61ea58a45768e4e3987ee67a6088631f6c7ffbbe8fdb85bd8fec8e4adf6d70"
+          "sha256": "43954c3f8851858d10e436c1d947bec13bf1491412e14fd9c10104de008671be"
         },
         "cis_level2_workstation": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "57ebc1d67355395f3a3a8b8c091e321a948d67cb33b14ff4bea69477226247de"
+          "sha256": "68106821091b132721cc6e0d3f43db6fb7dd3b3403a07d06b0288c0e763ca7a1"
         }
       }
     },
@@ -391,7 +391,7 @@
       "benchmark_ids": [
         "ubuntu2404_CIS_3-v2.0.0"
       ],
-      "tailoring_version": 3,
+      "channel_number": 3,
       "is_latest": true,
       "cac_product": "ubuntu2404",
       "cac_profiles": [
@@ -413,15 +413,15 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "9af6954ce8e7919e3f47d3659b4d2420bd115eb9822cec008b7e2e2af751e00b"
+          "sha256": "17cf49e248d595712829c6d29f59fda08d26a8b1b60571c12993d7144122b2c1"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "e921494e57f2ce96f7fc881d7e5997a33b2bf5d4e01f12e62fd0cbcf562dc506"
+          "sha256": "3e74bdfbf075934e9f06ac2c39f8f181f9769f6f486a6c68bf7b128f83cdd605"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "f5e6381b6b9c82e4d519340d62680ba3ff15dd4281babdd0d4b618a87d18579d"
+          "sha256": "f745905551347a63e4134b33a3ab4313e3290fe8a7b3b1493af79917bf47429a"
         }
       }
     },
@@ -430,7 +430,7 @@
       "benchmark_ids": [
         "ubuntu2404_STIG_1-V1R1"
       ],
-      "tailoring_version": 1,
+      "channel_number": 1,
       "is_latest": false,
       "cac_product": "ubuntu2404",
       "cac_profiles": [
@@ -450,7 +450,7 @@
       "tailoring_files": {
         "stig": {
           "path": "ubuntu2404_STIG_1/tailoring/stig-tailoring.xml",
-          "sha256": "afb972228c7fafb6c84b4a53e5da24480f812221c5f6f3392cd3e7d5b84ca631"
+          "sha256": "a76157f82edcb81953b5bd9d1dbb300249ca8d75eb3b613a98d1e56593a27851"
         }
       }
     },
@@ -460,7 +460,7 @@
         "ubuntu2404_STIG_2-V1R2",
         "ubuntu2404_STIG_2-V1R3"
       ],
-      "tailoring_version": 2,
+      "channel_number": 2,
       "is_latest": true,
       "cac_product": "ubuntu2404",
       "cac_profiles": [
@@ -480,7 +480,7 @@
       "tailoring_files": {
         "stig": {
           "path": "ubuntu2404_STIG_2/tailoring/stig-tailoring.xml",
-          "sha256": "547468656592c00afe00e85e78c8b2b32cf33eb73e9e1ab416322767eda30776"
+          "sha256": "8cc81c293bfef3ec75acbef9a45283cef70ddb73583758fed684be19cd8279fb"
         }
       }
     }
