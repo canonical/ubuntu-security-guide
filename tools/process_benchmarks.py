@@ -18,7 +18,6 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 
 """Functions and CLI for processing USG benchmark releases."""
-from dataclasses import dataclass
 import sys
 
 if sys.version_info < (3,12):
@@ -316,7 +315,6 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
                     latest_breaking_benchmark = benchmark2
 
         if latest_breaking_benchmark:
-            print(latest_breaking_benchmark)
             latest_breaking_id = latest_breaking_benchmark["profiles"][cac_profile_id]
             assert latest_breaking_id in profiles
         else:
@@ -426,7 +424,8 @@ def _create_tailoring_file(
         datastream_build_path: Path,
         tailoring_template_path: Path,
         benchmark_id: str,
-        output_tailoring_path: Path
+        output_tailoring_path: Path,
+        release_timestamp: int
 ) -> None:
     # Generate and validate tailoring file
     if not profile_path.exists():
@@ -444,7 +443,8 @@ def _create_tailoring_file(
             datastream_build_path,
             tailoring_template_path,
             benchmark_id,
-            output_tailoring_path
+            output_tailoring_path,
+            release_timestamp
         )
         validate_tailoring_file(output_tailoring_path)
     except GenerateTailoringError as e:
@@ -565,7 +565,8 @@ def _build_active_releases(
                     datastream_build_path,
                     tailoring_template_path,
                     channel_id,
-                    output_tailoring_path
+                    output_tailoring_path,
+                    release_timestamp
                 )
 
                 # Calc hashes and set metadata
