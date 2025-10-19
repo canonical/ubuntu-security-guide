@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2" id="xccdf_scap-workbench_tailoring_default">
   <benchmark href="/usr/share/usg-benchmarks/ubuntu2404_CIS_1"/>
-  <version time="2025-10-08T21:08:50+00:00">1</version>
+  <version time="1970-01-01T00:00:01+00:00">1</version>
   <Profile id="xccdf_org.ssgproject.content_profile_cis_level2_server_customized" extends="xccdf_org.ssgproject.content_profile_cis_level2_server">
     <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">CIS Ubuntu 24.04 Level 2 Server Benchmark [CUSTOMIZED]</title>
     <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">This baseline aligns to the Center for Internet Security Ubuntu 24.04 LTS Benchmark, v1.0.0, released 08-26-2024.</description>
