@@ -376,7 +376,7 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
 
         try:
             # get the profile
-            profile = usg.get_profile_by_id(
+            profile = usg.get_profile(
                 args.profile,
                 )
         except ProfileNotFoundError as e:
