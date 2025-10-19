@@ -25,7 +25,7 @@ from pytest import MonkeyPatch
 from usg import USGError, config, usg as usg_module
 from usg import constants
 from usg.exceptions import BackendError, ProfileNotFoundError
-from usg.models import Benchmark, Profile, Profiles, TailoringFile
+from usg.models import Benchmark, Metadata, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
 from usg.usg import USG
 
@@ -56,7 +56,7 @@ def dummy_config(tmp_path):
 
 
 @pytest.fixture
-def patch_usg(tmp_path_factory, dummy_benchmarks):
+def patch_usg(tmp_path_factory, test_metadata):
     # patch the usg module:
     # - set benchmarks to our dummy benchmarks
     # - set var_dir to our tmp path
@@ -128,7 +128,7 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
             artifacts.add_artifact("fix_script", fix_script_file)
             return artifacts
 
-    mp.setattr(constants, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
+    mp.setattr(constants, "BENCHMARK_METADATA_PATH", test_metadata)
     mp.setattr(constants, "STATE_DIR", tmp_path_factory.mktemp("var_dir"))
     mp.setattr(usg_module, "OpenscapBackend", DummyBackend)
     mp.setattr(usg_module, "check_perms", lambda *a, **k: None)
@@ -147,10 +147,10 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
     mp.undo()
 
 
-def test_usg_init_and_benchmarks(monkeypatch, dummy_benchmarks, tmp_path):
+def test_usg_init_and_benchmarks(monkeypatch, test_metadata, tmp_path):
     monkeypatch.setattr(usg_module, "check_perms", lambda *a, **k: None)
-    usg = USG(dummy_benchmarks, tmp_path / "state_dir")
-    assert isinstance(usg.profiles, Profiles)
+    usg = USG(test_metadata, tmp_path / "state_dir")
+    assert isinstance(usg._metadata, Metadata)
     assert isinstance(usg.get_profile("cis_level1_server-v1.0.0"), Profile)
 
 @pytest.mark.parametrize(
@@ -201,7 +201,7 @@ def test_load_tailoring_returns_tailoring_object(patch_usg, tmp_path, monkeypatc
     result = usg.load_tailoring(tailoring_path)
     assert isinstance(result, TailoringFile)
 
-def test_generate_fix(patch_usg, dummy_benchmarks, capsys):
+def test_generate_fix(patch_usg, test_metadata, capsys):
     # test that generate fix runs and passess the correct arguments to the backend
     usg = USG()
     profile = usg.get_profile("cis_level2_server-v2.0.0")
@@ -213,7 +213,7 @@ def test_generate_fix(patch_usg, dummy_benchmarks, capsys):
     )
 
 
-def test_generate_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, capsys):
+def test_generate_fix_correct_artifact_names(patch_usg, dummy_config, test_metadata, capsys):
     # test that generate-fix creates the correct artifact name and moves it to the correct path
     usg = USG(config=dummy_config)
     profile = usg.get_profile("cis_level1_server-v1.0.0")
@@ -223,7 +223,7 @@ def test_generate_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benc
 
 
 
-def test_fix(patch_usg, dummy_benchmarks, capsys):
+def test_fix(patch_usg, test_metadata, capsys):
     # test that fix runs and passess the correct arguments to the backend
     usg = USG()
     profile = usg.get_profile("cis_level1_server-v1.0.0")
@@ -235,7 +235,7 @@ def test_fix(patch_usg, dummy_benchmarks, capsys):
     )
 
 
-def test_fix_audit_results_file(patch_usg, dummy_benchmarks, capsys):
+def test_fix_audit_results_file(patch_usg, test_metadata, capsys):
     # test that fix only remediates failed rules
     usg = USG()
     profile = usg.get_profile("cis_level1_server-v1.0.0")
@@ -247,7 +247,7 @@ def test_fix_audit_results_file(patch_usg, dummy_benchmarks, capsys):
     )
 
 
-def test_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, capsys):
+def test_fix_correct_artifact_names(patch_usg, dummy_config, test_metadata, capsys):
     # test that fix creates the correct artifact name and moves it to the correct path
     usg = USG(config=dummy_config)
     profile = usg.get_profile("cis_level1_server-v1.0.0")
@@ -257,7 +257,7 @@ def test_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, c
 
 
 
-def test_audit_correct_arguments(patch_usg, dummy_benchmarks, capsys):
+def test_audit_correct_arguments(patch_usg, test_metadata, capsys):
     # test that audit runs and passess the correct arguments to the backend
     usg = USG()
     profile = usg.get_profile("cis_level1_server-v2.0.0")
@@ -269,7 +269,7 @@ def test_audit_correct_arguments(patch_usg, dummy_benchmarks, capsys):
     )
 
 
-def test_audit_correct_artifact_names(patch_usg, dummy_benchmarks, capsys):
+def test_audit_correct_artifact_names(patch_usg, test_metadata, capsys):
     # test that audit creates the correct artifact name and moves it to the correct path
     usg = USG()
     profile = usg.get_profile("cis_level1_server-v1.0.0")
