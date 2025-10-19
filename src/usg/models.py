@@ -198,7 +198,7 @@ class Profile:
 
 
 
-class Profiles(dict[str, Benchmark]):
+class Profiles(dict[str, Profile]):
     """Collection of profiles in form of a dictionary.
 
     Keys are profile IDs and values are Profile objects.
@@ -286,10 +286,8 @@ class TailoringFile:
     tailoring_file: Path
     profile: Profile
 
-    @classmethod
-    def from_file(
-        cls, usg: Any, tailoring_file: Path | str
-        ) -> "TailoringFile":
+    @staticmethod
+    def parse_tailoring_file(tailoring_file: Path | str) -> tuple[str, str, str]:
         """Create a TailoringFile object from a tailoring file.
 
         Args:
@@ -297,7 +295,7 @@ class TailoringFile:
             tailoring_file: path to tailoring file
 
         Returns:
-            TailoringFile
+            (channel_id, tailoring_profile_id, base_profile_cac_id)
 
         Raises:
             TailoringFileError: parsing issues
@@ -315,7 +313,7 @@ class TailoringFile:
 
         if re.search(r"<Tailoring\s", tailoring_file_contents):
             logger.debug("Found SCAP tailoring file.")
-            channel_id, tailoring_profile_id, base_profile_cac_id = cls._parse_tailoring_scap(
+            channel_id, tailoring_profile_id, base_profile_cac_id = TailoringFile._parse_tailoring_scap(
                 tailoring_file_contents
             )
         else:
@@ -325,54 +323,11 @@ class TailoringFile:
             f"Parsed tailoring file: {channel_id}, "
             f"{tailoring_profile_id}, {base_profile_cac_id}"
             )
+        return channel_id, tailoring_profile_id, base_profile_cac_id
 
-        try:
-            benchmark = usg.get_benchmark_by_id(channel_id)
-        except KeyError:
-            raise TailoringFileError(
-                f"Invalid tailoring file. Tailoring '{channel_id}' "
-                f"which doesn't exist in available benchmark data."
-            ) from None
 
-        # map channel_id and profile_id to internal usg profile
-        profiles_in_channel = [
-            p for p in usg.profiles.values()  \
-                if (p.benchmark.channel_id == channel_id and p.latest_compatible_id is None)
-            ]
-        if not profiles_in_channel:
-            raise TailoringFileError(
-                f"Invalid tailoring file. Benchmark channel ID '{channel_id}' "
-                f"does not exist in available benchmark data."
-            ) from None
-
-        profiles_matching_base_cac_id = [
-            p for p in profiles_in_channel \
-                if p.cac_id == base_profile_cac_id
-        ]
-        try:
-            base_profile_id = profiles_matching_base_cac_id[0]
-        except IndexError:
-            raise TailoringFileError(
-                f"Invalid tailoring file. Extended profile '{base_profile_cac_id}' "
-                f"doesn't exist in benchmark channel '{channel_id}'."
-            ) from None
-
-        return cls(
-            tailoring_file,
-            Profile(
-                id=tailoring_profile_id,
-                cac_id=base_profile_cac_id,
-                alias_ids=[],
-                benchmark=benchmark,
-                latest_compatible_id=None,
-                latest_breaking_id=None,
-                tailoring_file=tailoring_file,
-                extends_id=base_profile_id
-                )
-            )
-
-    @classmethod
-    def _map_benchmark_id_from_legacy(cls, benchmark_href: str, profile_id: str) -> str:
+    @staticmethod
+    def _map_benchmark_id_from_legacy(benchmark_href: str, profile_id: str) -> str:
         """Map benchmark id from legacy href attribute and profile id.
 
         Maps the legacy href to the new ID scheme (e.g. ubuntu2404_CIS_1)
@@ -423,8 +378,8 @@ class TailoringFile:
         )
         return benchmark_id
 
-    @classmethod
-    def _parse_tailoring_scap(cls, tailoring_file_contents: str) -> tuple[str, str, str]:
+    @staticmethod
+    def _parse_tailoring_scap(tailoring_file_contents: str) -> tuple[str, str, str]:
         """Parse scap tailoring file contents and returns benchmark and profile IDs.
 
         Args:
