@@ -22,10 +22,10 @@ from pathlib import Path
 import pytest
 from pytest import MonkeyPatch
 
-from usg import usg as usg_module
-from usg import constants, config
-from usg.exceptions import BackendError, ProfileNotFoundError, USGError
-from usg.models import Benchmark, Benchmarks, OldProfile, TailoringFile
+from usg import USGError, config, usg as usg_module
+from usg import constants
+from usg.exceptions import BackendError, ProfileNotFoundError
+from usg.models import Benchmark, Profile, Profiles, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
 from usg.usg import USG
 
@@ -150,85 +150,37 @@ def patch_usg(tmp_path_factory, dummy_benchmarks):
 def test_usg_init_and_benchmarks(monkeypatch, dummy_benchmarks, tmp_path):
     monkeypatch.setattr(usg_module, "check_perms", lambda *a, **k: None)
     usg = USG(dummy_benchmarks, tmp_path / "state_dir")
-    assert isinstance(usg.benchmarks, Benchmarks)
-    assert isinstance(usg.get_benchmark_by_id("ubuntu2404_CIS_1"), Benchmark)
-    with pytest.raises(KeyError, match="Benchmark 'badbenchmark' not found"):
-        usg.get_benchmark_by_id("badbenchmark")
-
+    assert isinstance(usg.profiles, Profiles)
+    assert isinstance(usg.get_profile("cis_level1_server-v1.0.0"), Profile)
 
 @pytest.mark.parametrize(
-    "profile_arg, product, version, expected_benchmark_id,expected_profile_id",
+    "profile_arg, expected_profile_id, expected_version, expected_benchmark_id, expected_profile_cac_id",
     [
-        # by default, get initial version
-        (
-            "cis_level1_server",
-            "ubuntu2404",
-            None,
-            "ubuntu2404_CIS_1",
-            "cis_level1_server",
-        ),
-        # by initial version
-        (
-            "cis_level1_server",
-            "ubuntu2404",
-            "initial",
-            "ubuntu2404_CIS_1",
-            "cis_level1_server",
-        ),
         # by explicit version
-        (
-            "cis_level1_server",
-            "ubuntu2404",
-            "v2.0.0",
-            "ubuntu2404_CIS_3",
-            "cis_level1_server",
-        ),
-        # by compatible version
-        (
-            "cis_level1_server",
-            "ubuntu2404",
-            "v1.0.0.usg1",
-            "ubuntu2404_CIS_2",
-            "cis_level1_server",
-        ),
-        # by legacy id
-        ("disa_stig", "ubuntu2404", "V1R1", "ubuntu2404_STIG_1", "stig"),
-        # by first released (profile not in first benchmark)
-        (
-            "cis_level1_server_special",
-            "ubuntu2404",
-            None,
-            "ubuntu2404_CIS_2",
-            "cis_level1_server_special"
-        )
+        ("cis_level1_server-v1.0.0", "cis_level1_server-v1.0.0", "v1.0.0", "ubuntu2404_CIS_1-v1.0.0",  "cis_level1_server"),
+        ("cis_level1_server-v2.0.0", "cis_level1_server-v2.0.0", "v2.0.0", "ubuntu2404_CIS_3-v2.0.0",  "cis_level1_server"),
+        ("stig-v1r3",                "stig-v1r3",                "V1R3",   "ubuntu2404_STIG_2-V1R3",   "stig"),
+        # by alias
+        ("cis_level1_server",        "cis_level1_server-v1.0.0", "v1.0.0", "ubuntu2404_CIS_1-v1.0.0",  "cis_level1_server"),
+        ("stig",                     "stig-v1r1",                "V1R1",   "ubuntu2404_STIG_1-V1R1",   "stig"),
+        ("disa_stig",                "stig-v1r1",                "V1R1",   "ubuntu2404_STIG_1-V1R1",   "stig"),
     ],
 )
 def test_get_profile_success(
-    patch_usg, profile_arg, product, version, expected_benchmark_id, expected_profile_id
+    patch_usg, profile_arg, expected_profile_id, expected_version, expected_benchmark_id, expected_profile_cac_id
 ):
     usg = USG()
-    if version is not None:
-        profile = usg.get_profile(profile_arg, product, benchmark_version=version)
-    else:
-        profile = usg.get_profile(profile_arg, product)
-    assert isinstance(profile, OldProfile)
-    assert profile.profile_id == expected_profile_id
-    assert profile.benchmark_channel == expected_benchmark_id
+    profile = usg.get_profile(profile_arg)
+    assert isinstance(profile, Profile)
+    assert profile.id == expected_profile_id
+    assert profile.cac_id == expected_profile_cac_id
+    assert profile.benchmark.id == expected_benchmark_id
+    assert profile.benchmark.version == expected_version
 
-
-@pytest.mark.parametrize(
-    "profile,product,version,error_string",
-    [
-        ("bad_profile", "ubuntu2404", "v1.0.0", "Could not find benchmark profile"),
-        ("cis_level1_server", "bad_product", "v1.0.0", "Could not find benchmark product"),
-        ("cis_level1_server", "ubuntu2404", "bad_version", "Could not find profile.*with benchmark version"),
-    ],
-)
-def test_get_profile_not_found(patch_usg, profile, product, version, error_string)  :
+def test_get_profile_not_found(patch_usg):
     usg = USG()
-    with pytest.raises(ProfileNotFoundError, match=error_string):
-        usg.get_profile(profile, product, benchmark_version=version)
-
+    with pytest.raises(ProfileNotFoundError, match="Could not find benchmark profile 'badprofile'"):
+        usg.get_profile("badprofile")
 
 def test_load_tailoring_returns_tailoring_object(patch_usg, tmp_path, monkeypatch):
     # test that the load_tailoring function returns a tailoring file
@@ -240,59 +192,23 @@ def test_load_tailoring_returns_tailoring_object(patch_usg, tmp_path, monkeypatc
     tailoring_path.write_text("")
 
     # Patch TailoringFile.from_file to return a dummy object
-    class DummyTailoring:
-        def __init__(self):
-            self.benchmark_id = "ubuntu2404_CIS_1"
-            self.tailoring_file = tailoring_path
-            self.profile = OldProfile(
-                profile_id="cis_level1_server",
-                profile_legacy_id="cis_level1_server_legacy_id",
-                benchmark_channel="ubuntu2404_CIS_1",
-                tailoring_file=tailoring_path,
-            )
-
-    monkeypatch.setattr(TailoringFile, "from_file", lambda path: DummyTailoring())
-    result = usg.load_tailoring(tailoring_path)
-    assert isinstance(result, DummyTailoring)
-
-
-def test_load_tailoring_benchmark_not_found(patch_usg, monkeypatch, tmp_path):
-    # test that the tailoring file contains an invalid benchmark
-    # (not in list of benchmarks)
-    usg = USG()
-    tailoring_path = (
-        tmp_path / "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml"
-    )
-    tailoring_path.parent.mkdir(parents=True, exist_ok=True)
-    tailoring_path.write_text("")
-
-    # Patch TailoringFile.from_file to return a dummy object
-    class DummyTailoring:
-        benchmark_id = "badbenchmark"
-        profile = OldProfile(
-            profile_id="cis_level1_server",
-            profile_legacy_id="cis_level1_server_legacy_id",
-            benchmark_channel="badbenchmark",
-            tailoring_file=tailoring_path,
+    def mock_parse(tailoring_file_path):
+        return (
+            "ubuntu2404_CIS_1", "cis_level1_server_customized", "cis_level1_server"
         )
 
-
-    monkeypatch.setattr(TailoringFile, "from_file", lambda path: DummyTailoring)
-    with pytest.raises(
-        USGError,
-        match="Could not find benchmark referenced in tailoring file: badbenchmark",
-    ):
-        usg.load_tailoring(tailoring_path)
-
+    monkeypatch.setattr(TailoringFile, "parse_tailoring_file", mock_parse)
+    result = usg.load_tailoring(tailoring_path)
+    assert isinstance(result, TailoringFile)
 
 def test_generate_fix(patch_usg, dummy_benchmarks, capsys):
     # test that generate fix runs and passess the correct arguments to the backend
     usg = USG()
-    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    profile = usg.get_profile("cis_level2_server-v2.0.0")
     _ = usg.generate_fix(profile)
     stdout, _ = capsys.readouterr()
     assert stdout == (
-        "generate_fix called with profile_id=cis_level1_server, "
+        "generate_fix called with profile_id=cis_level2_server, "
         "tailoring_file=None, fix_path=None\n"
     )
 
@@ -300,7 +216,7 @@ def test_generate_fix(patch_usg, dummy_benchmarks, capsys):
 def test_generate_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, capsys):
     # test that generate-fix creates the correct artifact name and moves it to the correct path
     usg = USG(config=dummy_config)
-    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    profile = usg.get_profile("cis_level1_server-v1.0.0")
     artifacts = usg.generate_fix(profile)
     expected_name = "test-fix-cis_level1_server-20250715.1200.sh"
     assert artifacts.get_by_type("fix_script").path.name == expected_name
@@ -310,7 +226,7 @@ def test_generate_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benc
 def test_fix(patch_usg, dummy_benchmarks, capsys):
     # test that fix runs and passess the correct arguments to the backend
     usg = USG()
-    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    profile = usg.get_profile("cis_level1_server-v1.0.0")
     _ = usg.fix(profile)
     stdout, _ = capsys.readouterr()
     assert stdout.strip() == (
@@ -322,7 +238,7 @@ def test_fix(patch_usg, dummy_benchmarks, capsys):
 def test_fix_audit_results_file(patch_usg, dummy_benchmarks, capsys):
     # test that fix only remediates failed rules
     usg = USG()
-    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    profile = usg.get_profile("cis_level1_server-v1.0.0")
     _ = usg.fix(profile, audit_results_file=Path("/path/to/test_audit_results_file.xml"))
     stdout, stderr = capsys.readouterr()
     assert stdout.strip() == (
@@ -334,7 +250,7 @@ def test_fix_audit_results_file(patch_usg, dummy_benchmarks, capsys):
 def test_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, capsys):
     # test that fix creates the correct artifact name and moves it to the correct path
     usg = USG(config=dummy_config)
-    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    profile = usg.get_profile("cis_level1_server-v1.0.0")
     artifacts = usg.fix(profile)
     expected_name = "test-fix-cis_level1_server-20250715.1200.sh"
     assert artifacts.get_by_type("fix_script").path.name == expected_name
@@ -344,7 +260,7 @@ def test_fix_correct_artifact_names(patch_usg, dummy_config, dummy_benchmarks, c
 def test_audit_correct_arguments(patch_usg, dummy_benchmarks, capsys):
     # test that audit runs and passess the correct arguments to the backend
     usg = USG()
-    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    profile = usg.get_profile("cis_level1_server-v2.0.0")
     results, artifacts = usg.audit(profile)
     stdout, stderr = capsys.readouterr()
     assert stdout == (
@@ -356,7 +272,7 @@ def test_audit_correct_arguments(patch_usg, dummy_benchmarks, capsys):
 def test_audit_correct_artifact_names(patch_usg, dummy_benchmarks, capsys):
     # test that audit creates the correct artifact name and moves it to the correct path
     usg = USG()
-    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    profile = usg.get_profile("cis_level1_server-v1.0.0")
     results, artifacts = usg.audit(profile)
     expected_name = "usg-results-20250715.1200.xml"
     assert artifacts.get_by_type("audit_results").path.name == expected_name
@@ -401,8 +317,9 @@ def test_error_handling_in_backend_operations(patch_usg, monkeypatch, caplog, fu
 
     monkeypatch.setattr(usg_module.OpenscapBackend, function_name, backend_function)
     usg = USG()
-    profile = usg.get_profile("cis_level1_server", "ubuntu2404")
+    profile = usg.get_profile("cis_level1_server")
     with pytest.raises(reraised_error_type, match=error_text):
         with caplog.at_level("ERROR"):
             getattr(usg, function_name)(profile)
     assert "Storing partial outputs in " in caplog.text
+
