@@ -113,7 +113,7 @@ def gen_documentation(output_benchmarks_dir: Path) -> tuple[str, str]:
     try:
         latest = [
             b
-            for b in benchmark_metadata["channel_releases"]
+            for b in benchmark_metadata["release_channels"]
             if b["is_latest"]
         ][0]
         datastream_gz_path = (
