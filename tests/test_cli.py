@@ -27,7 +27,7 @@ from pytest import MonkeyPatch
 
 from usg import cli, exceptions, results, constants, utils, __version__
 from usg.cli import init_logging
-from usg.exceptions import LockError, StateFileError, USGError
+from usg.exceptions import LockError, USGError
 from usg.usg import USG
 from usg.results import AuditResults, BackendArtifacts
 
@@ -67,11 +67,12 @@ def patch_usg_and_cli(tmp_path_factory, test_metadata):
 
         def audit(self, profile, debug=False, oval_results=False) -> tuple[AuditResults, BackendArtifacts]:
             print(
-                f"Audit called with profile_id={profile.profile_id},"
+                f"Audit called with profile_id={profile.id},"
                 f"tailoring_file={profile.tailoring_file},"
+                f"extended_profile_id={profile.extends_id},"
                 f"debug={debug},"
-                f"oval_results={oval_results}."
-                f"Benchmark={profile.benchmark_id}"
+                f"oval_results={oval_results},"
+                f"benchmark={profile.benchmark.id}"
             )
             output_files = BackendArtifacts()
             output_files.add_artifact("audit_results", "test_results_contents")
@@ -79,9 +80,10 @@ def patch_usg_and_cli(tmp_path_factory, test_metadata):
 
         def generate_fix(self, profile) -> BackendArtifacts:
             print(
-                f"Generate fix called with profile_id={profile.profile_id},"
-                f"tailoring_file={profile.tailoring_file}."
-                f"Benchmark={profile.benchmark_id}"
+                f"Generate fix called with profile_id={profile.id},"
+                f"tailoring_file={profile.tailoring_file},"
+                f"extended_profile_id={profile.extends_id},"
+                f"benchmark={profile.benchmark.id}"
             )
             output_files = BackendArtifacts()
             output_files.add_artifact("fix_script", "test_fix_contents")
@@ -90,9 +92,10 @@ def patch_usg_and_cli(tmp_path_factory, test_metadata):
         def fix(self, profile, audit_results_file=None) -> BackendArtifacts:
             fn = audit_results_file.name if audit_results_file else "None"
             print(
-                f"Fix called with profile_id={profile.profile_id},"
-                f"tailoring_file={profile.tailoring_file}."
-                f"Benchmark={profile.benchmark_id}"
+                f"Fix called with profile_id={profile.id},"
+                f"tailoring_file={profile.tailoring_file},"
+                f"extended_profile_id={profile.extends_id},"
+                f"benchmark={profile.benchmark.id},"
                 f"audit_results_file={fn}"
             )
             output_files = BackendArtifacts()
@@ -111,7 +114,7 @@ def patch_usg_and_cli(tmp_path_factory, test_metadata):
     tailoring_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
   <benchmark href="/usr/share/usg-benchmarks/ubuntu2404_CIS_2"/>
-  <Profile id="tailored_profile">
+  <Profile id="tailored_profile" extends="cis_level1_server">
     <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
   </Profile>
 </Tailoring>
@@ -180,21 +183,23 @@ def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
         (["--version"], __version__.replace(".4.", ".04."), None, 0),
         (["notacommand"], None, "invalid choice:", 2),
         # list command
-        (["list"], "Listing latest and default profiles", None, None),
+        (["list"], "Listing latest profiles", None, None),
         (["list", "asd"], None, "unrecognized arguments: asd", 2),
         (["list", "--all"], "v1.0.0", None, None),
         (["list", "--machine-readable"], "cis_level1_server:CIS:ubuntu2404:v2.0.0", None, None),
         (["list"], "v2.0.0", None, None),
-        # successful commands with profile argument
+        # successful commands with new profile id
+        (["info", "cis_level1_server-v2.0.0"], "ubuntu2404_CIS_3", None, None),
+        (["audit", "cis_level1_server-v2.0.0"], "ubuntu2404_CIS_3", None, None),
+        (["fix", "cis_level1_server-v2.0.0"], "ubuntu2404_CIS_3", None, None),
+        (["generate-fix", "cis_level1_server-v2.0.0"], "ubuntu2404_CIS_3", None, None),
+        # successful commands with legacy fallback profile id
         (["info", "cis_level1_server"], "ubuntu2404_CIS_1", None, None),
+        (["info", "stig"], "ubuntu2404_STIG_1", None, None),
+        (["info", "disa_stig"], "ubuntu2404_STIG_1", None, None),
         (["audit", "cis_level1_server"], "ubuntu2404_CIS_1", None, None),
         (["fix", "cis_level1_server"], "ubuntu2404_CIS_1", None, None),
         (["generate-fix", "cis_level1_server"], "ubuntu2404_CIS_1", None, None),
-        # successful commands with profile and version
-        (["info", "cis_level1_server", "-b", "v2.0.0"], "ubuntu2404_CIS_3", None, None),
-        (["audit", "cis_level1_server", "-b", "v2.0.0"], "ubuntu2404_CIS_3", None, None),
-        (["fix", "cis_level1_server", "-b", "v2.0.0"], "ubuntu2404_CIS_3", None, None),
-        (["generate-fix", "cis_level1_server", "-b", "v2.0.0"], "ubuntu2404_CIS_3", None, None),
         # successful commands with tailoring file
         (["info", "-t", "tailoring.xml"], "ubuntu2404_CIS_2", None, None),
         (["audit", "-t", "tailoring.xml"], "ubuntu2404_CIS_2", None, None),
@@ -210,21 +215,11 @@ def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
         (["audit", "bad_profile"], None, "See `usg list --all` for list of available profiles.", 1),
         (["fix", "bad_profile"], None, "See `usg list --all` for list of available profiles.", 1),
         (["generate-fix", "bad_profile"], None, "See `usg list --all` for list of available profiles.", 1),
-        # failed commands with bad version
-        (["info", "cis_level1_server", "-b", "v10"], None, "See `usg list --all` for list of available profiles.", 1),
-        (["audit", "cis_level1_server", "-b", "v10"], None, "See `usg list --all` for list of available profiles.", 1),
-        (["fix", "cis_level1_server", "-b", "v10"], None, "See `usg list --all` for list of available profiles.", 1),
-        (["generate-fix", "cis_level1_server", "-b", "v10"], None, "See `usg list --all` for list of available profiles.", 1),
         # failed commands with both a profile and a tailoring file
         (["info", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         (["audit", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         (["fix", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         (["generate-fix", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
-        # failed commands with both a tailoring file and a version
-        (["info", "-b", "v1.0.0", "-t", "tailoring.xml"], None, "--benchmark-version cannot be used with a tailoring file.", 2),
-        (["audit", "--benchmark-version", "v1.0.0", "-t", "tailoring.xml"], None, "--benchmark-version cannot be used with a tailoring file.", 2),
-        (["fix", "-b", "v1.0.0", "-t", "tailoring.xml"], None, "--benchmark-version cannot be used with a tailoring file.", 2),
-        (["generate-fix", "-b", "v1.0.0", "-t", "tailoring.xml"], None, "--benchmark-version cannot be used with a tailoring file.", 2),
         # audit command with extra arguments
         (["audit", "cis_level1_server", "--oval-results"], "oval_results=True", None, None),
         (["audit", "cis_level1_server", "--debug"], "debug=True", None, None),
@@ -265,11 +260,11 @@ def test_cli_invocation(
     "cli_args,benchmark_id",
     [
         (
-            ["generate-tailoring", "cis_level1_server", "gen-tail-out.xml"],
+            ["generate-tailoring", "cis_level1_server-v2.0.0", "gen-tail-out.xml"],
             "ubuntu2404_CIS_3",
         ),
         (
-            ["generate-tailoring", "cis_level1_server", "gen-tail-out.xml", "-b", "v1.0.0",],
+            ["generate-tailoring", "cis_level1_server", "gen-tail-out.xml"],
             "ubuntu2404_CIS_1",
         ),
     ],
@@ -302,7 +297,7 @@ def test_cli_default_tailoring_file(patch_usg_and_cli, monkeypatch, capsys, capl
     default_tailoring_file.write_text("""<?xml version="1.0" encoding="UTF-8"?>
 <Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2">
   <benchmark href="/usr/share/usg-benchmarks/ubuntu2404_CIS_3"/>
-  <Profile id="tailored_profile">
+  <Profile id="tailored_profile" extends="cis_level1_server">
     <select idref="xccdf_org.ssgproject.content_rule_test_rule" selected="true"/>
   </Profile>
 </Tailoring>
