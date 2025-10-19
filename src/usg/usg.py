@@ -106,27 +106,8 @@ class USG:
         """Getter for benchmarks."""
         return self._profiles
 
-    def get_benchmark_by_id(self, benchmark_id: str) -> Benchmark:
-        """Return benchmark object by benchmark id.
 
-        Args:
-            benchmark_id: ID of the benchmark to return (e.g. ubuntu2404_CIS_1)
-
-        Returns:
-            Benchmark
-
-        Raises:
-            KeyError: if the benchmark id is not found
-
-        """
-        try:
-            return self.benchmarks[benchmark_id]
-        except KeyError as e:
-            msg = f"Benchmark '{benchmark_id}' not found"
-            raise KeyError(msg) from e
-
-
-    def get_profile_by_id(self, profile_id: str) -> Profile:
+    def get_profile(self, profile_id: str) -> Profile:
         """Return benchmark profile based on the given criteria.
 
         Args:
@@ -155,7 +136,7 @@ class USG:
 
     def load_tailoring(
         self,
-        tailoring_file_path: Path | str,
+        tailoring_file_path: Path,
     ) -> TailoringFile:
         """Parse tailoring file and return tailoring file object.
 
@@ -171,7 +152,47 @@ class USG:
         """
         logger.debug(f"Loading {tailoring_file_path}")
         check_perms(tailoring_file_path)
-        return TailoringFile.from_file(self, tailoring_file_path)
+
+        # parse tailoring file
+        channel_id, tailoring_profile_id, base_profile_id = \
+            TailoringFile.parse_tailoring_file(tailoring_file_path)
+
+        # map channel_id and profile_id to internal usg profile
+        profiles_in_channel = [
+            p for p in list(self.profiles.values())  \
+                if (p.benchmark.channel.id == channel_id and p.latest_compatible_id is None)
+            ]
+        if not profiles_in_channel:
+            raise USGError(
+                f"Invalid tailoring file. Benchmark channel ID '{channel_id}' "
+                f"does not exist in available benchmark data."
+            ) from None
+
+        profiles_matching_base_cac_id = [
+            p for p in profiles_in_channel \
+                if p.cac_id == base_profile_id
+        ]
+        try:
+            base_profile = profiles_matching_base_cac_id[0]
+        except IndexError:
+            raise USGError(
+                f"Invalid tailoring file. Extended profile '{base_profile_id}' "
+                f"doesn't exist in benchmark channel '{channel_id}'."
+            ) from None
+
+        return TailoringFile(
+            tailoring_file=tailoring_file_path,
+            profile=Profile(
+                id=tailoring_profile_id,
+                cac_id=tailoring_profile_id,
+                alias_ids=[],
+                benchmark=base_profile.benchmark,
+                latest_compatible_id=None,
+                latest_breaking_id=None,
+                tailoring_file=tailoring_file_path,
+                extends_id=base_profile.id
+                )
+            )
 
 
     def _init_openscap_backend(
@@ -279,7 +300,7 @@ class USG:
                     )
             raise e
 
-        self._move_artifacts(artifacts, profile.id,  profile.benchmark.product)
+        self._move_artifacts(artifacts, profile.cac_id,  profile.benchmark.product)
 
         logger.debug(f"Removing temporary directory {work_dir}")
         shutil.rmtree(work_dir)
@@ -341,7 +362,7 @@ class USG:
                     )
             raise e
 
-        self._move_artifacts(artifacts, profile.id, profile.benchmark.product)
+        self._move_artifacts(artifacts, profile.cac_id, profile.benchmark.product)
 
         logger.debug(f"Removing temporary directory {work_dir}")
         shutil.rmtree(work_dir)
@@ -398,7 +419,7 @@ class USG:
                     )
             raise e
 
-        self._move_artifacts(artifacts, profile.id, profile.benchmark.product)
+        self._move_artifacts(artifacts, profile.cac_id, profile.benchmark.product)
 
         logger.debug(f"Removing temporary directory {work_dir}")
         shutil.rmtree(work_dir)
