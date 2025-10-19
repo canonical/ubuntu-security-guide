@@ -21,55 +21,58 @@ from pathlib import Path
 import pytest
 
 from usg.exceptions import MetadataError, ProfileNotFoundError
-from usg.models import Benchmark, Benchmarks, OldProfile
+from usg.models import Benchmark, Profile, Profiles, ReleaseChannel
 
 
-def test_usgbenchmarks(dummy_benchmarks):
+def test_metadata_loading(test_metadata):
     # Test that the two benchmarks from a file are correctly loaded
-    benchmarks = Benchmarks.from_json(dummy_benchmarks)
-    assert benchmarks.version == 1
-    assert len(benchmarks) == 5
-    assert isinstance(benchmarks, Benchmarks)
-    assert isinstance(benchmarks["ubuntu2404_CIS_1"], Benchmark)
-    assert isinstance(benchmarks["ubuntu2404_STIG_1"], Benchmark)
+    profiles = Profiles.from_json(test_metadata)
+    assert profiles.version == 1
+    assert len(profiles) == 5
+    assert isinstance(profiles, Profiles)
+    profile = list(profiles.values())[0]
+    assert isinstance(profile, Profile)
+    assert isinstance(profile.benchmark, Benchmark)
+    assert isinstance(profile.benchmark.channel, ReleaseChannel)
+
 
 def test_usgbenchmarks_error_loading_and_parsing(tmp_path):
     # test that failure to load or parse json file results in MetadataError
     with pytest.raises(MetadataError, match="Failed to parse"):
-        Benchmarks.from_json("/dev/null/nonexistent")
+        Profiles.from_json("/dev/null/nonexistent")
 
     bad_json = tmp_path / "benchmarks.json"
     bad_json.write_text("this won't parse")
     with pytest.raises(MetadataError, match="Failed to parse"):
-        Benchmarks.from_json(bad_json)
+        Profiles.from_json(bad_json)
 
-def test_usgbenchmarks_error_from_missing_benchmarks(tmp_path, dummy_benchmarks):
+def test_usgbenchmarks_error_from_missing_benchmarks(tmp_path, test_metadata):
     # Test that an error is raised if the benchmarks key is missing
-    b = json.loads(dummy_benchmarks.read_text())
+    b = json.loads(test_metadata.read_text())
     b.pop("benchmarks")
     json_file = tmp_path / "benchmarks.json"
     json_file.write_text(json.dumps(b))
     with pytest.raises(
         MetadataError, match="Invalid '.*' contents. Could not find key 'benchmarks'"
     ):
-        Benchmarks.from_json(json_file)
+        Profiles.from_json(json_file)
 
 
-def test_usgbenchmarks_error_from_missing_version(tmp_path, dummy_benchmarks):
+def test_usgbenchmarks_error_from_missing_version(tmp_path, test_metadata):
     # Test that an error is raised if the version key is missing
-    b = json.loads(dummy_benchmarks.read_text())
+    b = json.loads(test_metadata.read_text())
     b.pop("version")
     json_file = tmp_path / "benchmarks.json"
     json_file.write_text(json.dumps(b))
     with pytest.raises(
         MetadataError, match="Invalid '.*' contents. Could not find key 'version'"
     ):
-        Benchmarks.from_json(json_file)
+        Profiles.from_json(json_file)
 
 
-def test_usgbenchmarks_error_from_duplicate_benchmark_id(tmp_path, dummy_benchmarks):
+def test_usgbenchmarks_error_from_duplicate_benchmark_id(tmp_path, test_metadata):
     # Test that an error is raised if the version key is missing
-    b = json.loads(dummy_benchmarks.read_text())
+    b = json.loads(test_metadata.read_text())
     b["benchmarks"].append(b["benchmarks"][0])
     json_file = tmp_path / "benchmarks.json"
     json_file.write_text(json.dumps(b))
@@ -77,12 +80,12 @@ def test_usgbenchmarks_error_from_duplicate_benchmark_id(tmp_path, dummy_benchma
         MetadataError,
         match="Malformed dataset - duplicate benchmark ID: ubuntu2404_CIS_1",
     ):
-        Benchmarks.from_json(json_file)
+        Profiles.from_json(json_file)
 
 
-def test_usgbenchmark(dummy_benchmarks):
+def test_usgbenchmark(test_metadata):
     # Test that the single benchmark from a file is correctly parsed
-    benchmarks = Benchmarks.from_json(dummy_benchmarks)
+    benchmarks = Profiles.from_json(test_metadata)
     benchmark = benchmarks["ubuntu2404_CIS_2"]
     assert benchmark.id == "ubuntu2404_CIS_2"
     assert benchmark.benchmark_type == "CIS"
@@ -125,9 +128,9 @@ def test_usgbenchmark(dummy_benchmarks):
 
 
 @pytest.mark.parametrize("missing_key", ["profiles", "data_files", "tailoring_files"])
-def test_usgbenchmark_bad_data(dummy_benchmarks, missing_key):
+def test_usgbenchmark_bad_data(test_metadata, missing_key):
     # Test that an error is raised if the data is malformed
-    raw_data = json.loads(dummy_benchmarks.read_text())
+    raw_data = json.loads(test_metadata.read_text())
     raw_data["benchmarks"][0].pop(missing_key)
     with pytest.raises(
         MetadataError,
@@ -136,15 +139,15 @@ def test_usgbenchmark_bad_data(dummy_benchmarks, missing_key):
         Benchmark.from_dict(raw_data["benchmarks"][0])
 
 
-def test_usgbenchmark_tailoring_bad_profile(dummy_benchmarks):
-    benchmarks = Benchmarks.from_json(dummy_benchmarks)
+def test_usgbenchmark_tailoring_bad_profile(test_metadata):
+    benchmarks = Profiles.from_json(test_metadata)
     benchmark = benchmarks["ubuntu2404_CIS_1"]
     with pytest.raises(ProfileNotFoundError):
         benchmark.get_tailoring_file_relative_path("cis_level3_server")
 
 
-def test_usgbenchmark_tailoring_file(dummy_benchmarks):
-    benchmarks = Benchmarks.from_json(dummy_benchmarks)
+def test_usgbenchmark_tailoring_file(test_metadata):
+    benchmarks = Profiles.from_json(test_metadata)
     benchmark = benchmarks["ubuntu2404_CIS_1"]
     assert benchmark.get_tailoring_file_relative_path("cis_level1_server") == Path(
         "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml"
@@ -154,8 +157,8 @@ def test_usgbenchmark_tailoring_file(dummy_benchmarks):
     )
 
 
-def test_usgbenchmark_profiles(dummy_benchmarks):
-    benchmarks = Benchmarks.from_json(dummy_benchmarks)
+def test_usgbenchmark_profiles(test_metadata):
+    benchmarks = Profiles.from_json(test_metadata)
     benchmark = benchmarks["ubuntu2404_CIS_1"]
     # Test that profiles contain correct data
     for profile_id, profile in benchmarks["ubuntu2404_CIS_1"].profiles.items():
