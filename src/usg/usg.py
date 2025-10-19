@@ -238,7 +238,7 @@ class USG:
 
         """
         logger.info(f"Generating tailoring file for profile {profile.id}")
-        tailoring_rel_path = profile.benchmark.get_tailoring_file_relative_path(
+        tailoring_rel_path = profile.benchmark.channel.get_tailoring_file_relative_path(
             profile.cac_id
         )
         tailoring_abs_path = (

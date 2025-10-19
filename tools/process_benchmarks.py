@@ -77,7 +77,7 @@ def _get_release_channel_successions(
     logger.debug("Entered get_release_successions()")
 
     # sanity check tailoring versions (channels) (should be all from 1 to max())
-    channels = sorted({r["tailoring_version"] for r in all_releases})
+    channels = sorted({r["release_channel"] for r in all_releases})
     channels_good = list(range(1, max(channels) + 1))
     if channels != channels_good:
         raise BenchmarkProcessingError(
@@ -88,7 +88,7 @@ def _get_release_channel_successions(
     # bin by channel_id
     releases_by_channels = {channel: [] for channel in channels}
     for release in all_releases:
-        channel = release["tailoring_version"]
+        channel = release["release_channel"]
         releases_by_channels[channel].append(release)
 
     # sort by release (first to latest) and sanity checks
@@ -162,7 +162,7 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
 
     # Populate base data structures
     profiles = {}       # cac_profile_id, latest_breaking_id, latest_compatible_id, ...
-    benchmarks = {}     # channel_id, tailoring_version, product, cac_profiles, latest_breaking_id, latest_compatible_id, state, ...
+    benchmarks = {}     # channel_id, channel_number, product, cac_profiles, latest_breaking_id, latest_compatible_id, state, ...
     release_channels = {}   # benchmark release channel information, latest release tag/commit/timestamp, data files, tailoring files
 
     # Preset common values
@@ -171,21 +171,21 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
     benchmark_type = yaml_data["general"]["benchmark_type"]
     latest_release = list(releases_by_channels.values())[-1][-1]
     latest_version = latest_release["benchmark_data"]["version"]
-    latest_tailoring = latest_release["tailoring_version"]
-    latest_channel_id = f"{product}_{benchmark_type}_{latest_tailoring}"
+    latest_channel_number = latest_release["release_channel"]
+    latest_channel_id = f"{product}_{benchmark_type}_{latest_channel_number}"
     latest_benchmark_id = f"{latest_channel_id}-{latest_version}"
 
     # Add info from latest releases in each channel to 'channel_data'
-    for tailoring_version, releases_in_channel in releases_by_channels.items():
+    for channel_number, releases_in_channel in releases_by_channels.items():
 
         latest_release = releases_in_channel[-1]
-        channel_id = f"{product}_{benchmark_type}_{tailoring_version}"
+        channel_id = f"{product}_{benchmark_type}_{channel_number}"
         assert channel_id not in release_channels
         release_channels[channel_id] = {
             "id": channel_id,
             "benchmark_ids": [], # populated below
-            "tailoring_version": tailoring_version,
-            "is_latest": tailoring_version == latest_tailoring,
+            "channel_number": channel_number,
+            "is_latest": channel_number == latest_channel_number,
             "cac_product": product,
             "cac_profiles": list(latest_release["benchmark_data"]["profiles"]), # store profiles here to ensure all benchmarks in one channel have same profiles
             "release_tag": latest_release["cac_tag"],
@@ -197,8 +197,8 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
         }
 
     # find all benchmarks with unique IDs (versions) and add info to 'benchmarks' and 'profiles'
-    for tailoring_version, releases_in_channel in releases_by_channels.items():
-        channel_id = f"{product}_{benchmark_type}_{tailoring_version}"
+    for channel_number, releases_in_channel in releases_by_channels.items():
+        channel_id = f"{product}_{benchmark_type}_{channel_number}"
 
         for i, release in enumerate(releases_in_channel):
 
@@ -215,7 +215,7 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
                     "benchmark_type": benchmark_type,
                     "product": product,
                     "product_long": product_long,
-                    "tailoring_version": tailoring_version,
+                    "channel_number": channel_number,
                     "latest_breaking_id": None,
                     "latest_compatible_id": None,
                     "state": None,
@@ -240,7 +240,7 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
                     # add original profile id-s to alias ids if initial version of benchmark
                     # to keep beackwards compatibility
                     alias_ids = []
-                    if benchmark["tailoring_version"] == 1:
+                    if benchmark["channel_number"] == 1:
                         alias_ids.append(cac_profile_id)
                         # also add 'disa_stig' which is legacy name for stig
                         if cac_profile_id == "stig":
@@ -264,19 +264,19 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
     for benchmark_id, benchmark in benchmarks.items():
 
         channel_id = benchmark["channel_id"]
-        tailoring_version = release_channels[channel_id]["tailoring_version"]
-        latest_release_in_channel = releases_by_channels[tailoring_version][-1]
+        channel_number = release_channels[channel_id]["channel_number"]
+        latest_release_in_channel = releases_by_channels[channel_number][-1]
         latest_version_in_channel = latest_release_in_channel["benchmark_data"]["version"]
         latest_benchmark_id_in_channel = f"{channel_id}-{latest_version_in_channel}"
 
-        benchmark["state"] = "Latest Stable"
+        benchmark["state"] = "Latest stable"
         # Benchmark is superseded by a newer release in same channel
         if benchmark_id != latest_benchmark_id_in_channel:
             benchmark["latest_compatible_id"] = latest_benchmark_id_in_channel
             benchmark["state"] = f"Superseded by {latest_version_in_channel}"
 
         # Benchmark is not in latest channel (maintenance mode)
-        if tailoring_version != latest_tailoring:
+        if channel_number != latest_channel_number:
             benchmark["latest_breaking_id"] = latest_benchmark_id
             benchmark["state"] = "Maintenance"  # overrides superseded
 
@@ -304,14 +304,14 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
         # Older channel (and the latest benchmark doesn't contain the profile id)
         # Find the latest benchmark which contains this profile
         else:
-            tailoring_version = benchmark["tailoring_version"]
+            channel_number = benchmark["channel_number"]
             for benchmark2 in benchmarks.values():
-                tailoring_version2 = benchmark2["tailoring_version"]
+                channel_number2 = benchmark2["channel_number"]
 
-                if tailoring_version2 > tailoring_version and \
+                if channel_number2 > channel_number and \
                       benchmark2["latest_compatible_id"] is None and \
                       cac_profile_id in benchmark2["profiles"]:
-                    tailoring_version = tailoring_version2
+                    channel_number = channel_number2
                     latest_breaking_benchmark = benchmark2
 
         if latest_breaking_benchmark:
