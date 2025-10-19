@@ -34,7 +34,7 @@ from usg.exceptions import (
     ProfileNotFoundError,
     USGError,
 )
-from usg.models import Benchmark, Profile, Profiles, TailoringFile
+from usg.models import Benchmark, Metadata, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
 from usg.utils import check_perms, gunzip_file, verify_integrity
 
@@ -97,14 +97,14 @@ class USG:
 
         check_perms(self._state_dir, is_dir=True)
 
-        self._profiles = Profiles.from_json(self._benchmark_metadata_path)
+        self._metadata = Metadata.from_json(self._benchmark_metadata_path)
         self._timestamp = datetime.datetime.now().strftime("%Y%m%d.%H%M")  # noqa: DTZ005
 
 
     @property
     def profiles(self) -> dict[str, Profile]:
         """Getter for benchmarks."""
-        return self._profiles
+        return self._metadata.profiles
 
 
     def get_profile(self, profile_id: str) -> Profile:
@@ -122,10 +122,10 @@ class USG:
 
         """
         logger.debug(f"Getting profile: {profile_id}.")
-        if profile_id in self._profiles:
-            return self._profiles[profile_id]
+        if profile_id in self.profiles:
+            return self.profiles[profile_id]
 
-        matching = [p for p in self._profiles.values() if profile_id in p.alias_ids]
+        matching = [p for p in self.profiles.values() if profile_id in p.alias_ids]
         try:
             return matching[0]
         except IndexError:

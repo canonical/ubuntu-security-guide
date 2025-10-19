@@ -34,7 +34,7 @@ from usg.results import AuditResults, BackendArtifacts
 logger = logging.getLogger(__name__)
 
 @pytest.fixture
-def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
+def patch_usg_and_cli(tmp_path_factory, test_metadata):
     # patch the usg module:
     # - set benchmarks to dummy benchmarks fixture
     # - set state_dir to a tmp path
@@ -49,7 +49,7 @@ def patch_usg_and_cli(tmp_path_factory, dummy_benchmarks):
 
     dummy_cfg = tmp_state_dir / "usg.conf"
     dummy_cfg.write_text("")
-    mp.setattr(constants, "BENCHMARK_METADATA_PATH", dummy_benchmarks)
+    mp.setattr(constants, "BENCHMARK_METADATA_PATH", test_metadata)
     mp.setattr(constants, "STATE_DIR", tmp_state_dir)
     mp.setattr(constants, "CLI_STATE_FILE", tmp_state_dir / "state.json")
     mp.setattr(constants, "CONFIG_PATH", dummy_cfg)
