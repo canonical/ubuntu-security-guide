@@ -19,6 +19,7 @@
 
 """Functions and CLI for generating USG tailoring files."""
 import sys
+import time
 
 if sys.version_info < (3,12):
     sys.exit("Build tools require Python>=3.12")
@@ -45,7 +46,8 @@ def generate_tailoring_file(
     datastream_path: Path,
     tailoring_template_path: Path,
     benchmark_id: str,
-    tailoring_file_output_path: Path
+    tailoring_file_output_path: Path,
+    timestamp: float,
 ) -> None:
     """Create a tailoring file based on provided args.
 
@@ -55,6 +57,7 @@ def generate_tailoring_file(
         tailoring_template_path: template file for tailoring file
         benchmark_id: benchmark ID (e.g. ubuntu2404_CIS_1)
         tailoring_file_output_path: output path
+        timestamp: timestamp to be used in "time" attribute
 
     Raises:
         GenerateTailoringError
@@ -71,7 +74,10 @@ def generate_tailoring_file(
 
     datastream_path = Path(datastream_path)
     tailoring_template_path = Path(tailoring_template_path)
-    current_timestamp = datetime.datetime.now(datetime.UTC).replace(microsecond=0)
+    iso_timestamp = datetime.datetime.fromtimestamp(
+        timestamp,
+        datetime.timezone.utc
+        ).isoformat()
 
     try:
         datastream_doc = etree.parse(datastream_path)
@@ -87,7 +93,7 @@ def generate_tailoring_file(
             benchmark_id=benchmark_id
         )
         xml_ver = tailor_doc.find(f".//{{{XMLNS}}}version")
-        xml_ver.attrib["time"] = current_timestamp.isoformat()
+        xml_ver.attrib["time"] = iso_timestamp
     except etree.XMLSyntaxError as e:
         raise GenerateTailoringError(
             f"Failed to process template tailoring file: {e}"
@@ -223,7 +229,8 @@ if __name__ == "__main__":
             args.datastream_path,
             args.tailoring_template_path,
             args.benchmark_id,
-            args.output_tailoring_path
+            args.output_tailoring_path,
+            time.time(),
         )
         validate_tailoring_file(args.output_tailoring_path)
     except GenerateTailoringError as e:
