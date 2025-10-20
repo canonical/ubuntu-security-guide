@@ -31,7 +31,8 @@ The implementation details are described in some more detail later.
 
 ### Project configuration
 
-The project version, configuration and metadata is in `pyproject.toml`. On older platforms (Ubuntu <= 22.04), `setup.cfg` is used due to lack of support for pyproject.toml in setuptools<61.0.
+The project version, configuration and metadata is in `pyproject.toml`. On older platforms (Ubuntu <= 22.04),
+`setup.cfg` is used due to lack of support for pyproject.toml in setuptools<61.0.
 
 ### Data directories
 
@@ -96,8 +97,7 @@ general:
 benchmark_releases:
   - cac_tag: v0.1.78           # Git tag in ComplianceAsContent-content
     parent_tag: v0.1.77        # Tag of parent CaC release
-    breaking_release: True     # Set to True if the release introduces backwards-incompatible changes to tailoring file
-    tailoring_version: 2       # Version of tailoring file (must be incremented with every breaking release)
+    release_channel: 2         # Benchmark release channel (must be incremented with every breaking release)
     cac_commit: f7d79485...    # Git commit corresponding to above tag
     usg_version: 24.04.5
     benchmark_data:            # Benchmark metadata (version, profiles, description, etc)
@@ -107,15 +107,14 @@ benchmark_releases:
           cis_level2_server: {}
           cis_level1_workstation: {}
           cis_level2_workstation: {}
-      description: |
+      description: |-
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 
   - cac_tag: v0.1.77
     parent_tag:                # no parent tag, initial release
-    breaking_release: False
-    tailoring_version: 1
+    release_channel: 1
     ...
 ```
 
@@ -201,7 +200,7 @@ from usg import USG
 usg = USG(benchmark_metadata_path="benchmarks/benchmarks.json", state_dir=".")
 
 # Get profile and run audit
-profile = usg.get_profile("cis_level1_server", "ubuntu2404", "latest")
+profile = usg.get_profile("cis_level1_server-v1.0.0")
 results, audit_artifacts = usg.audit(profile)
 
 # Generate tailoring file
@@ -250,64 +249,6 @@ corresponding `Benchmark` and `TailoringFile` objects (if any).
 
 Functions like `audit` and `fix` take a **Profile** object, initialize a backend adapter (e.g., `OpenscapBackend`) in a secure temporary directory, and pass the necessary information to it. The adapter class handles the details of calling the `oscap` binary and parsing its output into an `AuditResults` object. All generated files (reports, logs) are returned via a `BackendArtifacts` object.
 
-
-```mermaid
-%% C4 — Context + Container + Component in one view
-C4Container
-title USG overview
-
-
-%% Actors
-Person(user, "User")
-
-Boundary(usgrepo, "USG repository", "") {
-
-%% Containers
-Container(cli, "CLI", "", "Entry-point script")
-Container(usg, "usg.USG", "", "Python lib")
-
-%% Components inside the library
-Component(openscap, "OpenscapBackend", "", "OSCAP adapter")
-Component(results, "AuditResults", "", "Parsed audit results")
-Component(config, "Config", "", "Default config and loader")
-Component(artifacts, "BackendArtifacts", "", "Backend artifacts (outputs,logs,...)")
-
-Boundary(components, "Models", "") {
-Component(benchmark, "Benchmark", "", "Benchmark metadata")
-Component(profile, "Profile", "", "Profile metadata")
-Component(tailoring, "TailoringFile", "", "Tailoring metadata")
-}
-}
-
-%% Relationships (internal)
-Rel(user, cli, "Runs on cmdline")
-Rel(user, usg, "Imports")
-Rel(cli, usg, "Imports")
-Rel(usg, config,  "Loads")
-Rel(cli, config,  "Loads from disk/default")
-
-Rel(usg, openscap,  "Inits/Routes", "")
-Rel(openscap, results, "Returns", "")
-Rel(openscap, artifacts, "Returns", "")
-
-Rel(usg, benchmark,  "Contains", "")
-Rel(usg, tailoring, "Loads")
-
-Rel(benchmark, profile, "")
-Rel(tailoring, profile, "")
-
-
-%% External components
-System_Ext(benchmarks, "usg benchmarks / metadata")
-System_Ext(oscap, "openscap")
-System_Ext(tailoringfile, "user tailoring")
-
-Rel(usg, benchmarks, "Loads from disk", "")
-Rel(openscap, oscap, "Calls", "subprocess")
-Rel(tailoring, tailoringfile, "Parses", "")
-
-UpdateLayoutConfig(4,)
-```
 
 #### CLI
 
