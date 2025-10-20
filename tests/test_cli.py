@@ -186,13 +186,17 @@ def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
         (["list"], "Listing latest profiles", None, None),
         (["list", "asd"], None, "unrecognized arguments: asd", 2),
         (["list", "--all"], "v1.0.0", None, None),
+        (["list", "-a"], "v1.0.0", None, None),
         (["list", "--machine-readable"], "cis_level1_server:CIS:ubuntu2404:v2.0.0", None, None),
+        (["list", "-m"], "cis_level1_server:CIS:ubuntu2404:v2.0.0", None, None),
         (["list"], "v2.0.0", None, None),
         # successful commands with new profile id
         (["info", "cis_level1_server-v2.0.0"], "ubuntu2404_CIS_3", None, None),
         (["audit", "cis_level1_server-v2.0.0"], "ubuntu2404_CIS_3", None, None),
         (["fix", "cis_level1_server-v2.0.0"], "ubuntu2404_CIS_3", None, None),
         (["generate-fix", "cis_level1_server-v2.0.0"], "ubuntu2404_CIS_3", None, None),
+        (["generate-fix", "cis_level1_server-v2.0.0", "-o", "fix.sh"], "ubuntu2404_CIS_3", None, None),
+        (["generate-fix", "cis_level1_server-v2.0.0", "--output", "fix.sh"], "ubuntu2404_CIS_3", None, None),
         # successful commands with legacy fallback profile id
         (["info", "cis_level1_server"], "ubuntu2404_CIS_1", None, None),
         (["info", "stig"], "ubuntu2404_STIG_1", None, None),
@@ -204,7 +208,7 @@ def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
         (["info", "-t", "tailoring.xml"], "ubuntu2404_CIS_2", None, None),
         (["audit", "-t", "tailoring.xml"], "ubuntu2404_CIS_2", None, None),
         (["fix", "-t", "tailoring.xml"], "ubuntu2404_CIS_2", None, None),
-        (["generate-fix", "-t", "tailoring.xml"], "ubuntu2404_CIS_2", None, None),
+        (["generate-fix", "--tailoring-file", "tailoring.xml"], "ubuntu2404_CIS_2", None, None),
         # failed commands without a profile or a tailoring file
         (["info"], None, "Error: a profile or a tailoring file must be provided.", 2),
         (["audit"], None, "Error: a profile or a tailoring file must be provided.", 2),
@@ -219,7 +223,7 @@ def test_usg_init_error(patch_usg_and_cli, monkeypatch, capsys):
         (["info", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         (["audit", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         (["fix", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
-        (["generate-fix", "cis_level1_server", "-t", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
+        (["generate-fix", "cis_level1_server", "--tailoring-file", "tailoring.xml"], None, "You cannot provide both a tailoring file and a profile!", 2),
         # audit command with extra arguments
         (["audit", "cis_level1_server", "--oval-results"], "oval_results=True", None, None),
         (["audit", "cis_level1_server", "--debug"], "debug=True", None, None),
@@ -379,3 +383,21 @@ def test_main_error_runtime(monkeypatch, capsys, caplog):
     captured = capsys.readouterr()
     assert "USG encountered an unknown error" in captured.err
     assert "ValueError: testing error" in caplog.text
+
+def test_list_machine_readable(
+    patch_usg_and_cli,
+    capsys,
+):
+    # Test machine readable output
+    sys.argv = ["usg", "list", "--all", "--machine-readable"]
+    cli.cli()
+    captured = capsys.readouterr()
+    match_line = (
+        "cis_level1_workstation-v1.0.1:cis_level1_workstation:CIS:ubuntu2404:v1.0.1:ubuntu2404_CIS_2-v1.0.1:Maintenance:ubuntu2404_CIS_2:2::::::"
+    )
+    assert match_line in captured.out
+    match_line = (
+        "cis_level1_workstation-v2.0.0:cis_level1_workstation:CIS:ubuntu2404:v2.0.0:ubuntu2404_CIS_3-v2.0.0:Latest stable:ubuntu2404_CIS_3:3::::::"
+    )
+    assert match_line in captured.out
+    
