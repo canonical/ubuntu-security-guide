@@ -67,7 +67,7 @@ class ReleaseChannel:
     @classmethod
     def from_data(cls, data: dict[str, Any]) -> "ReleaseChannel":
         """Create ReleaseChannel object from dictionary data."""
-        logger.debug(f"Creating Benchmark object from {data}")
+        logger.debug(f"Creating ReleaseChannel object from {data}")
         try:
             data_files = {
                 data_file_type: DataFile(
@@ -216,7 +216,7 @@ class Metadata:
             json_path: path to JSON file containing profile and benchmark metadata
 
         Returns:
-            Profiles
+            Metadata
 
         Raises:
             MetadataError: if the JSON file is invalid or the contents are invalid
