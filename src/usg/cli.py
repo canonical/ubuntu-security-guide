@@ -295,7 +295,6 @@ def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
     """Generate a tailoring file and writes it to disk."""
     logger.debug("Starting command_generate_tailoring")
     usg_profile = get_usg_profile_from_args(usg, args)
-    _check_profile_updates(usg, usg_profile)
 
     print(
         f"USG will extract the tailoring file for profile "
@@ -316,7 +315,6 @@ def command_generate_fix(usg: USG, args: argparse.Namespace) -> None:
     """Process args for generate-fix command and runs usg."""
     logger.debug("Starting command_generate_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
-    _check_profile_updates(usg, usg_profile)
 
     artifacts = usg.generate_fix(usg_profile)
     output_path = artifacts.get_by_type("fix_script").path
@@ -336,7 +334,6 @@ def command_fix(usg: USG, args: argparse.Namespace) -> None:
     """Process args and runs USG audit and USG fix."""
     logger.debug("Starting command_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
-    _check_profile_updates(usg, usg_profile)
 
     print("Running audit and remediation script...")
     _, output_files = usg.audit(
@@ -360,7 +357,6 @@ def command_audit(usg: USG, args: argparse.Namespace) -> None:
     """Process args and runs USG audit."""
     logger.debug("Starting command_audit")
     usg_profile = get_usg_profile_from_args(usg, args)
-    _check_profile_updates(usg, usg_profile)
 
     results, output_files = usg.audit(
         usg_profile, debug=args.debug, oval_results=args.oval_results
@@ -388,18 +384,6 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
         profile = usg.load_tailoring(args.tailoring_file).profile
 
     return profile
-
-
-def _check_profile_updates(usg: USG, profile: Profile) -> None:
-    """Check for newer profile version and print notice."""
-    logger.debug("Checking for newer version of profile...")
-    if profile.latest_breaking_id is not None:
-        sys.stderr.write(
-            f"\nNOTICE: A new version of this profile is available: "
-            f"{profile.latest_breaking_id}\n\n"
-            )
-        if sys.stdout.isatty():
-            time.sleep(3)
 
 
 def init_logging(log_path: Path, debug: bool) -> None:
