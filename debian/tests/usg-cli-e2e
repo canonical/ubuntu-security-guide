@@ -66,15 +66,15 @@ do
     test_cmd "usg info '$profile'"  0  "Benchmark.*$btype"   ""
 
     # test that generate tailoring works
-    test_cmd "usg generate-tailoring $profile $profile.xml"  0  "generate-tailoring command completed." ""
+    test_cmd "usg generate-tailoring $profile $profile.xml"  0  ""  "USG generate-tailoring command completed."
     test_cmd "grep \"$cac_id\" $profile.xml"  0  "<Profile id=" ""
 
     # test that generate fix works
-    test_cmd "usg generate-fix $profile"  0  "Wrote remediation script to '${cac_id}-.*sh'"  ""
+    test_cmd "usg generate-fix $profile"  0  ""  "Wrote remediation script to '${cac_id}-.*sh'"
     test_cmd "grep 'BEGIN fix' ${cac_id}-*.sh"  0  "BEGIN fix" ""
 
     # generate-fix with tailoring file
-    test_cmd "usg generate-fix -t $profile.xml -o fix.sh"  0  "Wrote remediation script to.*fix.sh"  ""
+    test_cmd "usg generate-fix -t $profile.xml -o fix.sh"  0  ""  "Wrote remediation script to.*fix.sh"
     test_cmd "grep 'BEGIN fix' fix.sh"  0  "BEGIN fix" ""
 
     # test that audit starts when using profile (full run is too long and useless, timeout at 2s)
@@ -93,8 +93,8 @@ fi
 test_cmd "usg info cis_level1_server | grep '^Profile.* cis_level1_server-v1.0.0' " 0 "cis_level1_server-v1.0.0"
 
 # generate tailoring file with version v1.0.0
-test_cmd "usg generate-tailoring cis_level1_server-v1.0.0 t1.xml"  0  "generate-tailoring command completed." ""
-test_cmd "grep href t1.xml"  0  "href=" "" 
+test_cmd "usg generate-tailoring cis_level1_server-v1.0.0 t1.xml"  0  "" "generate-tailoring command completed."
+test_cmd "grep href t1.xml"  0  "href=" ""
 
 # customize tailoring file on the host for quick audit/fix
 sed -e 's/"true"/"false"/g' \
@@ -105,18 +105,22 @@ sed -e 's/"true"/"false"/g' \
 test_cmd "usg info -t t1.xml"  0  "Benchmark.*CIS"  ""
 test_cmd "usg info"  2  ""  "a profile or a tailoring file must be provided"
 mkdir -p /etc/usg/ && cp t1.xml /etc/usg/default-tailoring.xml
-test_cmd "usg info"  0  "Using the default tailoring file" ""
+test_cmd "usg info"  0  ""  "Using the default tailoring file"
 rm /etc/usg/default-tailoring.xml
 
 # Audit with tailoring file, should be 1 pass, 1 fail
-rm -f /var/lib/usg/*
-test_cmd "usg audit -t t1.xml"  0  "^Fail:.*1$"  ""
+rm -f /var/lib/usg/* /var/log/usg.log
+test_cmd "usg audit -t t1.xml"  0  ""  "USG audit scan command completed."
+test_cmd "grep -P 'Fail:\s+1,' /var/log/usg.log"  0  "Fail" ""
+test_cmd "grep -P 'Pass:\s+1,' /var/log/usg.log"  0  "Pass" ""
 # Ensure default outputs exist
 test_cmd "test -s /var/lib/usg/usg-report-*.html"  0  "" ""
 test_cmd "test -s /var/lib/usg/usg-results-*.xml"  0  "" ""
 # Ensure non-default outputs exist
-rm -f /var/lib/usg/* report.html results.xml
-test_cmd "usg audit -t t1.xml --html-file report.html --results-file results.xml --debug --oval-results"  0  "^Fail:.*1$"  ""
+rm -f /var/lib/usg/* /var/log/usg.log report.html results.xml
+test_cmd "usg audit -t t1.xml --html-file report.html --results-file results.xml --debug --oval-results"  0  ""  "USG audit scan command completed."
+test_cmd "grep -P 'Fail:\s+1,' /var/log/usg.log"  0  "Fail" ""
+test_cmd "grep -P 'Pass:\s+1,' /var/log/usg.log"  0  "Pass" ""
 test_cmd "test -s report.html"  0  "" ""
 test_cmd "test -s results.xml"  0  "" ""
 test_cmd "test -s /var/lib/usg/usg-log-*log"  0  "" ""
@@ -125,18 +129,21 @@ test_cmd "test -s /var/lib/usg/ssg-ubuntu????-cpe-oval.xml.result-*.xml"  0  "" 
 
 
 # Fix with tailoring file, only failed rules
-rm -f /var/lib/usg/*
-test_cmd "usg fix -t t1.xml --only-failed"  0  "fix command completed" ""
+rm -f /var/lib/usg/* /var/log/usg.log
+test_cmd "usg fix -t t1.xml --only-failed"  0  "" "USG fix command completed"
 # test only one rule is in remediation script
 test_cmd "grep -c BEGIN /var/lib/usg/*sh"  0  "^1$"  ""
 
 # Re-audit to confirm remediation
-test_cmd "usg audit -t t1.xml"  0  "^Fail:.*0$"  ""
+rm -f /var/lib/usg/* /var/log/usg.log
+test_cmd "usg audit -t t1.xml"  0  ""  "USG audit scan command completed"
+test_cmd "grep -P 'Fail:\s+0,' /var/log/usg.log"  0  "Fail" ""
+test_cmd "grep -P 'Pass:\s+2,' /var/log/usg.log"  0  "Pass" ""
 
 
 # Fix with tailoring file, all rules
 rm -f /var/lib/usg/*
-test_cmd "usg fix -t t1.xml"  0  "fix command completed" ""
+test_cmd "usg fix -t t1.xml"  0  "" "USG fix command completed"
 # test both rules are in remediation script
 test_cmd "grep -c BEGIN /var/lib/usg/*sh"  0  "^2$"  ""
 # Ensure default outputs exist
@@ -144,7 +151,7 @@ test_cmd "test -s /var/lib/usg/usg-report-*.html"  0  "" ""
 test_cmd "test -s /var/lib/usg/usg-results-*.xml"  0  "" ""
 # Ensure non-default outputs exist
 rm -f /var/lib/usg/* report.html results.xml
-test_cmd "usg fix -t t1.xml --html-file report.html --results-file results.xml --debug --oval-results"  0  "fix command completed"  ""
+test_cmd "usg fix -t t1.xml --html-file report.html --results-file results.xml --debug --oval-results"  0  ""  "USG fix command completed"
 test_cmd "test -s report.html"  0  "" ""
 test_cmd "test -s results.xml"  0  "" ""
 test_cmd "test -s /var/lib/usg/usg-log-*log"  0  "" ""
