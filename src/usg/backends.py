@@ -209,12 +209,16 @@ class OpenscapBackend:
         results_path = self._work_dir / self.ARTIFACT_FILENAMES["audit_results"]
         log_path = self._work_dir / self.ARTIFACT_FILENAMES["audit_log"]
 
-        verbose_flag = "INFO" if debug else "WARNING"
+        if debug:
+            verbose_options = [
+                    "--verbose", "INFO",
+                    "--verbose-log-file", str(log_path),
+                ]
+        else:
+            verbose_options = [
+                    "--verbose", "WARNING"
+                ]
 
-        verbose_options = [
-                "--verbose", verbose_flag,
-                "--verbose-log-file", str(log_path),
-            ]
 
         xccdf_options = [
                 "eval",
@@ -264,7 +268,8 @@ class OpenscapBackend:
         artifacts = BackendArtifacts()
         artifacts.add_artifact("audit_report", report_path)
         artifacts.add_artifact("audit_results", results_path)
-        artifacts.add_artifact("audit_log", log_path)
+        if debug:
+            artifacts.add_artifact("audit_log", log_path)
 
         if oval_results or debug:
             # oval results filenames are hardcoded and based on the DS
