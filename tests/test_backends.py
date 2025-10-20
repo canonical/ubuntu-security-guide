@@ -217,9 +217,6 @@ def test_audit_command_line_options(
         tailoring_file=None,
     )
     args = (tmp_path / "test_oscap.args").read_text()
-    log_file = (
-        oscap_backend._work_dir / oscap_backend.ARTIFACT_FILENAMES["audit_log"]
-    )
     results_file = (
         oscap_backend._work_dir / oscap_backend.ARTIFACT_FILENAMES["audit_results"]
     )
@@ -228,7 +225,7 @@ def test_audit_command_line_options(
     )
 
     assert args == (
-        f"xccdf --verbose WARNING --verbose-log-file {log_file} eval "
+        f"xccdf --verbose WARNING eval "
         f"--results {results_file} "
         f"--report {report_file} "
         f"--profile {TEST_PROFILE_ID} "
@@ -247,9 +244,6 @@ def test_audit_command_line_options_old_oscap_version(
         tailoring_file=None,
     )
     args = (tmp_path / "test_oscap.args").read_text()
-    log_file = (
-        oscap_backend._work_dir / oscap_backend.ARTIFACT_FILENAMES["audit_log"]
-    )
     results_file = (
         oscap_backend._work_dir / oscap_backend.ARTIFACT_FILENAMES["audit_results"]
     )
@@ -262,7 +256,7 @@ def test_audit_command_line_options_old_oscap_version(
         f"--results {results_file} "
         f"--report {report_file} "
         f"--profile {TEST_PROFILE_ID} "
-        f"--verbose WARNING --verbose-log-file {log_file} "
+        f"--verbose WARNING "
         f"{dummy_datastream}"
     )
 
@@ -290,9 +284,12 @@ def test_audit_command_line_options_with_debug(monkeypatch, oscap_backend, tmp_p
     results, artifacts = oscap_backend.audit(
         cac_profile=TEST_PROFILE_ID, tailoring_file=None, debug=True, oval_results=False
     )
+    log_file = (
+        oscap_backend._work_dir / oscap_backend.ARTIFACT_FILENAMES["audit_log"]
+    )
     args = (tmp_path / "test_oscap.args").read_text()  # type: ignore
-    assert "--verbose INFO" in args
-    assert "--oval-results" in args
+    assert f" --verbose INFO --verbose-log-file {log_file} " in args
+    assert " --oval-results " in args
 
 
 def test_audit_command_line_options_with_oval_results(
@@ -304,7 +301,7 @@ def test_audit_command_line_options_with_oval_results(
         cac_profile=TEST_PROFILE_ID, tailoring_file=None, debug=False, oval_results=True
     )
     args = (tmp_path / "test_oscap.args").read_text()  # type: ignore
-    assert "--oval-results" in args
+    assert " --oval-results " in args
 
 
 def test_audit_command_fail_on_no_results(oscap_backend, monkeypatch):
