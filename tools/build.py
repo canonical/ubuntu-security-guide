@@ -246,7 +246,7 @@ def main(sys_args) -> None:
         )
     mutex_group.add_argument(
             "--test-data", type=Path,
-            help="Run in test mode using the data in specified directory (e.g. tools/tests/data/ubuntu2404)"
+            help="Run in test mode using the data in specified directory (e.g. tests/data/ubuntu2404)"
             )
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument(
