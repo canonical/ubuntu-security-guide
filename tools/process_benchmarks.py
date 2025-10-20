@@ -138,8 +138,6 @@ def _get_release_channel_successions(
     return releases_by_channels
 
 
-
-
 def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     # Process CaC release yaml configuration file
 
@@ -497,7 +495,7 @@ def _build_active_releases(
                         f"{pre_built_data_dir}. "
                         f"Check the pre-built-data-dir argument. "
                         f"Ensure the directory structure matches the one used in "
-                        f"tools/tests/data/input/"
+                        f"tests/data/input/"
                     )
                 logger.debug(f"Copying test data from {release_dir} to {tmp_build_dir}")
                 shutil.copytree(release_dir, tmp_build_dir, dirs_exist_ok=True)
@@ -585,34 +583,6 @@ def _build_active_releases(
             shutil.copy(license_build_path, license_dst)
 
 
-def _log_upgrade_paths(active_releases: list[dict[str, Any]]) -> None:
-    # print out clean upgrade paths
-    logger.info("--- Benchmark upgrade paths ---")
-    for _, release in enumerate(sorted(active_releases,
-                                 key=lambda x: x["benchmark_data"]["benchmark_id"])):
-        b = release["benchmark_data"]
-        compatible_versions = [
-            x for x in b["compatible_versions"] if x != b["benchmark_id"]
-        ] or []
-        compatible_versions = ", ".join(compatible_versions)
-
-        logger.info(f"Benchmark id/version: {b['benchmark_id']}/{b['version']}")
-        if compatible_versions:
-            logger.info(
-                f"Automatically replaces deprecated versions: {compatible_versions}"
-            )
-
-        logger.info("Upgrade path:")
-        upgrade_path = b["breaking_upgrade_path"]
-        if upgrade_path:
-            for j, benchmark_id in enumerate(upgrade_path):
-                logger.info(f"{j + 1}: {benchmark_id}")
-        else:
-            logger.info("None, this is the latest release!")
-
-    logger.info("----------------------------")
-
-
 def process_benchmarks(
     benchmark_yaml_files: list[Path],
     cac_repo_dir: Path,
@@ -667,10 +637,15 @@ def process_benchmarks(
 
         # get available profiles,benchmarks,channels
         profiles, benchmarks, release_channels = _process_yaml(yaml_data)
+        logger.info(f"Found {len(benchmarks)} benchmark versions containing a total of {len(profiles)} profiles.")
+        for b in benchmarks.values():
+            logger.info(
+                    f"Benchmark: {b['id']}, Release channel: {b['channel_id']}, "
+                    f"Latest tag: {release_channels[b['channel_id']]['release_tag']}."
+                    )
         benchmarks_json_data["profiles"].extend(profiles.values())
         benchmarks_json_data["benchmarks"].extend(benchmarks.values())
         benchmarks_json_data["release_channels"].extend(release_channels.values())
-#        _log_upgrade_paths(active_releases)
 
     # build data for active releases
     with tempfile.TemporaryDirectory() as tmp_dst_dir:

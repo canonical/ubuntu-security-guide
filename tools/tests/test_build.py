@@ -27,7 +27,7 @@ import pytest
 import sys
 
 TOOLS_DIR = Path(__file__).resolve().parent.parent
-TEST_DATA_DIR = importlib.resources.files("tools") / "tests/data"
+TEST_DATA_DIR = importlib.resources.files("tests") / "data"
 
 sys.path.insert(0, str(TOOLS_DIR))
 from build import main as build_main
