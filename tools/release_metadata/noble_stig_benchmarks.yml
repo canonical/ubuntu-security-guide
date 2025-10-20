@@ -1,16 +1,16 @@
 general:
   benchmark_type: STIG
-  product: ubuntu2404
-  product_long: Ubuntu 24.04 LTS (Noble Numbat)
+  product: ubuntu2204
+  product_long: Ubuntu 22.04 LTS (Jammy Jellyfish)
 
 benchmark_releases:
-  - cac_tag: noble-stig-1.0
+  - cac_tag: testing_asd #noble-stig-1.5
     parent_tag: 
     release_channel: 1
     cac_commit: e40871066ec2edfce046b53241f0e02d4a184ea5
     usg_version: 24.04.5
     benchmark_data:
-      version: V1R1
+      version: V2R3
       profiles:
           stig: {}
       description: |-

@@ -1,10 +1,10 @@
 general:
   benchmark_type: CIS
-  product: ubuntu2404
-  product_long: Ubuntu 24.04 LTS (Noble Numbat)
+  product: ubuntu2204
+  product_long: Ubuntu 22.04 LTS (Jammy Jellyfish)
 
 benchmark_releases:
-  - cac_tag: noble-cis-1.5
+  - cac_tag: testing_asd #jammy-cis-1.12
     parent_tag: 
     release_channel: 1
     cac_commit: e40871066ec2edfce046b53241f0e02d4a184ea5
