@@ -40,32 +40,26 @@ test_cmd "usg --version"  0  "\d*\.\d*\.\d*"                 ""
 
 # cis_level1_server profile should exist
 test_cmd "usg list --all"                            0  "cis_level1_server"             ""
-test_cmd "usg list --all | grep 'Listing available'" 0  "Listing available profiles"             ""
+test_cmd "usg list --all | grep 'Listing all available'" 0  "Listing all available profiles"             ""
 
 # machine-readable flag should print "profile:type:product:..." and no extra information
-test_cmd "usg list --machine-readable"                            0  "cis_level1_server:CIS:"             ""
-test_cmd "usg list --machine-readable | grep 'Listing available'" 1  ""                              ""
+test_cmd "usg list --machine-readable"                            0  ":cis_level1_server:CIS:"             ""
+test_cmd "usg list --machine-readable | grep 'Listing all available'" 1  ""                              ""
 
 # get list of all available profile names
 all_profiles=($(usg list --machine --all | cut -d: -f1 | sort -u | xargs))
-# add known aliases
-if grep -w "stig" <<<"${all_profiles[@]}"; then
-    all_profiles="${all_profiles} disa_stig"
-fi
 
 # ensure cis_level1_server exists
-test_cmd "echo ${all_profiles} | grep -w cis_level1_server"  0  "cis_level1_server"
+test_cmd "echo ${all_profiles} | grep -w cis_level1_server-v1.0.0"  0  "cis_level1_server-v1.0.0"
 
 # commands without special args should work for all profiles
 for profile in ${all_profiles[@]}
 do
     # test that info shows correct benchmark type
     case $profile in
-        cis_*) btype=CIS; realname=$profile
+        cis_*) btype=CIS; cac_id=${profile/-v*/}
             ;;
-        stig) btype=STIG; realname=$profile
-            ;;
-        disa_stig) btype=STIG; realname=stig
+        stig*) btype=STIG; cac_id=${profile/-v*/}
             ;;
         *) btype=UNKNOWN
     esac
@@ -73,11 +67,11 @@ do
 
     # test that generate tailoring works
     test_cmd "usg generate-tailoring $profile $profile.xml"  0  "generate-tailoring command completed." ""
-    test_cmd "grep \"$realname\" $profile.xml"  0  "<Profile id=" ""
+    test_cmd "grep \"$cac_id\" $profile.xml"  0  "<Profile id=" ""
 
     # test that generate fix works
-    test_cmd "usg generate-fix $profile"  0  "Wrote remediation script to '${realname}-.*sh'"  ""
-    test_cmd "grep 'BEGIN fix' ${realname}-*.sh"  0  "BEGIN fix" ""
+    test_cmd "usg generate-fix $profile"  0  "Wrote remediation script to '${cac_id}-.*sh'"  ""
+    test_cmd "grep 'BEGIN fix' ${cac_id}-*.sh"  0  "BEGIN fix" ""
 
     # generate-fix with tailoring file
     test_cmd "usg generate-fix -t $profile.xml -o fix.sh"  0  "Wrote remediation script to.*fix.sh"  ""
@@ -91,8 +85,15 @@ do
     rm -rf /var/lib/usg/*
 done
 
-# generate tailoring file with version v1.0.0 (should exist)
-test_cmd "usg generate-tailoring cis_level1_server t1.xml -b v1.0.0"  0  "generate-tailoring command completed." ""
+# ensure known aliases resolve correctly
+if grep -w "stig" <<<"${all_profiles[@]}"; then
+    test_cmd "usg info stig | grep '^Profile.* stig-v1r1' " 0 "stig-v1r1"
+    test_cmd "usg info disa_stig | grep '^Profile.* stig-v1r1' " 0 "stig-v1r1"
+fi
+test_cmd "usg info cis_level1_server | grep '^Profile.* cis_level1_server-v1.0.0' " 0 "cis_level1_server-v1.0.0"
+
+# generate tailoring file with version v1.0.0
+test_cmd "usg generate-tailoring cis_level1_server-v1.0.0 t1.xml"  0  "generate-tailoring command completed." ""
 test_cmd "grep href t1.xml"  0  "href=" "" 
 
 # customize tailoring file on the host for quick audit/fix
@@ -124,10 +125,10 @@ test_cmd "test -s /var/lib/usg/ssg-ubuntu????-cpe-oval.xml.result-*.xml"  0  "" 
 
 
 # Fix with tailoring file, only failed rules
-rm -f /var/lib/usg/xccdf*sh
+rm -f /var/lib/usg/*
 test_cmd "usg fix -t t1.xml --only-failed"  0  "fix command completed" ""
 # test only one rule is in remediation script
-test_cmd "grep -c BEGIN /var/lib/usg/xccdf*sh"  0  "^1$"  ""
+test_cmd "grep -c BEGIN /var/lib/usg/*sh"  0  "^1$"  ""
 
 # Re-audit to confirm remediation
 test_cmd "usg audit -t t1.xml"  0  "^Fail:.*0$"  ""
@@ -137,7 +138,7 @@ test_cmd "usg audit -t t1.xml"  0  "^Fail:.*0$"  ""
 rm -f /var/lib/usg/*
 test_cmd "usg fix -t t1.xml"  0  "fix command completed" ""
 # test both rules are in remediation script
-test_cmd "grep -c BEGIN /var/lib/usg/xccdf*sh"  0  "^2$"  ""
+test_cmd "grep -c BEGIN /var/lib/usg/*sh"  0  "^2$"  ""
 # Ensure default outputs exist
 test_cmd "test -s /var/lib/usg/usg-report-*.html"  0  "" ""
 test_cmd "test -s /var/lib/usg/usg-results-*.xml"  0  "" ""
