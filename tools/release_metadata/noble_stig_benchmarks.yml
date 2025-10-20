@@ -6,16 +6,14 @@ general:
 benchmark_releases:
   - cac_tag: noble-stig-1.0
     parent_tag: 
-    breaking_release: False
-    tailoring_version: 1
+    release_channel: 1
     cac_commit: e40871066ec2edfce046b53241f0e02d4a184ea5
     usg_version: 24.04.5
     benchmark_data:
       version: V1R1
       profiles:
-          stig:
-            legacy_id: disa_stig
-      description: |
+          stig: {}
+      description: |-
           ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
       reference_url: https://public.cyber.mil/stigs/downloads/
