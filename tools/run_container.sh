@@ -88,7 +88,7 @@ COPY ./ /root/usg/
 $pre_commands
 
 # copy test benchmark data
-RUN cp -r /root/usg/tools/tests/data/$product/expected/benchmarks/ /usr/share/usg-benchmarks/
+RUN cp -r /root/usg/tests/data/$product/expected/benchmarks/ /usr/share/usg-benchmarks/
 
 # install usg module, wrapper, config, and bash completion
 RUN cd /root/usg \
