@@ -5,29 +5,25 @@ general:
 benchmark_releases:
 - cac_tag: jammy-stig-1.6
   parent_tag: jammy-stig-1.5
-  breaking_release: false
-  tailoring_version: 1
+  release_channel: 1
   cac_commit: f9637e810bb57b6911da14ca1eb59f68c941ede0
   usg_version: 22.04.13
   benchmark_data:
     version: V2R3
     profiles:
-      stig:
-        legacy_id: disa_stig
+      stig: {}
     description: ComplianceAsCode implementation of STIG Ubuntu 22.04 LTS V2R3 benchmark.
     release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
     reference_url: https://public.cyber.mil/stigs/downloads/
 - cac_tag: jammy-stig-1.5
   parent_tag: null
-  breaking_release: false
-  tailoring_version: 1
+  release_channel: 1
   cac_commit: 02edc5a1bcbf89a6cb7329e13de0aee3717aedab
   usg_version: 22.04.12
   benchmark_data:
     version: V2R3
     profiles:
-      stig:
-        legacy_id: disa_stig
+      stig: {}
     description: ComplianceAsCode implementation of STIG Ubuntu 22.04 LTS V2R3 benchmark.
     release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
     reference_url: https://public.cyber.mil/stigs/downloads/

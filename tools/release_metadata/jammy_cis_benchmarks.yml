@@ -5,8 +5,7 @@ general:
 benchmark_releases:
 - cac_tag: jammy-cis-2.1
   parent_tag: jammy-cis-1.13
-  breaking_release: true
-  tailoring_version: 2
+  release_channel: 2
   cac_commit: a83e9467529aba225a2e1a2328f5a2d2903992b5
   usg_version: 22.04.14
   benchmark_data:
@@ -21,8 +20,7 @@ benchmark_releases:
     reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 - cac_tag: jammy-cis-1.13
   parent_tag: jammy-cis-1.12
-  breaking_release: false
-  tailoring_version: 1
+  release_channel: 1
   cac_commit: f9637e810bb57b6911da14ca1eb59f68c941ede0
   usg_version: 22.04.13
   benchmark_data:
@@ -38,8 +36,7 @@ benchmark_releases:
     reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 - cac_tag: jammy-cis-1.12
   parent_tag: null
-  breaking_release: false
-  tailoring_version: 1
+  release_channel: 1
   cac_commit: 02edc5a1bcbf89a6cb7329e13de0aee3717aedab
   usg_version: 22.04.12
   benchmark_data:
