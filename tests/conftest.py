@@ -20,8 +20,9 @@ import importlib.resources
 
 @pytest.fixture(scope="session")
 def test_metadata():
-    base_test_data_dir = importlib.resources.files("tools") / "tests/data"
+    base_test_data_dir = importlib.resources.files("tests") / "data"
     test_metadata_file = (
         base_test_data_dir / "ubuntu2404/expected/benchmarks/benchmarks.json"
     )
+    assert test_metadata_file.exists(), f"Test data file {test_metadata_file} doesn't exist"
     return test_metadata_file
