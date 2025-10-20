@@ -76,6 +76,7 @@ def patch_usg_and_cli(tmp_path_factory, test_metadata):
             )
             output_files = BackendArtifacts()
             output_files.add_artifact("audit_results", "test_results_contents")
+            output_files.add_artifact("audit_report", "test_report_contents")
             return AuditResults(), output_files
 
         def generate_fix(self, profile) -> BackendArtifacts:
@@ -281,7 +282,7 @@ def test_cli_generate_tailoring(
     cli.cli()
     captured = capsys.readouterr()
     assert Path("gen-tail-out.xml").exists()
-    assert "generate-tailoring command completed" in captured.out
+    assert "generate-tailoring command completed" in captured.err
 
 
 def test_cli_generate_tailoring_os_error(patch_usg_and_cli, capsys):
@@ -316,10 +317,8 @@ def test_cli_default_tailoring_file(patch_usg_and_cli, monkeypatch, capsys, capl
     monkeypatch.setattr(constants, "DEFAULT_TAILORING_PATH", default_tailoring_file)
     cli.cli() # should not fail
     captured = capsys.readouterr()
-    assert f"Using the default tailoring file at {default_tailoring_file}" in captured.out
+    assert f"Using the default tailoring file at {default_tailoring_file}" in captured.err
     assert "tailored_profile" in captured.out
-
-
 
 
 def test_init_logging(capsys, tmp_path):
