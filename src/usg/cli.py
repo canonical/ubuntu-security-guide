@@ -256,7 +256,6 @@ def print_info_profile(profile: Profile) -> None:
         print(CLI_INFO_FORMAT.format(k, v))
 
     benchmark = profile.benchmark
-    profiles = "\n".join([f"- {p}" for p in benchmark.profiles])
     state = "Latest stable" if benchmark.channel.is_latest \
         else "Maintenance (critical patches only)"
 
@@ -276,13 +275,9 @@ def print_info_profile(profile: Profile) -> None:
         ("Release channel", benchmark.channel.id),
     ]:
         print(CLI_INFO_FORMAT.format(k, v))
-    print(
-        f"""
 
-Available profiles:
-{profiles}
-"""
-    )
+    profiles = "\n".join([f"- {p}" for p in benchmark.profiles.values()])
+    print(f"\nAll profiles in this benchmark:\n{profiles}\n")
 
     if profile.latest_breaking_id is not None:
         print(
