@@ -74,7 +74,7 @@ with either a provided profile or a provided tailoring file.
 """,
     "epilog": EPILOG_COMMON + """
 Examples:
-$ usg audit cis_level1_server
+$ usg audit cis_level1_server-v1.0.0
 $ usg audit -t tailoring.xml --html-file report.html --results-file result.xml
 """
 }
@@ -92,7 +92,7 @@ for all rules to be fixed correctly.
 """,
     "epilog": EPILOG_COMMON + """
 Examples:
-$ usg fix cis_level1_server
+$ usg fix cis_level1_server-v1.0.0
 $ usg fix -t tailoring.xml --only-failed
 """
 }
@@ -105,7 +105,7 @@ associated with either a provided profile or a provided tailoring file.
 """,
     "epilog": EPILOG_COMMON + """
 Examples:
-$ usg generate-fix cis_level1_server
+$ usg generate-fix cis_level1_server-v1.0.0
 $ usg generate-fix -t tailoring.xml
 """
 }
@@ -121,7 +121,7 @@ All rules present in the base profile will also be present in the tailoring file
 """,
     "epilog": """
 Examples:
-$ usg generate-fix cis_level1_server -o fix.sh
+$ usg generate-fix cis_level1_server-v1.0.0 -o fix.sh
 $ usg generate-fix -t tailoring.xml -o fix.sh
 """
 }
@@ -164,6 +164,11 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
     """List available profiles."""
     logger.debug("Starting command_list")
     if not args.machine_readable:
+        if not sys.stdout.isatty():
+            sys.stderr.write(
+                "Warning: 'usg list' does not have a stable CLI interface. "
+                "Use '--machine-readable' flag in scripts.\n"
+                )
         if args.all:
             print("\nListing all available profiles...\n")
         else:
@@ -174,7 +179,9 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
 
     example_profile = "cis_level1_server"
     for profile in sorted(usg.profiles.values(), key=lambda p: p.id):
-        is_latest = profile.latest_compatible_id is None and profile.benchmark.channel.is_latest
+        is_latest = profile.latest_compatible_id is None \
+            and profile.benchmark.channel.is_latest
+
         if not args.all and not is_latest:
             continue
         if args.machine_readable:
@@ -186,7 +193,8 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
                 profile.benchmark.version,
                 profile.benchmark.id,
                 profile.benchmark.state,
-                "latest" if is_latest else ""
+                profile.benchmark.channel.id,
+                str(profile.benchmark.channel.channel_number),
                 "", "", "", "", "", "" # reserved
                 ]))
 
@@ -199,6 +207,7 @@ def command_list(usg: USG, args: argparse.Namespace) -> None:
                     profile.benchmark.state,
                 )
             )
+        example_profile = profile.id
     if not args.machine_readable:
         print(f"""
 
@@ -213,9 +222,13 @@ $ usg info -t my_tailoring.xml
 def command_info(usg: USG, args: argparse.Namespace) -> None:
     """Print info about a specific profile or tailoring file."""
     logger.debug("Starting command_info")
+    if not sys.stdout.isatty():
+        sys.stderr.write(
+            "Warning: 'usg info' does not have a stable CLI interface. "
+            "Use with caution in scripts.\n"
+            )
     if hasattr(args, "tailoring_file"):
         tailoring = usg.load_tailoring(args.tailoring_file)
-        print_info_tailoring(tailoring)
         usg_profile = tailoring.profile
     else:
         usg_profile = get_usg_profile_from_args(usg, args)
@@ -229,50 +242,38 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
             )
 
     print_info_profile(usg_profile)
-    print_info_benchmark(usg_profile)
     logger.debug("Finished command_info")
 
 
-def print_info_tailoring(tailoring: TailoringFile) -> None:
-    """Print info about tailoring file."""
+def print_info_profile(profile: Profile) -> None:
+    """Print information about profile, benchmark, release channel."""
     print()
     for k, v in [
-        ("Tailoring file", str(tailoring.tailoring_file.resolve())),
+        ("Profile", profile.id),
+        ("Aliases", ", ".join(profile.alias_ids) or '(none)'),
+        ("Extends", profile.extends_id or "(none)"),
     ]:
         print(CLI_INFO_FORMAT.format(k, v))
 
-
-def print_info_profile(profile: Profile) -> None:
-    """Print info about profile."""
-    print()
-    for k, v in [
-        ("Profile name", profile.cac_id),
-        ("Latest compatible ID", profile.latest_compatible_id or "None (latest)"),
-        ("Latest breaking ID", profile.latest_breaking_id or "None (latest)"),
-        ]:
-        print(CLI_INFO_FORMAT.format(k, v))
-
-
-def print_info_benchmark(profile: Profile) -> None:
-    """Print info about benchmark."""
     benchmark = profile.benchmark
     profiles = "\n".join([f"- {p}" for p in benchmark.profiles])
-    state = "Latest stable" if benchmark.channel.is_latest else "Maintanance (critical patches only)"
+    state = "Latest stable" if benchmark.channel.is_latest \
+        else "Maintenance (critical patches only)"
 
     release_date = datetime.datetime.fromtimestamp(
         benchmark.channel.release_timestamp,
         datetime.timezone.utc
         ).isoformat()
     for k, v in [
-        ("Benchmark", benchmark.benchmark_type),
+        ("Benchmark type", benchmark.benchmark_type),
         ("Target product", benchmark.product_long),
-        ("Version", benchmark.version),
+        ("Benchmark version", benchmark.version),
         ("State", state),
         ("Description", benchmark.description.strip()),
+        ("Reference", benchmark.reference_url),
         ("Release date", release_date),
         ("Release notes", benchmark.channel.release_notes_url),
-        ("USG benchmark ID", benchmark.id),
-        ("Reference", benchmark.reference_url),
+        ("Release channel", benchmark.channel.id),
     ]:
         print(CLI_INFO_FORMAT.format(k, v))
     print(
@@ -284,10 +285,15 @@ Available profiles:
     )
 
     if profile.latest_breaking_id is not None:
-        print(f"""
-Note:
-This profile version is no longer supported. Latest version is {profile.latest_breaking_id}.
-""")  # noqa: E501
+        print(
+            f"\nNote:\nThis profile version is no longer supported. "
+            f"Latest version is {profile.latest_breaking_id}.\n"
+        )
+    elif profile.latest_compatible_id is not None:
+        print(
+            f"\nNote:\nThis profile has been superseded by compatible version "
+            f"{profile.latest_compatible_id}.\n"
+        )
 
 
 def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
