@@ -155,19 +155,21 @@ Use usg <command> --help for more information about a command.
 def error_exit(msg: str = "", rc: int = 1) -> None:
     """Write msg to standard error and exit with return code rc."""
     if msg:
-        sys.stderr.write(msg)
-        sys.stderr.write("\n")
+        printerr(msg)
     sys.exit(rc)
 
+def printerr(msg: str) -> None:
+    """Write msg to stderr with newline."""
+    sys.stderr.write(msg+"\n")
 
 def command_list(usg: USG, args: argparse.Namespace) -> None:
     """List available profiles."""
     logger.debug("Starting command_list")
     if not args.machine_readable:
         if not sys.stdout.isatty():
-            sys.stderr.write(
+            printerr(
                 "Warning: 'usg list' does not have a stable CLI interface. "
-                "Use '--machine-readable' flag in scripts.\n"
+                "Use '--machine-readable' flag in scripts."
                 )
         if args.all:
             print("\nListing all available profiles...\n")
@@ -223,7 +225,7 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
     """Print info about a specific profile or tailoring file."""
     logger.debug("Starting command_info")
     if not sys.stdout.isatty():
-        sys.stderr.write(
+        printerr(
             "Warning: 'usg info' does not have a stable CLI interface. "
             "Use with caution in scripts.\n"
             )
@@ -232,14 +234,6 @@ def command_info(usg: USG, args: argparse.Namespace) -> None:
         usg_profile = tailoring.profile
     else:
         usg_profile = get_usg_profile_from_args(usg, args)
-
-    benchmark = usg_profile.benchmark
-    if hasattr(args, "benchmark_version") and \
-        args.benchmark_version != benchmark.version:
-        print(
-            f"NOTE: Version {args.benchmark_version} was superseded by "
-            f"{benchmark.version}. Showing information for latter.\n"
-            )
 
     print_info_profile(usg_profile)
     logger.debug("Finished command_info")
@@ -296,18 +290,22 @@ def command_generate_tailoring(usg: USG, args: argparse.Namespace) -> None:
     logger.debug("Starting command_generate_tailoring")
     usg_profile = get_usg_profile_from_args(usg, args)
 
-    print(
+    printerr(
         f"USG will extract the tailoring file for profile "
         f"'{usg_profile.id}' to '{args.output}'."
     )
-    contents = usg.generate_tailoring(usg_profile)
+    try:
+        contents = usg.generate_tailoring(usg_profile)
+    except:
+        printerr("USG generate-tailoring command failed!")
+        raise
     try:
         with Path(args.output).open("w") as f:
             f.write(contents)
     except OSError as e:
         error_exit(f"Failed to write file {args.output}: {e}")
     else:
-        print("USG generate-tailoring command completed.")
+        printerr("USG generate-tailoring command completed.")
     logger.debug("Finished command_generate_tailoring")
 
 
@@ -316,7 +314,13 @@ def command_generate_fix(usg: USG, args: argparse.Namespace) -> None:
     logger.debug("Starting command_generate_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
 
-    artifacts = usg.generate_fix(usg_profile)
+    try:
+        artifacts = usg.generate_fix(usg_profile)
+    except:
+        # backwards compatible error msg
+        printerr("USG generate-fix command failed!")
+        raise
+
     output_path = artifacts.get_by_type("fix_script").path
     # Legacy USG writes the default output directly to cwd instead
     # of /var/lib/usg. Ensure we do the same.
@@ -326,7 +330,10 @@ def command_generate_fix(usg: USG, args: argparse.Namespace) -> None:
             output_path = output_path.name
         except OSError as e:
             logger.error(f"Failed to write fix script to CWD: {e}")
-    print(f"Wrote remediation script to '{output_path}'")
+    printerr(
+        f"USG generate-fix command completed."
+        f"Wrote remediation script to '{output_path}'"
+        )
     logger.debug("Finished command_generate_fix")
 
 
@@ -335,17 +342,21 @@ def command_fix(usg: USG, args: argparse.Namespace) -> None:
     logger.debug("Starting command_fix")
     usg_profile = get_usg_profile_from_args(usg, args)
 
-    print("Running audit and remediation script...")
-    _, output_files = usg.audit(
-        usg_profile, debug=args.debug, oval_results=args.oval_results
-    )
-    audit_results_file = None
-    if args.only_failed:
-        audit_results_file = output_files.get_by_type("audit_results").path
+    printerr("Running audit and remediation script...")
+    try:
+        _, output_files = usg.audit(
+            usg_profile, debug=args.debug, oval_results=args.oval_results
+        )
+        audit_results_file = None
+        if args.only_failed:
+            audit_results_file = output_files.get_by_type("audit_results").path
 
-    _ = usg.fix(usg_profile, audit_results_file=audit_results_file)
+        _ = usg.fix(usg_profile, audit_results_file=audit_results_file)
+    except:
+        printerr("USG fix command failed!")
+        raise
 
-    print(
+    printerr(
         "USG fix command completed.\n"
         "A system reboot is required to complete the fix process.\n"
         "Please run usg audit after reboot."
@@ -358,16 +369,26 @@ def command_audit(usg: USG, args: argparse.Namespace) -> None:
     logger.debug("Starting command_audit")
     usg_profile = get_usg_profile_from_args(usg, args)
 
-    results, output_files = usg.audit(
-        usg_profile, debug=args.debug, oval_results=args.oval_results
-    )
-    print(results.get_summary())
+    try:
+        results, output_files = usg.audit(
+            usg_profile, debug=args.debug, oval_results=args.oval_results
+        )
+    except:
+        printerr("USG audit scan command failed!")
+        raise
+
+    report_file = output_files.get_by_type("audit_report").path
+    results_file = output_files.get_by_type("audit_results").path
+    printerr(
+        f"USG audit scan command completed. The scan results are available in "
+        f"{report_file} report or in {results_file}"
+        )
     logger.debug("Finished command_audit")
 
 
 def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
     """Return a Profile object based on the provided args."""
-    logger.debug("Loading profile from args: {args}")
+    logger.debug(f"Loading profile from args: {args}")
 
     if hasattr(args, "profile"):
 
@@ -383,6 +404,7 @@ def get_usg_profile_from_args(usg: USG, args: argparse.Namespace) -> Profile:
     else:
         profile = usg.load_tailoring(args.tailoring_file).profile
 
+    logger.debug(f"Loaded profile {profile}")
     return profile
 
 
@@ -402,13 +424,13 @@ def init_logging(log_path: Path, debug: bool) -> None:
         root.handlers.clear()
 
     if debug:
-        sys.stderr.write(f"Debug logging enabled. Writing to {log_path}.\n")
+        printerr(f"Debug logging enabled. Writing to {log_path}.")
 
     try:
         log_handler = logging.FileHandler(log_path)
     except Exception:  # noqa: BLE001
-        sys.stderr.write(
-            f"Error: cannot open '{log_path}' for writing. Writing logs to stderr.\n"
+        printerr(
+            f"Error: cannot open '{log_path}' for writing. Writing logs to stderr."
         )
         log_handler = logging.StreamHandler()
     else:
@@ -586,11 +608,11 @@ def parse_args(config_defaults: configparser.ConfigParser) -> argparse.Namespace
             # Use default tailoring file if it exists
             default_tailoring = Path(constants.DEFAULT_TAILORING_PATH)
             if default_tailoring.exists():
-                print(f"Using the default tailoring file at {default_tailoring}")
+                printerr(f"Using the default tailoring file at {default_tailoring}")
                 args.tailoring_file = default_tailoring
             else:
-                sys.stderr.write(
-                    "Error: a profile or a tailoring file must be provided.\n"
+                printerr(
+                    "Error: a profile or a tailoring file must be provided."
                     )
                 cmd_parsers[args.command].print_help()
                 error_exit(rc=2)
