@@ -25,7 +25,7 @@ override_dh_auto_build:
 	pandoc doc/man8/usg.md -s -t man -o doc/man8/usg.8
 	pandoc doc/man7/usg-cis.md -s -t man -o doc/man7/usg-cis.7
 	pandoc doc/man7/usg-rules.md -s -t man -o doc/man7/usg-rules.7
-	pandoc doc/man7/usg-stig.md -s -t man -o doc/man7/usg-stig.7
+	pandoc doc/man7/usg-disa-stig.md -s -t man -o doc/man7/usg-disa-stig.7
 	pandoc doc/man7/usg-variables.md -s -t man -o doc/man7/usg-variables.7
 	dh_auto_build
 
@@ -33,6 +33,6 @@ override_dh_auto_clean:
 	rm -rf doc/man8/usg.8
 	rm -rf doc/man7/usg-cis.7
 	rm -rf doc/man7/usg-rules.7
-	rm -rf doc/man7/usg-stig.7
+	rm -rf doc/man7/usg-disa-stig.7
 	rm -rf doc/man7/usg-variables.7
 	dh_auto_clean
