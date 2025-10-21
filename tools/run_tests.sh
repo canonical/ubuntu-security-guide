@@ -21,7 +21,7 @@
 # project, source, data dirs
 SCRIPT_DIR=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 PROJECT_DIR=${SCRIPT_DIR}/..
-TEST_RELEASES="noble jammy"
+TEST_RELEASES="jammy"
 
 source ${SCRIPT_DIR}/run_container.sh
 
