@@ -108,4 +108,6 @@ oscap ds sds-split ssg*ds.xml ./
 for f in scap_org.*xml; do mv $f ${f/scap_org.open-scap_cref_/}; done
 popd >/dev/null
 test_cmd "usg generate-fix cis_level1_server"   0   "legacy USG" "USG generate-fix command completed."
+# revert
+mv /root/python3 /usr/bin/
 

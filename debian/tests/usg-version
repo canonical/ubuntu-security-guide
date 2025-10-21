@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -Ee
+# version matches deb package
+py_version=$(usg --version)
+deb_version=$(dpkg-query --show --showformat='${Version}' usg)
+if [[ "$py_version" != "$deb_version" ]]; then
+    echo "USG python module version not same as USG debian package ($py_version, $deb_version)"
+    exit 1
+fi
+
