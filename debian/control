@@ -15,7 +15,7 @@ Package: usg
 Architecture: all
 Depends: openscap-scanner, ${python3:Depends}, ${misc:Depends}
 Conflicts: usg-common
-Recommends: usg-benchmarks
+Recommends: usg-benchmarks,usg-benchmarks-1
 Description: usg tool application to work with Ubuntu Benchmarks
  This package contains a helper application to simplify the auditing
  and hardening executions.
