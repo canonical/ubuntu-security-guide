@@ -331,7 +331,7 @@ def command_generate_fix(usg: USG, args: argparse.Namespace) -> None:
         except OSError as e:
             logger.error(f"Failed to write fix script to CWD: {e}")
     printerr(
-        f"USG generate-fix command completed."
+        f"USG generate-fix command completed. "
         f"Wrote remediation script to '{output_path}'"
         )
     logger.debug("Finished command_generate_fix")
