@@ -69,11 +69,6 @@ _usg_completions() {
                 COMPREPLY=()
                 return
                 ;;
-            --benchmark-version)
-                # only suggest latest
-                COMPREPLY=($(compgen -W "latest" -- $cur))
-                return
-                ;;
         esac
         case "$cmd" in
             list)
@@ -88,7 +83,7 @@ _usg_completions() {
                 COMPREPLY=($(compgen -W "$opts" -- "$cur"))
                 ;;
             audit)
-                opts="--help --benchmark-version --html-file \
+                opts="--help --html-file \
                       --results-file --oval-results --debug"
                 opts="$(add_profile_and_or_tailoring "$opts")"
                 opts=$(filter_existing_opts "$opts")
@@ -96,20 +91,20 @@ _usg_completions() {
                 return
                 ;;
             fix)
-                opts="--help --benchmark-version --html-file \
+                opts="--help --html-file \
                       --results-file --oval-results --only-failed --debug"
                 opts="$(add_profile_and_or_tailoring "$opts")"
                 opts=$(filter_existing_opts "$opts")
                 COMPREPLY=($(compgen -W "$opts" -- "$cur"))
                 ;;
             generate-fix)
-                opts="--help --benchmark-version --debug --output"
+                opts="--help --debug --output"
                 opts="$(add_profile_and_or_tailoring "$opts")"
                 opts=$(filter_existing_opts "$opts")
                 COMPREPLY=($(compgen -W "$opts" -- "$cur"))
                 ;;
             generate-tailoring)
-                opts="--help --benchmark-version"
+                opts="--help"
                 opts=$(filter_existing_opts "$opts")
                 num_pos=$(count_num_positional_args)
                 if [[ "${num_pos}" -eq 3 ]]; then
