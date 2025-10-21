@@ -87,8 +87,9 @@ done
 
 # ensure known aliases resolve correctly
 if grep -w "stig" <<<"${all_profiles[@]}"; then
-    test_cmd "usg info stig | grep '^Profile.* stig-v1r1' " 0 "stig-v1r1"
-    test_cmd "usg info disa_stig | grep '^Profile.* stig-v1r1' " 0 "stig-v1r1"
+    initial_id=$(usg list -a -m | awk -F: '/_STIG_1:/ {print $1}')
+    test_cmd "usg info stig | grep '^Profile.* $initial_id$' " 0 "$initial_id"
+    test_cmd "usg info disa_stig | grep '^Profile.* $initial_id$' " 0 "$initial_id"
 fi
 test_cmd "usg info cis_level1_server | grep '^Profile.* cis_level1_server-v1.0.0' " 0 "cis_level1_server-v1.0.0"
 
