@@ -1,0 +1,461 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Tailoring xmlns="http://checklists.nist.gov/xccdf/1.2" id="xccdf_scap-workbench_tailoring_default">
+  <benchmark href="/usr/share/usg-benchmarks/ubuntu2404_STIG_1"/>
+  <version time="2025-08-11T20:01:27+00:00">1</version>
+  <Profile id="xccdf_org.ssgproject.content_profile_stig_customized" extends="xccdf_org.ssgproject.content_profile_stig">
+    <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">DISA-STIG Benchmark [CUSTOMIZED]</title>
+    <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">This baseline aligns to the DISA-STIG v.1, rel.1, released 2025-01-28.</description>
+    <!--UBTU-24-100010: Ubuntu 24.04 LTS must not have the "systemd-timesyncd" package installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_timesyncd_removed" selected="true"/>
+    <!--UBTU-24-100020: Ubuntu 24.04 LTS must not have the "ntp" package installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_ntp_removed" selected="true"/>
+    <!--UBTU-24-100030: Ubuntu 24.04 LTS must not have the telnet package installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_telnetd_removed" selected="true"/>
+    <!--UBTU-24-100040: Ubuntu 24.04 LTS must not have the rsh-server package installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_rsh-server_removed" selected="true"/>
+    <!--UBTU-24-100100: Ubuntu 24.04 LTS must use a file integrity tool to verify correct operation of all security functions.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_aide_installed" selected="true"/>
+    <!--UBTU-24-100110: Ubuntu 24.04 LTS must configure AIDE to preform file integrity checking on the file system.-->
+    <select idref="xccdf_org.ssgproject.content_rule_aide_build_database" selected="true"/>
+    <!--UBTU-24-100120: Ubuntu 24.04 LTS must be configured so that the script which runs each 30 days or less to check file integrity is the default one.-->
+    <select idref="xccdf_org.ssgproject.content_rule_aide_periodic_checking_systemd_timer" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_aide_periodic_cron_checking" selected="true"/>
+    <!--UBTU-24-100130: Ubuntu 24.04 LTS must notify designated personnel if baseline configurations are changed in an unauthorized manner. The file integrity tool must notify the system administrator (SA) when changes to the baseline configuration or anomalies in the operation of any security functions are discovered.-->
+    <select idref="xccdf_org.ssgproject.content_rule_aide_disable_silentreports" selected="true"/>
+    <!--UBTU-24-100200: Ubuntu 24.04 LTS must be configured to preserve log records from failure events.-->
+    <select idref="xccdf_org.ssgproject.content_rule_service_rsyslog_enabled" selected="true"/>
+    <!--UBTU-24-100300: Ubuntu 24.04 LTS must have an application firewall installed in order to control remote access methods.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_network_filtering_service">ufw</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_package_ufw_installed" selected="true"/>
+    <!--UBTU-24-100310: Ubuntu 24.04 LTS must enable and run the Uncomplicated Firewall (ufw).-->
+    <select idref="xccdf_org.ssgproject.content_rule_check_ufw_active" selected="true"/>
+    <!--UBTU-24-100400: Ubuntu 24.04 LTS must have the "auditd" package installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_audit_installed" selected="true"/>
+    <!--UBTU-24-100410: Ubuntu 24.04 LTS must produce audit records and reports containing information to establish when, where, what type, the source, and the outcome for all DOD-defined auditable events and actions in near real time.-->
+    <select idref="xccdf_org.ssgproject.content_rule_service_auditd_enabled" selected="true"/>
+    <!--UBTU-24-100450: Ubuntu 24.04 LTS audit event multiplexor must be configured to offload audit logs onto a different system or storage media from the system being audited.-->
+    <select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_remote_server" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_audit-audispd-plugins_installed" selected="true"/>
+    <!--UBTU-24-100500: Ubuntu 24.04 LTS must have AppArmor installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_apparmor_installed" selected="true"/>
+    <!--UBTU-24-100510: Ubuntu 24.04 LTS must be configured to use AppArmor.-->
+    <select idref="xccdf_org.ssgproject.content_rule_apparmor_configured" selected="true"/>
+    <!--UBTU-24-100600: Ubuntu 24.04 LTS must have the "libpam-pwquality" package installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_pam_pwquality_installed" selected="true"/>
+    <!--UBTU-24-100650: Ubuntu 24.04 LTS must have the "SSSD" package installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_nss_sss_installed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_pam_sss_installed" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_package_sssd_installed" selected="true"/>
+    <!--UBTU-24-100660: Ubuntu 24.04 LTS must use the "SSSD" package for multifactor authentication services.-->
+    <select idref="xccdf_org.ssgproject.content_rule_service_sssd_enabled" selected="true"/>
+    <!--UBTU-24-100700: Ubuntu 24.04 LTS must have the "chrony" package installed.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_timesync_service">chronyd</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_package_chrony_installed" selected="true"/>
+    <!--UBTU-24-100800: Ubuntu 24.04 LTS must have SSH installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_openssh-server_installed" selected="true"/>
+    <!--UBTU-24-100810: Ubuntu 24.04 LTS must use SSH to protect the confidentiality and integrity of transmitted information.-->
+    <select idref="xccdf_org.ssgproject.content_rule_service_sshd_enabled" selected="true"/>
+    <!--UBTU-24-100820: Ubuntu 24.04 LTS must configure the SSH daemon to use FIPS 140-3 approved ciphers to prevent the unauthorized disclosure of information and/or detect changes to information during transmission.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_use_approved_ciphers_ordered_stig" selected="true"/>
+    <!--UBTU-24-100830: Ubuntu 24.04 LTS must configure the SSH daemon to use Message Authentication Codes (MACs) employing FIPS 140-3 approved cryptographic hashes to prevent the unauthorized disclosure of information and/or detect changes to information during transmission.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_use_approved_macs_ordered_stig" selected="true"/>
+    <!--UBTU-24-100840: Ubuntu 24.04 LTS SSH server must be configured to use only FIPS 140-3 validated key exchange algorithms.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_use_approved_kex_ordered_stig" selected="true"/>
+    <!--UBTU-24-100850: Ubuntu 24.04 LTS must configure the SSH client to use FIPS 140-3 approved ciphers to prevent the unauthorized disclosure of information and/or detect changes to information during transmission.-->
+    <select idref="xccdf_org.ssgproject.content_rule_ssh_client_use_approved_ciphers_ordered_stig" selected="true"/>
+    <!--UBTU-24-100860: Ubuntu 24.04 LTS SSH client must be configured to use only Message Authentication Codes (MACs) employing FIPS 140-3 validated cryptographic hash algorithms.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_ssh_approved_macs">hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_ssh_use_approved_macs_ordered_stig" selected="true"/>
+    <!--UBTU-24-100900: Ubuntu 24.04 LTS must accept Personal Identity Verification (PIV) credentials.-->
+    <select idref="xccdf_org.ssgproject.content_rule_package_opensc_installed" selected="true"/>
+    <!--UBTU-24-100910: Ubuntu 24.04 LTS must accept Personal Identity Verification (PIV) credentials managed through the Privileged Access Management (PAM) framework.-->
+    <select idref="xccdf_org.ssgproject.content_rule_install_smartcard_packages" selected="true"/>
+    <!--UBTU-24-101000: Ubuntu 24.04 LTS must allow users to directly initiate a session lock for all connection types.-->
+    <select idref="xccdf_org.ssgproject.content_rule_vlock_installed" selected="true"/>
+    <!--UBTU-24-102000: Ubuntu 24.04 LTS when booted must require authentication upon booting into single-user and maintenance modes.-->
+    <select idref="xccdf_org.ssgproject.content_rule_grub2_password" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_grub2_uefi_password" selected="true"/>
+    <!--UBTU-24-102010: Ubuntu 24.04 LTS must initiate session audits at system startup.-->
+    <select idref="xccdf_org.ssgproject.content_rule_grub2_audit_argument" selected="true"/>
+    <!--UBTU-24-200000: Ubuntu 24.04 LTS must limit the number of concurrent sessions to 10 for all accounts and/or account types.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_max_concurrent_login_sessions">10</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_max_concurrent_login_sessions" selected="true"/>
+    <!--UBTU-24-200020: Ubuntu 24.04 LTS must initiate a graphical session lock after 10 minutes of inactivity.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_inactivity_timeout_value">600</set-value>
+    <set-value idref="xccdf_org.ssgproject.content_value_var_screensaver_lock_delay">0</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_idle_delay" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_delay" selected="true"/>
+    <!--UBTU-24-200040: Ubuntu 24.04 LTS must retain a user's session lock until the user reestablishes access using established identification and authentication procedures.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_enabled" selected="true"/>
+    <!--UBTU-24-200060: Ubuntu 24.04 LTS must automatically terminate a user session after inactivity timeouts have expired.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_tmout">600</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_tmout" selected="true"/>
+    <!--UBTU-24-200090: Ubuntu 24.04 LTS must monitor remote access methods.-->
+    <select idref="xccdf_org.ssgproject.content_rule_rsyslog_remote_access_monitoring" selected="true"/>
+    <!--UBTU-24-200250: Ubuntu 24.04 LTS must automatically remove or disable emergency accounts after 72 hours.-->
+    <select idref="xccdf_org.ssgproject.content_rule_account_temp_expire_date" selected="true"/>
+    <!--UBTU-24-200260: Ubuntu 24.04 LTS must disable account identifiers (individuals, groups, roles, and devices) after 35 days of inactivity.-->
+    <select idref="xccdf_org.ssgproject.content_rule_account_disable_post_pw_expiration" selected="true"/>
+    <!--UBTU-24-200280: Ubuntu 24.04 LTS must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/passwd.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_usergroup_modification_passwd" selected="true"/>
+    <!--UBTU-24-200290: Ubuntu 24.04 LTS must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/group.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_usergroup_modification_group" selected="true"/>
+    <!--UBTU-24-200300: Ubuntu 24.04 LTS must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/shadow.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_usergroup_modification_shadow" selected="true"/>
+    <!--UBTU-24-200310: Ubuntu 24.04 LTS must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/gshadow.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_usergroup_modification_gshadow" selected="true"/>
+    <!--UBTU-24-200320: Ubuntu 24.04 LTS must generate audit records for all account creations, modifications, disabling, and termination events that affect /etc/opasswd.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_usergroup_modification_opasswd" selected="true"/>
+    <!--UBTU-24-200580: Ubuntu 24.04 LTS must prevent all software from executing at higher privilege levels than users executing the software and the audit system must be configured to audit the execution of privileged functions.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_suid_privilege_function" selected="true"/>
+    <!--UBTU-24-200610: Ubuntu 24.04 LTS must automatically lock an account until the locked account is released by an administrator when three unsuccessful logon attempts have been made.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_passwords_pam_faillock_deny">3</set-value>
+    <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_passwords_pam_faillock_fail_interval">900</set-value>
+    <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_passwords_pam_faillock_unlock_time">0</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_audit" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_deny" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_interval" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_silent" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faillock_unlock_time" selected="true"/>
+    <!--UBTU-24-200640: Ubuntu 24.04 LTS must display the Standard Mandatory DOD Notice and Consent Banner before granting access to via an SSH logon.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_remote_login_banner_text">^(You[\s\n]+are[\s\n]+accessing[\s\n]+a[\s\n]+U\.S\.[\s\n]+Government[\s\n]+\(USG\)[\s\n]+Information[\s\n]+System[\s\n]+\(IS\)[\s\n]+that[\s\n]+is[\s\n]+provided[\s\n]+for[\s\n]+USG\-authorized[\s\n]+use[\s\n]+only\.[\s\n]+By[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+\(which[\s\n]+includes[\s\n]+any[\s\n]+device[\s\n]+attached[\s\n]+to[\s\n]+this[\s\n]+IS\),[\s\n]+you[\s\n]+consent[\s\n]+to[\s\n]+the[\s\n]+following[\s\n]+conditions\:(?:[\n]+|(?:\\n)+)\-The[\s\n]+USG[\s\n]+routinely[\s\n]+intercepts[\s\n]+and[\s\n]+monitors[\s\n]+communications[\s\n]+on[\s\n]+this[\s\n]+IS[\s\n]+for[\s\n]+purposes[\s\n]+including,[\s\n]+but[\s\n]+not[\s\n]+limited[\s\n]+to,[\s\n]+penetration[\s\n]+testing,[\s\n]+COMSEC[\s\n]+monitoring,[\s\n]+network[\s\n]+operations[\s\n]+and[\s\n]+defense,[\s\n]+personnel[\s\n]+misconduct[\s\n]+\(PM\),[\s\n]+law[\s\n]+enforcement[\s\n]+\(LE\),[\s\n]+and[\s\n]+counterintelligence[\s\n]+\(CI\)[\s\n]+investigations\.(?:[\n]+|(?:\\n)+)\-At[\s\n]+any[\s\n]+time,[\s\n]+the[\s\n]+USG[\s\n]+may[\s\n]+inspect[\s\n]+and[\s\n]+seize[\s\n]+data[\s\n]+stored[\s\n]+on[\s\n]+this[\s\n]+IS\.(?:[\n]+|(?:\\n)+)\-Communications[\s\n]+using,[\s\n]+or[\s\n]+data[\s\n]+stored[\s\n]+on,[\s\n]+this[\s\n]+IS[\s\n]+are[\s\n]+not[\s\n]+private,[\s\n]+are[\s\n]+subject[\s\n]+to[\s\n]+routine[\s\n]+monitoring,[\s\n]+interception,[\s\n]+and[\s\n]+search,[\s\n]+and[\s\n]+may[\s\n]+be[\s\n]+disclosed[\s\n]+or[\s\n]+used[\s\n]+for[\s\n]+any[\s\n]+USG\-authorized[\s\n]+purpose\.(?:[\n]+|(?:\\n)+)\-This[\s\n]+IS[\s\n]+includes[\s\n]+security[\s\n]+measures[\s\n]+\(e\.g\.,[\s\n]+authentication[\s\n]+and[\s\n]+access[\s\n]+controls\)[\s\n]+to[\s\n]+protect[\s\n]+USG[\s\n]+interests\-\-not[\s\n]+for[\s\n]+your[\s\n]+personal[\s\n]+benefit[\s\n]+or[\s\n]+privacy\.(?:[\n]+|(?:\\n)+)\-Notwithstanding[\s\n]+the[\s\n]+above,[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+does[\s\n]+not[\s\n]+constitute[\s\n]+consent[\s\n]+to[\s\n]+PM,[\s\n]+LE[\s\n]+or[\s\n]+CI[\s\n]+investigative[\s\n]+searching[\s\n]+or[\s\n]+monitoring[\s\n]+of[\s\n]+the[\s\n]+content[\s\n]+of[\s\n]+privileged[\s\n]+communications,[\s\n]+or[\s\n]+work[\s\n]+product,[\s\n]+related[\s\n]+to[\s\n]+personal[\s\n]+representation[\s\n]+or[\s\n]+services[\s\n]+by[\s\n]+attorneys,[\s\n]+psychotherapists,[\s\n]+or[\s\n]+clergy,[\s\n]+and[\s\n]+their[\s\n]+assistants\.[\s\n]+Such[\s\n]+communications[\s\n]+and[\s\n]+work[\s\n]+product[\s\n]+are[\s\n]+private[\s\n]+and[\s\n]+confidential\.[\s\n]+See[\s\n]+User[\s\n]+Agreement[\s\n]+for[\s\n]+details\.|I've[\s\n]+read[\s\n]+\&amp;[\s\n]+consent[\s\n]+to[\s\n]+terms[\s\n]+in[\s\n]+IS[\s\n]+user[\s\n]+agreem't\.)$</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_warning_banner_net" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_banner_etc_issue_net" selected="true"/>
+    <!--UBTU-24-200650: Ubuntu 24.04 LTS must enable the graphical user logon banner to display the Standard Mandatory DOD Notice and Consent Banner before granting local access to the system via a graphical user logon.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_banner_enabled" selected="true"/>
+    <!--UBTU-24-200660: Ubuntu 24.04 LTS must display the Standard Mandatory DOD Notice and Consent Banner before granting local access to the system via a graphical user logon.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_login_banner_text">^(You[\s\n]+are[\s\n]+accessing[\s\n]+a[\s\n]+U\.S\.[\s\n]+Government[\s\n]+\(USG\)[\s\n]+Information[\s\n]+System[\s\n]+\(IS\)[\s\n]+that[\s\n]+is[\s\n]+provided[\s\n]+for[\s\n]+USG\-authorized[\s\n]+use[\s\n]+only\.[\s\n]+By[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+\(which[\s\n]+includes[\s\n]+any[\s\n]+device[\s\n]+attached[\s\n]+to[\s\n]+this[\s\n]+IS\),[\s\n]+you[\s\n]+consent[\s\n]+to[\s\n]+the[\s\n]+following[\s\n]+conditions\:(?:[\n]+|(?:\\n)+)\-The[\s\n]+USG[\s\n]+routinely[\s\n]+intercepts[\s\n]+and[\s\n]+monitors[\s\n]+communications[\s\n]+on[\s\n]+this[\s\n]+IS[\s\n]+for[\s\n]+purposes[\s\n]+including,[\s\n]+but[\s\n]+not[\s\n]+limited[\s\n]+to,[\s\n]+penetration[\s\n]+testing,[\s\n]+COMSEC[\s\n]+monitoring,[\s\n]+network[\s\n]+operations[\s\n]+and[\s\n]+defense,[\s\n]+personnel[\s\n]+misconduct[\s\n]+\(PM\),[\s\n]+law[\s\n]+enforcement[\s\n]+\(LE\),[\s\n]+and[\s\n]+counterintelligence[\s\n]+\(CI\)[\s\n]+investigations\.(?:[\n]+|(?:\\n)+)\-At[\s\n]+any[\s\n]+time,[\s\n]+the[\s\n]+USG[\s\n]+may[\s\n]+inspect[\s\n]+and[\s\n]+seize[\s\n]+data[\s\n]+stored[\s\n]+on[\s\n]+this[\s\n]+IS\.(?:[\n]+|(?:\\n)+)\-Communications[\s\n]+using,[\s\n]+or[\s\n]+data[\s\n]+stored[\s\n]+on,[\s\n]+this[\s\n]+IS[\s\n]+are[\s\n]+not[\s\n]+private,[\s\n]+are[\s\n]+subject[\s\n]+to[\s\n]+routine[\s\n]+monitoring,[\s\n]+interception,[\s\n]+and[\s\n]+search,[\s\n]+and[\s\n]+may[\s\n]+be[\s\n]+disclosed[\s\n]+or[\s\n]+used[\s\n]+for[\s\n]+any[\s\n]+USG\-authorized[\s\n]+purpose\.(?:[\n]+|(?:\\n)+)\-This[\s\n]+IS[\s\n]+includes[\s\n]+security[\s\n]+measures[\s\n]+\(e\.g\.,[\s\n]+authentication[\s\n]+and[\s\n]+access[\s\n]+controls\)[\s\n]+to[\s\n]+protect[\s\n]+USG[\s\n]+interests\-\-not[\s\n]+for[\s\n]+your[\s\n]+personal[\s\n]+benefit[\s\n]+or[\s\n]+privacy\.(?:[\n]+|(?:\\n)+)\-Notwithstanding[\s\n]+the[\s\n]+above,[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+does[\s\n]+not[\s\n]+constitute[\s\n]+consent[\s\n]+to[\s\n]+PM,[\s\n]+LE[\s\n]+or[\s\n]+CI[\s\n]+investigative[\s\n]+searching[\s\n]+or[\s\n]+monitoring[\s\n]+of[\s\n]+the[\s\n]+content[\s\n]+of[\s\n]+privileged[\s\n]+communications,[\s\n]+or[\s\n]+work[\s\n]+product,[\s\n]+related[\s\n]+to[\s\n]+personal[\s\n]+representation[\s\n]+or[\s\n]+services[\s\n]+by[\s\n]+attorneys,[\s\n]+psychotherapists,[\s\n]+or[\s\n]+clergy,[\s\n]+and[\s\n]+their[\s\n]+assistants\.[\s\n]+Such[\s\n]+communications[\s\n]+and[\s\n]+work[\s\n]+product[\s\n]+are[\s\n]+private[\s\n]+and[\s\n]+confidential\.[\s\n]+See[\s\n]+User[\s\n]+Agreement[\s\n]+for[\s\n]+details\.|I've[\s\n]+read[\s\n]+\&amp;[\s\n]+consent[\s\n]+to[\s\n]+terms[\s\n]+in[\s\n]+IS[\s\n]+user[\s\n]+agreem't\.)$</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_login_banner_text" selected="true"/>
+    <!--UBTU-24-200680: Ubuntu 24.04 LTS must be configured to enforce the acknowledgement of the Standard Mandatory DOD Notice and Consent Banner for all SSH connections.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_ssh_confirm_text">^\#!\/bin\/bash(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)if[\s\n]+\[[\s\n]+\-n[\s\n]+"\$SSH_CLIENT"[\s\n]+\][\s\n]+\|\|[\s\n]+\[[\s\n]+\-n[\s\n]+"\$SSH_TTY"[\s\n]+\];[\s\n]+then(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+while[\s\n]+true;[\s\n]+do(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+read[\s\n]+\-p[\s\n]+"[\s\n]+(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)You[\s\n]+are[\s\n]+accessing[\s\n]+a[\s\n]+U\.S\.[\s\n]+Government[\s\n]+\(USG\)[\s\n]+Information[\s\n]+System[\s\n]+\(IS\)[\s\n]+that[\s\n]+is[\s\n]+provided[\s\n]+for[\s\n]+USG\-authorized[\s\n]+use[\s\n]+only\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)By[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+\(which[\s\n]+includes[\s\n]+any[\s\n]+device[\s\n]+attached[\s\n]+to[\s\n]+this[\s\n]+IS\),[\s\n]+you[\s\n]+consent[\s\n]+to[\s\n]+the[\s\n]+following[\s\n]+conditions\:(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-The[\s\n]+USG[\s\n]+routinely[\s\n]+intercepts[\s\n]+and[\s\n]+monitors[\s\n]+communications[\s\n]+on[\s\n]+this[\s\n]+IS[\s\n]+for[\s\n]+purposes[\s\n]+including,[\s\n]+but[\s\n]+not[\s\n]+limited[\s\n]+to,[\s\n]+penetration[\s\n]+testing,[\s\n]+COMSEC[\s\n]+monitoring,[\s\n]+network[\s\n]+operations[\s\n]+and[\s\n]+defense,[\s\n]+personnel[\s\n]+misconduct[\s\n]+\(PM\),[\s\n]+law[\s\n]+enforcement[\s\n]+\(LE\),[\s\n]+and[\s\n]+counterintelligence[\s\n]+\(CI\)[\s\n]+investigations\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-At[\s\n]+any[\s\n]+time,[\s\n]+the[\s\n]+USG[\s\n]+may[\s\n]+inspect[\s\n]+and[\s\n]+seize[\s\n]+data[\s\n]+stored[\s\n]+on[\s\n]+this[\s\n]+IS\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-Communications[\s\n]+using,[\s\n]+or[\s\n]+data[\s\n]+stored[\s\n]+on,[\s\n]+this[\s\n]+IS[\s\n]+are[\s\n]+not[\s\n]+private,[\s\n]+are[\s\n]+subject[\s\n]+to[\s\n]+routine[\s\n]+monitoring,[\s\n]+interception,[\s\n]+and[\s\n]+search,[\s\n]+and[\s\n]+may[\s\n]+be[\s\n]+disclosed[\s\n]+or[\s\n]+used[\s\n]+for[\s\n]+any[\s\n]+USG\-authorized[\s\n]+purpose\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-This[\s\n]+IS[\s\n]+includes[\s\n]+security[\s\n]+measures[\s\n]+\(e\.g\.,[\s\n]+authentication[\s\n]+and[\s\n]+access[\s\n]+controls\)[\s\n]+to[\s\n]+protect[\s\n]+USG[\s\n]+interests\-\-not[\s\n]+for[\s\n]+your[\s\n]+personal[\s\n]+benefit[\s\n]+or[\s\n]+privacy\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)\-Notwithstanding[\s\n]+the[\s\n]+above,[\s\n]+using[\s\n]+this[\s\n]+IS[\s\n]+does[\s\n]+not[\s\n]+constitute[\s\n]+consent[\s\n]+to[\s\n]+PM,[\s\n]+LE[\s\n]+or[\s\n]+CI[\s\n]+investigative[\s\n]+searching[\s\n]+or[\s\n]+monitoring[\s\n]+of[\s\n]+the[\s\n]+content[\s\n]+of[\s\n]+privileged[\s\n]+communications,[\s\n]+or[\s\n]+work[\s\n]+product,[\s\n]+related[\s\n]+to[\s\n]+personal[\s\n]+representation[\s\n]+or[\s\n]+services[\s\n]+by[\s\n]+attorneys,[\s\n]+psychotherapists,[\s\n]+or[\s\n]+clergy,[\s\n]+and[\s\n]+their[\s\n]+assistants\.[\s\n]+Such[\s\n]+communications[\s\n]+and[\s\n]+work[\s\n]+product[\s\n]+are[\s\n]+private[\s\n]+and[\s\n]+confidential\.[\s\n]+See[\s\n]+User[\s\n]+Agreement[\s\n]+for[\s\n]+details\.(?:[\n]+|(?:\\n)+)(?:[\n]+|(?:\\n)+)Do[\s\n]+you[\s\n]+agree\?[\s\n]+\[y\/N\][\s\n]+"[\s\n]+yn(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+case[\s\n]+\$yn[\s\n]+in(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+\[Yy\]\*[\s\n]+\)[\s\n]+break[\s\n]+;;(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+\[Nn\]\*[\s\n]+\)[\s\n]+exit[\s\n]+1[\s\n]+;;(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+[\s\n]+esac(?:[\n]+|(?:\\n)+)[\s\n]+[\s\n]+[\s\n]+[\s\n]+done(?:[\n]+|(?:\\n)+)fi(?:[\n]+|(?:\\n)+)$</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_banner_etc_profiled_ssh_confirm" selected="true"/>
+    <!--UBTU-24-300001: Ubuntu 24.04 LTS Advance Package Tool (APT) must be configured to prevent the installation of patches, service packs, device drivers, or Ubuntu 24.04 LTS components without verification they have been digitally signed using a certificate that is recognized and approved by the organization.-->
+    <select idref="xccdf_org.ssgproject.content_rule_apt_conf_disallow_unauthenticated" selected="true"/>
+    <!--UBTU-24-300006: Ubuntu 24.04 LTS library files must have mode 0755 or less permissive.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_library_dirs" selected="true"/>
+    <!--UBTU-24-300007: Ubuntu 24.04 LTS library files must be owned by root.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_ownership_library_dirs" selected="true"/>
+    <!--UBTU-24-300008: Ubuntu 24.04 LTS library directories must be owned by root.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_ownership_library_dirs" selected="true"/>
+    <!--UBTU-24-300009: Ubuntu 24.04 LTS library files must be group-owned by root or a system account.-->
+    <select idref="xccdf_org.ssgproject.content_rule_root_permissions_syslibrary_files" selected="true"/>
+    <!--UBTU-24-300010: Ubuntu 24.04 LTS library directories must be group-owned by root.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_group_ownership_library_dirs" selected="true"/>
+    <!--UBTU-24-300011: Ubuntu 24.04 LTS must have system commands set to a mode of 0755 or less permissive.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_binary_dirs" selected="true"/>
+    <!--UBTU-24-300012: Ubuntu 24.04 LTS must have system commands owned by root or a system account.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_ownership_binary_dirs" selected="true"/>
+    <!--UBTU-24-300013: Ubuntu 24.04 LTS must have system commands group-owned by root or a system account.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupownership_system_commands_dirs" selected="true"/>
+    <!--UBTU-24-300014: Ubuntu 24.04 LTS must prevent the use of dictionary words for passwords.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_dictcheck">1</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_dictcheck" selected="true"/>
+    <!--UBTU-24-300016: Ubuntu 24.04 LTS must be configured so that when passwords are changed or new passwords are established, pwquality must be used.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_retry">3</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_enforcing" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_retry" selected="true"/>
+    <!--UBTU-24-300017: Ubuntu 24.04 LTS must enforce a delay of at least four seconds between logon prompts following a failed logon attempt.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_delay">4000000</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_passwords_pam_faildelay_delay" selected="true"/>
+    <!--UBTU-24-300021: Ubuntu 24.04 LTS must require users to reauthenticate for privilege escalation or when changing roles.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sudo_require_authentication" selected="true"/>
+    <!--UBTU-24-300022: Ubuntu 24.04 LTS must be configured so that remote X connections are disabled, unless to fulfill documented and validated mission requirements.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_x11_forwarding" selected="true"/>
+    <!--UBTU-24-300023: Ubuntu 24.04 LTS SSH daemon must prevent remote hosts from connecting to the proxy display.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_x11_use_localhost" selected="true"/>
+    <!--UBTU-24-300024: Ubuntu 24.04 LTS must display the date and time of the last successful account logon upon logon.-->
+    <select idref="xccdf_org.ssgproject.content_rule_display_login_attempts" selected="true"/>
+    <!--UBTU-24-300025: Ubuntu 24.04 LTS must disable the x86 Ctrl-Alt-Delete key sequence if a graphical user interface is installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dconf_gnome_disable_ctrlaltdel_reboot" selected="true"/>
+    <!--UBTU-24-300026: Ubuntu 24.04 LTS must disable the x86 Ctrl-Alt-Delete key sequence.-->
+    <select idref="xccdf_org.ssgproject.content_rule_disable_ctrlaltdel_reboot" selected="true"/>
+    <!--UBTU-24-300027: Ubuntu 24.04 LTS must not have accounts configured with blank or null passwords.-->
+    <select idref="xccdf_org.ssgproject.content_rule_no_empty_passwords_etc_shadow" selected="true"/>
+    <!--UBTU-24-300028: Ubuntu 24.04 LTS must not allow accounts configured in Pluggable Authentication Modules (PAM) with blank or null passwords.-->
+    <select idref="xccdf_org.ssgproject.content_rule_no_empty_passwords" selected="true"/>
+    <!--UBTU-24-300029: Ubuntu 24.04 LTS must generate audit records for all events that affect the systemd journal files.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_var_log_journal" selected="true"/>
+    <!--UBTU-24-300030: Ubuntu 24.04 LTS default filesystem permissions must be defined in such a way that all authenticated users can read and modify only their own files.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_user_umask">077</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_umask_etc_login_defs" selected="true"/>
+    <!--UBTU-24-300031: Ubuntu 24.04 LTS must not allow unattended or automatic login via SSH.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_disable_empty_passwords" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_do_not_permit_user_env" selected="true"/>
+    <!--UBTU-24-300039: Ubuntu 24.04 LTS must disable automatic mounting of Universal Serial Bus (USB) mass storage driver.-->
+    <select idref="xccdf_org.ssgproject.content_rule_kernel_module_usb-storage_disabled" selected="true"/>
+    <!--UBTU-24-300041: Ubuntu 24.04 LTS must be configured to prohibit or restrict the use of functions, ports, protocols, and/or services, as defined in the Ports, Protocols, and Services Management Category Assurance List (PPSM CAL) and vulnerability assessments.-->
+    <select idref="xccdf_org.ssgproject.content_rule_ufw_only_required_services" selected="true"/>
+    <!--UBTU-24-400000: Ubuntu 24.04 LTS must uniquely identify interactive users.-->
+    <select idref="xccdf_org.ssgproject.content_rule_no_duplicate_uids" selected="true"/>
+    <!--UBTU-24-400020: Ubuntu 24.04 LTS must implement smart card logins for multifactor authentication for local and network access to privileged and nonprivileged accounts.-->
+    <select idref="xccdf_org.ssgproject.content_rule_smartcard_pam_enabled" selected="true"/>
+    <!--UBTU-24-400030: Ubuntu 24.04 LTS must implement smart card logins for multifactor authentication for local and network access to privileged and nonprivileged accounts over SSH.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_pubkey_auth" selected="true"/>
+    <!--UBTU-24-400060: Ubuntu 24.04 LTS must electronically verify Personal Identity Verification (PIV) credentials.-->
+    <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_cert_checking" selected="true"/>
+    <!--UBTU-24-400110: Ubuntu 24.04 LTS must prevent direct login to the root account.-->
+    <select idref="xccdf_org.ssgproject.content_rule_prevent_direct_root_logins" selected="true"/>
+    <!--UBTU-24-400220: Ubuntu 24.04 LTS must store only encrypted representations of passwords.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_unix_rounds">100000</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_set_password_hashing_algorithm_auth_stig" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_unix_rounds_password_auth" selected="true"/>
+    <!--UBTU-24-400260: Ubuntu 24.04 LTS must enforce password complexity by requiring that at least one uppercase character be used.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_ucredit">-1</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_ucredit" selected="true"/>
+    <!--UBTU-24-400270: Ubuntu 24.04 LTS must enforce password complexity by requiring that at least one lowercase character be used.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_lcredit">-1</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_lcredit" selected="true"/>
+    <!--UBTU-24-400280: Ubuntu 24.04 LTS must enforce password complexity by requiring that at least one numeric character be used.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_dcredit">-1</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_dcredit" selected="true"/>
+    <!--UBTU-24-400290: Ubuntu 24.04 LTS must require the change of at least eight characters when passwords are changed.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_difok">8</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_difok" selected="true"/>
+    <!--UBTU-24-400300: Ubuntu 24.04 LTS must enforce 24 hours/1 day as the minimum password lifetime. Passwords for new users must have a 24 hours/1 day minimum password lifetime restriction.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_minimum_age_login_defs">1</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_minimum_age_login_defs" selected="true"/>
+    <!--UBTU-24-400310: Ubuntu 24.04 LTS must enforce a 60-day maximum password lifetime restriction. Passwords for new users must have a 60-day maximum password lifetime restriction.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_accounts_maximum_age_login_defs">60</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_maximum_age_login_defs" selected="true"/>
+    <!--UBTU-24-400320: Ubuntu 24.04 LTS must enforce a minimum 15-character password length.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_minlen">15</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_minlen" selected="true"/>
+    <!--UBTU-24-400330: Ubuntu 24.04 LTS must enforce password complexity by requiring that at least one special character be used.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_password_pam_ocredit">-1</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_accounts_password_pam_ocredit" selected="true"/>
+    <!--UBTU-24-400340: Ubuntu 24.04 LTS must be configured such that Pluggable Authentication Module (PAM) prohibits the use of cached authentications after one day.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sssd_offline_cred_expiration" selected="true"/>
+    <!--UBTU-24-400360: Ubuntu 24.04 LTS, for PKI-based authentication, SSSD must validate certificates by constructing a certification path (which includes status information) to an accepted trust anchor.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sssd_enable_pam_services" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_sssd_enable_smartcards" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_sssd_certification_path_trust_anchor" selected="true"/>
+    <!--UBTU-24-400370: Ubuntu 24.04 LTS must map the authenticated identity to the user or group account for PKI-based authentication.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sssd_enable_user_cert" selected="true"/>
+    <!--UBTU-24-400375: Ubuntu 24.04 LTS, for PKI-based authentication, Privileged Access Management (PAM) must validate certificates by constructing a certification path (which includes status information) to an accepted trust anchor.-->
+    <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_ca" selected="true"/>
+    <!--UBTU-24-400380: Ubuntu 24.04 LTS for PKI-based authentication, must implement a local cache of revocation data in case of the inability to access revocation information via the network.-->
+    <select idref="xccdf_org.ssgproject.content_rule_smartcard_configure_crl" selected="true"/>
+    <!--UBTU-24-400400: Ubuntu 24.04 LTS must encrypt all stored passwords with a FIPS 140-3 approved cryptographic hashing algorithm.-->
+    <select idref="xccdf_org.ssgproject.content_rule_set_password_hashing_algorithm_logindefs" selected="true"/>
+    <!--UBTU-24-500010: Ubuntu 24.04 LTS must generate audit records for privileged activities, nonlocal maintenance, diagnostic sessions, and other system-level access.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_sudo_log_events" selected="true"/>
+    <!--UBTU-24-500050: Ubuntu 24.04 LTS must use strong authenticators in establishing nonlocal maintenance and diagnostic sessions.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_enable_pam" selected="true"/>
+    <!--UBTU-24-600000: Ubuntu 24.04 LTS must immediately terminate all network connections associated with SSH traffic after a period of inactivity.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_sshd_set_keepalive">1</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_set_keepalive" selected="true"/>
+    <!--UBTU-24-600010: Ubuntu 24.04 LTS must immediately terminate all network connections associated with SSH traffic at the end of the session or after 10 minutes of inactivity.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_sshd_idle_timeout_value">600</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_sshd_set_idle_timeout" selected="true"/>
+    <!--UBTU-24-600030: Ubuntu 24.04 LTS must implement NIST FIPS-validated cryptography to protect classified information and for the following: To provision digital signatures, to generate cryptographic hashes, and to protect unclassified information requiring confidentiality and cryptographic protection in accordance with applicable federal laws, Executive Orders, directives, policies, regulations, and standards.-->
+    <select idref="xccdf_org.ssgproject.content_rule_is_fips_mode_enabled" selected="true"/>
+    <!--UBTU-24-600060: Ubuntu 24.04 LTS must use DOD PKI-established certificate authorities (CAs) for verification of the establishment of protected sessions.-->
+    <select idref="xccdf_org.ssgproject.content_rule_only_allow_dod_certs" selected="true"/>
+    <!--UBTU-24-600070: Ubuntu 24.04 LTS must disable kernel core dumps.-->
+    <select idref="xccdf_org.ssgproject.content_rule_service_kdump_disabled" selected="true"/>
+    <!--UBTU-24-600090: Ubuntu 24.04 LTS handling data requiring "data at rest" protections must employ cryptographic mechanisms to prevent unauthorized disclosure and modification of the information at rest.-->
+    <select idref="xccdf_org.ssgproject.content_rule_encrypt_partitions" selected="true"/>
+    <!--UBTU-24-600130: Ubuntu 24.04 LTS must ensure only users who need access to security functions are part of sudo group.-->
+    <select idref="xccdf_org.ssgproject.content_rule_ensure_sudo_group_restricted" selected="true"/>
+    <!--UBTU-24-600140: Ubuntu 24.04 LTS must restrict access to the kernel message buffer.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sysctl_kernel_dmesg_restrict" selected="true"/>
+    <!--UBTU-24-600150: Ubuntu 24.04 LTS must set a sticky bit on all public directories to prevent unauthorized and unintended information transferred via shared system resources.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_perms_world_writable_sticky_bits" selected="true"/>
+    <!--UBTU-24-600160: Ubuntu 24.04 LTS must compare internal information system clocks at least every 24 hours with an authoritative time server.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_time_service_set_maxpoll">16</set-value>
+    <set-value idref="xccdf_org.ssgproject.content_value_var_multiple_time_servers">0.us.pool.ntp.mil</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_chronyd_specify_remote_server" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_chronyd_or_ntpd_set_maxpoll" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_chronyd_server_directive" selected="true"/>
+    <!--UBTU-24-600180: Ubuntu 24.04 LTS must synchronize internal information system clocks to the authoritative time source when the time difference is greater than one second.-->
+    <select idref="xccdf_org.ssgproject.content_rule_chronyd_sync_clock" selected="true"/>
+    <!--UBTU-24-600190: Ubuntu 24.04 LTS must be configured to use TCP syncookies.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sysctl_net_ipv4_tcp_syncookies" selected="true"/>
+    <!--UBTU-24-600200: Ubuntu 24.04 LTS must configure the uncomplicated firewall to rate-limit impacted network interfaces.-->
+    <select idref="xccdf_org.ssgproject.content_rule_ufw_rate_limit" selected="true"/>
+    <!--UBTU-24-600230: Ubuntu 24.04 LTS must disable all wireless network adapters.-->
+    <select idref="xccdf_org.ssgproject.content_rule_wireless_disable_interfaces" selected="true"/>
+    <!--UBTU-24-700010: Ubuntu 24.04 LTS must generate error messages that provide information necessary for corrective actions without revealing information that could be exploited by adversaries.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log_stig" selected="true"/>
+    <!--UBTU-24-700020: Ubuntu 24.04 LTS must generate system journal entries without revealing information that could be exploited by adversaries.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_permissions_system_journal" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_system_journal" selected="true"/>
+    <!--UBTU-24-700030: Ubuntu 24.04 LTS must be configured so that the "journalctl" command is not accessible by unauthorized users.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_journalctl" selected="true"/>
+    <!--UBTU-24-700040: Ubuntu 24.04 LTS must be configured so that the "journalctl" command is owned by "root".-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_owner_journalctl" selected="true"/>
+    <!--UBTU-24-700050: Ubuntu 24.04 LTS must be configured so that the "journalctl" command is group-owned by "root".-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_journalctl" selected="true"/>
+    <!--UBTU-24-700060: Ubuntu 24.04 LTS must configure the directories used by the system journal to be group-owned by "systemd-journal".-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_groupowner_system_journal" selected="true"/>
+    <!--UBTU-24-700070: Ubuntu 24.04 LTS must configure the files used by the system journal to be group-owned by "systemd-journal".-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_system_journal" selected="true"/>
+    <!--UBTU-24-700080: Ubuntu 24.04 LTS must configure the directories used by the system journal to be owned by "root".-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_owner_system_journal" selected="true"/>
+    <!--UBTU-24-700090: Ubuntu 24.04 LTS must configure the files used by the system journal to be owned by "root"-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_owner_system_journal" selected="true"/>
+    <!--UBTU-24-700100: Ubuntu 24.04 LTS must configure the /var/log directory to be group-owned by syslog.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_var_log" selected="true"/>
+    <!--UBTU-24-700110: Ubuntu 24.04 LTS must configure the /var/log directory to be owned by root.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_owner_var_log" selected="true"/>
+    <!--UBTU-24-700120: Ubuntu 24.04 LTS must configure the /var/log directory to have mode "0755" or less permissive.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log" selected="true"/>
+    <!--UBTU-24-700130: Ubuntu 24.04 LTS must configure the /var/log/syslog file to be group-owned by adm.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupowner_var_log_syslog" selected="true"/>
+    <!--UBTU-24-700140: Ubuntu 24.04 LTS must configure /var/log/syslog file to be owned by syslog.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_owner_var_log_syslog" selected="true"/>
+    <!--UBTU-24-700150: Ubuntu 24.04 LTS must configure /var/log/syslog file with mode "0640" or less permissive.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log_syslog" selected="true"/>
+    <!--UBTU-24-700300: Ubuntu 24.04 LTS must implement nonexecutable data to protect its memory from unauthorized code execution.-->
+    <select idref="xccdf_org.ssgproject.content_rule_bios_enable_execution_restrictions" selected="true"/>
+    <!--UBTU-24-700310: Ubuntu 24.04 LTS must implement address space layout randomization to protect its memory from unauthorized code execution.-->
+    <select idref="xccdf_org.ssgproject.content_rule_sysctl_kernel_randomize_va_space" selected="true"/>
+    <!--UBTU-24-700320: Ubuntu 24.04 LTS must be configured so that Advance Package Tool (APT) removes all software components after updated versions have been installed.-->
+    <select idref="xccdf_org.ssgproject.content_rule_clean_components_post_updating" selected="true"/>
+    <!--UBTU-24-700400: Ubuntu 24.04 LTS must be a vendor-supported release.-->
+    <select idref="xccdf_org.ssgproject.content_rule_installed_OS_is_vendor_supported" selected="true"/>
+    <!--UBTU-24-900040: Ubuntu 24.04 LTS must be configured so that audit configuration files are not write-accessible by unauthorized users.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_audit_auditd" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_audit_rules" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_etc_audit_rulesd" selected="true"/>
+    <!--UBTU-24-900050: Ubuntu 24.04 LTS must permit only authorized accounts to own the audit configuration files.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_ownership_audit_configuration" selected="true"/>
+    <!--UBTU-24-900060: Ubuntu 24.04 LTS must permit only authorized groups to own the audit configuration files.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupownership_audit_configuration" selected="true"/>
+    <!--UBTU-24-900070: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the su command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_su" selected="true"/>
+    <!--UBTU-24-900080: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the chfn command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_chfn" selected="true"/>
+    <!--UBTU-24-900090: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the mount command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_mount" selected="true"/>
+    <!--UBTU-24-900100: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the umount command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_umount" selected="true"/>
+    <!--UBTU-24-900110: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the ssh-agent command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_ssh_agent" selected="true"/>
+    <!--UBTU-24-900120: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the ssh-keysign command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_ssh_keysign" selected="true"/>
+    <!--UBTU-24-900130: Ubuntu 24.04 LTS must generate audit records for any use of the setxattr, fsetxattr, lsetxattr, removexattr, fremovexattr, and lremovexattr system calls.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_fremovexattr" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_fsetxattr" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_lremovexattr" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_lsetxattr" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_removexattr" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_setxattr" selected="true"/>
+    <!--UBTU-24-900140: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the chown, fchown, fchownat, and lchown system calls.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_chown" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_fchown" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_fchownat" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_lchown" selected="true"/>
+    <!--UBTU-24-900150: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the chmod, fchmod, and fchmodat system calls.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_chmod" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_fchmod" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_dac_modification_fchmodat" selected="true"/>
+    <!--UBTU-24-900160: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the creat, open, openat, open_by_handle_at, truncate, and ftruncate system calls.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_unsuccessful_file_modification_creat" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_unsuccessful_file_modification_ftruncate" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_unsuccessful_file_modification_open" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_unsuccessful_file_modification_open_by_handle_at" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_unsuccessful_file_modification_openat" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_unsuccessful_file_modification_truncate" selected="true"/>
+    <!--UBTU-24-900170: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the sudo command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_sudo" selected="true"/>
+    <!--UBTU-24-900180: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the sudoedit command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_sudoedit" selected="true"/>
+    <!--UBTU-24-900190: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the chsh command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_chsh" selected="true"/>
+    <!--UBTU-24-900200: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the newgrp command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_newgrp" selected="true"/>
+    <!--UBTU-24-900210: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the chcon command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_chcon" selected="true"/>
+    <!--UBTU-24-900220: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the apparmor_parser command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_apparmor_parser" selected="true"/>
+    <!--UBTU-24-900230: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the setfacl command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_setfacl" selected="true"/>
+    <!--UBTU-24-900240: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the chacl command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_execution_chacl" selected="true"/>
+    <!--UBTU-24-900250: Ubuntu 24.04 LTS must generate audit records for the use and modification of faillog file.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_login_events_faillog" selected="true"/>
+    <!--UBTU-24-900260: Ubuntu 24.04 LTS must generate audit records for the use and modification of the lastlog file.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_login_events_lastlog" selected="true"/>
+    <!--UBTU-24-900270: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the passwd command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_passwd" selected="true"/>
+    <!--UBTU-24-900280: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the unix_update command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_unix_update" selected="true"/>
+    <!--UBTU-24-900290: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the gpasswd command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_gpasswd" selected="true"/>
+    <!--UBTU-24-900300: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the chage command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_chage" selected="true"/>
+    <!--UBTU-24-900310: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the usermod command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_usermod" selected="true"/>
+    <!--UBTU-24-900320: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the crontab command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_crontab" selected="true"/>
+    <!--UBTU-24-900330: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the pam_timestamp_check command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_pam_timestamp_check" selected="true"/>
+    <!--UBTU-24-900340: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the init_module and finit_module syscalls.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_kernel_module_loading_finit" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_kernel_module_loading_init" selected="true"/>
+    <!--UBTU-24-900350: Ubuntu 24.04 LTS must generate audit records for successful/unsuccessful uses of the delete_module syscall.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_kernel_module_loading_delete" selected="true"/>
+    <!--UBTU-24-900510: Ubuntu 24.04 LTS must generate audit records when successful/unsuccessful attempts to modify the /etc/sudoers file occur.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_sudoers" selected="true"/>
+    <!--UBTU-24-900520: Ubuntu 24.04 LTS must generate audit records when successful/unsuccessful attempts to modify the /etc/sudoers.d directory occur.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_sudoers_d" selected="true"/>
+    <!--UBTU-24-900540: Ubuntu 24.04 LTS must generate audit records for any successful/unsuccessful use of unlink, unlinkat, rename, renameat, and rmdir system calls.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_file_deletion_events_rename" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_file_deletion_events_renameat" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_file_deletion_events_rmdir" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_file_deletion_events_unlink" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_file_deletion_events_unlinkat" selected="true"/>
+    <!--UBTU-24-900590: Ubuntu 24.04 LTS must generate audit records for the /var/log/wtmp file.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_session_events_wtmp" selected="true"/>
+    <!--UBTU-24-900600: Ubuntu 24.04 LTS must generate audit records for the /var/run/utmp file.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_session_events_utmp" selected="true"/>
+    <!--UBTU-24-900610: Ubuntu 24.04 LTS must generate audit records for the /var/log/btmp file.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_session_events_btmp" selected="true"/>
+    <!--UBTU-24-900730: Ubuntu 24.04 LTS must generate audit records when successful/unsuccessful attempts to use modprobe command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_modprobe" selected="true"/>
+    <!--UBTU-24-900740: Ubuntu 24.04 LTS must generate audit records when successful/unsuccessful attempts to use the kmod command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_kmod" selected="true"/>
+    <!--UBTU-24-900750: Ubuntu 24.04 LTS must generate audit records when successful/unsuccessful attempts to use the fdisk command.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_privileged_commands_fdisk" selected="true"/>
+    <!--UBTU-24-900920: Ubuntu 24.04 LTS must allocate audit record storage capacity to store at least one week's worth of audit records, when audit records are not immediately sent to a central audit record storage facility.-->
+    <select idref="xccdf_org.ssgproject.content_rule_auditd_audispd_configure_sufficiently_large_partition" selected="true"/>
+    <!--UBTU-24-900950: Ubuntu 24.04 LTS must have a crontab script running weekly to offload audit events of standalone systems.-->
+    <select idref="xccdf_org.ssgproject.content_rule_auditd_offload_logs" selected="true"/>
+    <!--UBTU-24-900960: Ubuntu 24.04 LTS must immediately notify the system administrator (SA) and information system security officer (ISSO) (at a minimum) when allocated audit record storage volume reaches 75 percent of the repository maximum audit record storage capacity.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_auditd_space_left_percentage">25</set-value>
+    <set-value idref="xccdf_org.ssgproject.content_value_var_auditd_space_left_action">email</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_auditd_data_retention_space_left_action" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_auditd_data_retention_space_left_percentage" selected="true"/>
+    <!--UBTU-24-900980: Ubuntu 24.04 LTS must alert the system administrator (SA) and information system security officer (ISSO) (at a minimum) in the event of an audit processing failure.-->
+    <set-value idref="xccdf_org.ssgproject.content_value_var_auditd_action_mail_acct">root</set-value>
+    <select idref="xccdf_org.ssgproject.content_rule_auditd_data_retention_action_mail_acct" selected="true"/>
+    <!--UBTU-24-901220: Ubuntu 24.04 LTS must record time stamps for audit records that can be mapped to Coordinated Universal Time (UTC) or Greenwich Mean Time (GMT).-->
+    <select idref="xccdf_org.ssgproject.content_rule_ensure_rtc_utc_configuration" selected="true"/>
+    <!--UBTU-24-901230: Ubuntu 24.04 LTS must configure audit tools with a mode of "0755" or less permissive.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_audit_binaries" selected="true"/>
+    <!--UBTU-24-901240: Ubuntu 24.04 LTS must configure audit tools to be owned by root.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_ownership_audit_binaries" selected="true"/>
+    <!--UBTU-24-901250: Ubuntu 24.04 LTS must configure the audit tools to be group-owned by root.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_groupownership_audit_binaries" selected="true"/>
+    <!--UBTU-24-901260: Ubuntu 24.04 LTS must have directories that contain system commands set to a mode of "0755" or less permissive.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_permissions_binary_dirs" selected="true"/>
+    <!--UBTU-24-901270: Ubuntu 24.04 LTS must have directories that contain system commands owned by root.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_ownership_binary_dirs" selected="true"/>
+    <!--UBTU-24-901280: Ubuntu 24.04 LTS must have directories that contain system commands group-owned by root.-->
+    <select idref="xccdf_org.ssgproject.content_rule_dir_groupownership_binary_dirs" selected="true"/>
+    <!--UBTU-24-901300: Ubuntu 24.04 LTS must be configured so that audit log files are not read or write-accessible by unauthorized users.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_permissions_var_log_audit_stig" selected="true"/>
+    <!--UBTU-24-901310: Ubuntu 24.04 LTS must be configured to permit only authorized users ownership of the audit log files.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_ownership_var_log_audit_stig" selected="true"/>
+    <!--UBTU-24-901350: Ubuntu 24.04 LTS must permit only authorized groups ownership of the audit log files.-->
+    <select idref="xccdf_org.ssgproject.content_rule_file_group_ownership_var_log_audit" selected="true"/>
+    <select idref="xccdf_org.ssgproject.content_rule_file_group_ownership_var_log_audit_stig" selected="true"/>
+    <!--UBTU-24-901380: Ubuntu 24.04 LTS must be configured so that the audit log directory is not write-accessible by unauthorized users.-->
+    <select idref="xccdf_org.ssgproject.content_rule_directory_permissions_var_log_audit" selected="true"/>
+    <!--UBTU-24-90890: Ubuntu 24.04 LTS must use cryptographic mechanisms to protect the integrity of audit tools.-->
+    <select idref="xccdf_org.ssgproject.content_rule_aide_check_audit_tools" selected="true"/>
+    <!--UBTU-24-909000: Ubuntu 24.04 LTS audit system must protect auditing rules from unauthorized change.-->
+    <select idref="xccdf_org.ssgproject.content_rule_audit_rules_immutable" selected="true"/>
+  </Profile>
+</Tailoring>

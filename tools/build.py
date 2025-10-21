@@ -16,139 +16,110 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 import datetime
-import configparser
-import os
-import re
-import subprocess
+import gzip
+import shutil
+import tempfile
 import sys
-import traceback
+import logging
+from create_rule_and_variable_doc import generate_markdown_doc
+from pathlib import Path
+import json
+from typing import Tuple
+from process_benchmarks import get_pat_token, process_benchmarks, BenchmarkProcessingError
+import toml
 
-# This is assumed to be in the same directory as this script.
-tools_directory = os.path.dirname(os.path.realpath(__file__))
-configfile = "%s/build_config.ini" % (tools_directory)
+logger = logging.getLogger(__name__)
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+RELEASE_METADATA_DIR = Path("tools/release_metadata")
+TEMPLATES_DIR = Path("templates")
+BENCHMARKS_DIR = Path("benchmarks")
+TEST_INPUTS_DIR = Path("tools/tests/data/input")
+TEST_PB_DOWNLOAD_DIR = Path(TEST_INPUTS_DIR) / RELEASE_METADATA_DIR / "process_benchmarks_mock_data"
 
 
 def exit_error(msg):
-    print(f"Build script exiting with error:\n{msg}\n")
-    traceback.print_exc()
+    logger.error(f"Build script exiting with error:\n{msg}\n")
     sys.exit(1)
 
 
-def load_config():
-    config = configparser.ConfigParser()
-    if config.read(configfile) == []:
-        exit_error("Could not open config.ini file.\n"
-                   "Is this present in the same directory as the script?")
+def run_process_benchmarks(
+        release_metadata_dir: Path,
+        templates_dir: Path,
+        pb_download_dir: Path | None,
+        output_benchmarks_dir: Path
+        ) -> None:
+    # Run process_benchmarks() to generate benchmark data.
+    # If pb_mock_download_dir is provided, use mock data from that directory
+    # instead of downloading the actual data from GitHub.
+    
+    logger.debug(f"Running process_benchmarks() with release_metadata_dir: {release_metadata_dir}")
+    logger.debug(f"Running process_benchmarks() with templates_dir: {templates_dir}")
+    logger.debug(f"Running process_benchmarks() with pb_download_dir: {pb_download_dir}")
+    logger.debug(f"Running process_benchmarks() with output_benchmarks_dir: {output_benchmarks_dir}")
+
+    release_metadata_files = list(release_metadata_dir.glob("*.yml"))
+
+    logger.debug(f"Found benchmark metadata files: {release_metadata_files}")
+    if not release_metadata_files:
+        exit_error(f"No yml files fonud in ${RELEASE_METADATA_DIR}")
+
+    if pb_download_dir is not None:
+        github_pat_token = None
+    else:
+        github_pat_token = get_pat_token()
 
     try:
-        package_version = config["DEFAULT"]["version"]
-    except KeyError:
-        exit_error("\"version\" key is not present in a \"DEFAULT\" section.\n"
-                   "Has config.ini been malformed?")
+        process_benchmarks(
+            release_metadata_files,
+            templates_dir,
+            github_pat_token,
+            pb_download_dir,
+            output_benchmarks_dir
+            )
+
+    except BenchmarkProcessingError as e:
+        exit_error(f"Error while processing benchmarks: {e}")
+
+    logger.debug("process_benchmarks() completed successfully")
+
+
+def gen_documentation(output_benchmarks_dir: Path) -> Tuple[str, str]:
+    # generate docs for rules and variables for the latest benchmark
+
+    logger.debug("Generating documentation...")
+
+    benchmark_metadata_path = output_benchmarks_dir / "benchmarks.json"
+    benchmark_metadata = json.loads(benchmark_metadata_path.read_text())
 
     try:
-        alternative_version = config["DEFAULT"]["alternative_version"]
-    except KeyError:
-        exit_error("\"alternate_version\" key is not present in a \"DEFAULT\""
-                   "section.\nHas config.ini been malformed?")
+        latest = [b for b in benchmark_metadata["benchmarks"] if b["backend"] == "openscap" and b["is_latest"]][0]
+        datastream_gz_path = output_benchmarks_dir / latest["data_files"]["datastream_gz"]["path"]
+    except Exception:
+        exit_error(f"Could not find 'latest' openscap datastream in {benchmark_metadata_path}")
 
-    try:
-        target = config["DEFAULT"]["target"]
-    except KeyError:
-        exit_error("\"target\" key is not present in a \"DEFAULT\" section.\n"
-                   "Has config.ini been malformed?")
+    logger.debug(f"Using datastream: {datastream_gz_path}")
 
-    try:
-        usg_directory = config["DEFAULT"]["usg_directory"]
-    except KeyError:
-        exit_error("\"usg_directory\" key is not present in a \"DEFAULT\""
-                   "section.\nHas config.ini been malformed?")
+    # Unpack datastream used for generating documentation
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        unpacked_datastream_path = Path(tmp_dir) / datastream_gz_path.name.replace(".gz", "")
+        logger.debug(f"Unpacking datastream to {unpacked_datastream_path}...")
+        with gzip.open(datastream_gz_path, "rb") as ds_gz:
+            with open(unpacked_datastream_path, "wb") as ds:
+                shutil.copyfileobj(ds_gz, ds)
 
-    try:
-        cac_directory = config["DEFAULT"]["cac_directory"]
-    except KeyError:
-        exit_error("\"cac_directory\" key is not present in a \"DEFAULT\""
-                   "section.\nHas config.ini been malformed?")
-
-    return package_version, alternative_version, target, usg_directory, cac_directory
-
-
-def run_ppb(tools_directory, cac_directory, target, usg_directory):
-    try:
-        ppb_out = subprocess.check_output(
-            ["%s/pre_package_build.sh" % (tools_directory),
-             "%s/%s" % (tools_directory, cac_directory),
-             "%s" % (target),
-             "%s/%s" % (tools_directory, usg_directory)])
-    except subprocess.CalledProcessError:
-        exit_error("pre_package_build.sh returned a non-zero status."
-                   "Possible failure.\n%s" % (ppb_out))
-
-
-def update_alternative_version(usg_path, altver):
-    try:
-        control_file = open("%s/%s/debian/control" %
-                            (tools_directory, usg_path), "r")
-    except FileNotFoundError:
-        exit_error("debian/control file was unable to be opened for reading.\n"
-                   "Is \"usg_directory\" key in config.ini wrong?")
-    control_data = control_file.read()
-    control_file.close()
-
-    try:
-        control_file = open("%s/%s/debian/control" %
-                            (tools_directory, usg_path), "w")
-    except FileNotFoundError:
-        exit_error("debian/control file was unable to be opened for writing.\n"
-                   "Is \"usg_directory\" key in config.ini wrong?")
-
-    control_data_corrected = re.sub(
-        "Package: usg-benchmarks-*.$",
-        "Package: usg-benchmarks-%s" % (altver),
-        control_data,
-        flags=re.MULTILINE)
-
-    control_data_corrected = re.sub(
-        "Recommends: usg-benchmarks-*.$",
-        "Recommends: usg-benchmarks-%s" % (altver),
-        control_data_corrected,
-        flags=re.MULTILINE)
-
-    control_file.write(control_data_corrected)
-    control_file.close()
-
-
-def gen_documentation(cac_directory, usg_directory, target):
-    # I'm opting to listen to the other module's outputs
-    # rather than rebuilding the module.
-    # This way the other module can still be used as it
-    # was originally designed.
-
-    doc_gen_command = ["rules", "variables"]
-    doc_output = [""] * len(doc_gen_command)
-    for i in range(len(doc_gen_command)):
         try:
-            exec_arg_1 = "%s/create_rule_and_variable_doc.py" % \
-                (tools_directory)
-            exec_arg_2 = doc_gen_command[i]
-            exec_arg_3 = "%s/%s/products/%s/profiles" % \
-                (tools_directory, cac_directory, target)
-            exec_arg_4 =\
-                "%s/%s/benchmarks/ssg-%s-xccdf.xml"\
-                % (tools_directory, usg_directory, target)
-            doc_output[i] = subprocess.check_output([
-                sys.executable, exec_arg_1, exec_arg_2,
-                exec_arg_3, exec_arg_4]).decode()
-        except subprocess.CalledProcessError:
-            exit_error("Executing `%s %s %s %s %s` failed." %
-                       (sys.executable, exec_arg_1, exec_arg_2,
-                        exec_arg_3, exec_arg_4))
+            rules_output = generate_markdown_doc(unpacked_datastream_path, 'rules')
+            vars_output = generate_markdown_doc(unpacked_datastream_path, 'variables')
+        except Exception as e:
+            exit_error(f"Failed to generate documentation: {e}")
 
-    # In order of [rules, variables]
-    return (doc_output[0], doc_output[1])
+    return (rules_output, vars_output)
 
 
+<<<<<<< HEAD
 def validate_tailoring_files(usg_directory):
     tailoring_dir = os.path.join(tools_directory,
                                  usg_directory + '/tailoring/')
@@ -223,6 +194,14 @@ def gen_tailoring(cac_directory, usg_directory, target, benchmark_version):
 
 def mass_replacer(the_meat, meat_placeholder, package_version,
                   alternative_version, current_timestamp, file_lines):
+=======
+def mass_replacer(
+        the_meat: str,
+        meat_placeholder: str,
+        current_timestamp: datetime.datetime,
+        file_lines: str
+        ) -> str:
+>>>>>>> a2f9469 (Initial squashed commit of python usg)
     # This function significantly reduces code reuse and other potential
     # ickyness. "the_meat" refers to the main data that needs to be put
     # in the file,ie the generated documentation.
@@ -236,84 +215,108 @@ def mass_replacer(the_meat, meat_placeholder, package_version,
     corrected_lines = file_lines.replace(
         "<<YEAR_PLACEHOLDER>>", str(current_year))\
         .replace("<<DATE_PLACEHOLDER>>", str(current_datestring))\
-        .replace("<<USG_BENCHMARKS_VERSION_PLACEHOLDER>>",
-                 str(package_version))\
-        .replace("<<USG_BENCHMARKS_ALTERNATIVE_PLACEHOLDER>>",
-                 str(alternative_version))\
+        .replace("<<USG_BENCHMARKS_VERSION_PLACEHOLDER>>", _get_usg_version())\
         .replace(meat_placeholder, str(the_meat))
 
     return corrected_lines
 
 
-def build_files(rules_doc, vars_doc,
-                package_version, alternative_version,
-                current_timestamp, usg_directory):
+def build_files(
+        templates_dir: Path,
+        output_dir: Path,
+        rules_doc: str,
+        vars_doc: str,
+        current_timestamp: datetime.datetime
+        ) -> None:
+
+
     # An array of [path, data, placeholder]
     data_info = [
         ["doc/man8/usg.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-cis.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-disa-stig.md", "", "<<DOESNT_EXIST>>"],
         ["doc/man7/usg-rules.md", rules_doc, "<<USG_MAN_RULES_PLACEHOLDER>>"],
-        ["doc/man7/usg-variables.md", vars_doc,
-         "<<USG_MAN_VARIABLE_PLACEHOLDER>>"]
+        ["doc/man7/usg-variables.md", vars_doc, "<<USG_MAN_VARIABLE_PLACEHOLDER>>"]
     ]
 
     for specific_file_data in data_info:
         try:
-            template_file = open("%s/%s/templates/%s" %
-                                 (tools_directory, usg_directory,
-                                  specific_file_data[0]), "r")
+            template_path = templates_dir / specific_file_data[0]
+            template_data = template_path.read_text()
         except FileNotFoundError:
-            exit_error("Template file at %s/%s/templates/%s cannot be opened."
-                       % (tools_directory, usg_directory,
-                          specific_file_data[0]))
+            exit_error(f"Template file at {template_path} cannot be opened.")
+
+        built_data = mass_replacer(
+            specific_file_data[1],
+            specific_file_data[2],
+            current_timestamp,
+            template_data
+        )
         try:
-            built_file = open("%s/%s/%s" %
-                              (tools_directory, usg_directory,
-                               specific_file_data[0]), "w")
+            output_path = output_dir / specific_file_data[0]
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(built_data)
         except FileNotFoundError:
-            exit_error("File at %s/%s/%s cannot be opened for writing." %
-                       (tools_directory, usg_directory, specific_file_data[0]))
-
-        template_data = template_file.read()
-        built_data = mass_replacer(specific_file_data[1],
-                                   specific_file_data[2],
-                                   package_version,
-                                   alternative_version,
-                                   current_timestamp,
-                                   template_data)
-        built_file.write(built_data)
-        built_file.close()
-        template_file.close()
+            exit_error("File at {output_path} cannot be opened for writing.")
 
 
-def main(arg):
+def _get_usg_version() -> str:
+    pyproject_path = PROJECT_ROOT / "pyproject.toml"
+    pyproject_toml = toml.load(pyproject_path)
+    return pyproject_toml["project"]["version"]
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", action="store_true")
+    parser.add_argument("--test-mode", action="store_true")
+    parser.add_argument("--pre-downloaded-data-dir", type=Path, help="Data dir containing pre-downloaded data (also used for testing)")
+    parser.add_argument("--output-dir", type=Path, default=PROJECT_ROOT, help="Root output dir")
+    args = parser.parse_args()
+
+    loglevel = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(stream=sys.stdout, level=loglevel, format='%(levelname)s: %(message)s')
+
+    if args.test_mode:
+        logger.warning(f"In test mode, using mock data from {TEST_INPUTS_DIR}")
+        templates_dir = PROJECT_ROOT / TEST_INPUTS_DIR / TEMPLATES_DIR
+        release_metadata_dir = PROJECT_ROOT / TEST_INPUTS_DIR / RELEASE_METADATA_DIR
+        pb_download_dir = PROJECT_ROOT / TEST_PB_DOWNLOAD_DIR
+    else:
+        templates_dir = PROJECT_ROOT / TEMPLATES_DIR
+        release_metadata_dir = PROJECT_ROOT / RELEASE_METADATA_DIR
+        pb_download_dir = args.pre_downloaded_data_dir.resolve() if args.pre_downloaded_data_dir else None
+
+    output_benchmarks_dir = args.output_dir / BENCHMARKS_DIR
+
+    logger.debug(f"Templates directory: {templates_dir}")
+    logger.debug(f"Release metadata directory: {release_metadata_dir}")
+    logger.debug(f"Mock download directory: {pb_download_dir}")
+    logger.debug(f"Root output directory: {args.output_dir}")
+    logger.debug(f"Output benchmarks directory: {output_benchmarks_dir}")
+
     # Get the current timestamp
-    current_timestamp = datetime.datetime.utcnow().replace(microsecond=0)
+    current_timestamp = datetime.datetime.now(datetime.UTC).replace(microsecond=0)
+    
+    logger.info('Running `process_benchmarks.py`')
+    run_process_benchmarks(
+            release_metadata_dir,
+            templates_dir,
+            pb_download_dir,
+            output_benchmarks_dir
+            )
 
-    # Read configuration variables from config.ini
-    package_version, alternative_version, target, usg_directory, cac_directory = load_config()
+    logger.info('Generating the rules and variables documentation')
+    rules_doc, vars_doc = gen_documentation(output_benchmarks_dir)
 
-    # Run `pre_package_build.sh`
-    run_ppb(tools_directory, cac_directory, target, usg_directory)
-
-    # Update the alternative version number in debian/control
-    update_alternative_version(usg_directory, alternative_version)
-
-    # Generate the rules and variables documentation meat
-    rules_doc, vars_doc = gen_documentation(cac_directory, usg_directory, target)
-
-    # Generate the tailoring data
-    gen_tailoring(cac_directory, usg_directory, target, alternative_version)
-
-    # Build the template files from all of the data that we've collected.
-    build_files(rules_doc,
-                vars_doc,
-                package_version,
-                alternative_version,
-                current_timestamp,
-                usg_directory)
+    logger.info('Building the template files from all of the data that we\'ve collected.')
+    build_files(
+        templates_dir,
+        args.output_dir,
+        rules_doc,
+        vars_doc,
+        current_timestamp
+        )
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

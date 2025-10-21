@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 doc/man7/usg-cis-${env:BENCHMARK_VERSION}.7
 doc/man7/usg-disa-stig-${env:BENCHMARK_VERSION}.7
 doc/man7/usg-rules-${env:BENCHMARK_VERSION}.7
 doc/man7/usg-variables-${env:BENCHMARK_VERSION}.7
+=======
+doc/man7/usg-cis.7
+doc/man7/usg-rules.7
+doc/man7/usg-variables.7
+>>>>>>> a2f9469 (Initial squashed commit of python usg)

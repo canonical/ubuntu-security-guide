@@ -1,23 +1,7 @@
-#!/bin/bash
-#
-# Ubuntu Security Guides
-# Copyright (C) 2022 Canonical Limited
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#--------------------------------------------------------
+#!/bin/sh
+# Wrapper for USG module in /usr/share/usg
 
+<<<<<<< HEAD
 # Run audit scan for CIS and DISA-STIG profiles
 #
 # See usg and oscap manpages for more instructions
@@ -292,180 +276,18 @@ function generate_fix_script
 if [ $# -eq 0 ]; then
     usage "command"
     exit 1
+=======
+PYTHON3=/usr/bin/python3
+if [ ! -x "${PYTHON3}" ]; then
+  echo "Fatal! Could not find python executable at ${PYTHON3}."
+  exit 1
+>>>>>>> a2f9469 (Initial squashed commit of python usg)
 fi
 
-# Command must be audit or generate-fix
-command="$1"
-
-case "${command}" in
-    $AUDIT_CMD|$FIX_CMD)
-        shift
-        all_params=$(getopt -n ${prog_name} -oh --long tailoring-file:,html-file:,results-file:,oval-results,debug,help -- "$@")
-        ;;
-    $GENFIX_CMD)
-        shift
-        all_params=$(getopt -n ${prog_name} -oh --long output:,tailoring-file:,help -- "$@")
-        ;;
-    $GENTAIL_CMD)
-        shift
-        all_params=$(getopt -n ${prog_name} -oh --long help -- "$@")
-        ;;
-    --help)
-        usage "command"
-        exit 0
-        ;;
-    *)
-        echoerr "Error: invalid command '${command}'!"
-        usage "command"
-        exit 1
-esac
-
-if [ $? -gt 0 ]; then
-    usage "${command}"
-    exit 1
-fi
-eval set -- "${all_params}"
-
-while true ; do
-    case "$1" in
-        --output)
-            output_flag="$1 $2"; shift 2 ;;
-        --tailoring-file)
-            tailoring_file=$2; shift 2 ;;
-        --html-file)
-	        HTML_FILE=$2; shift 2 ;;
-        --results-file)
-            RESULTS_FILE=$2; shift 2 ;;
-        --oval-results)
-            oval_results_flag="--oval-results"; shift ;;
-        --debug)
-            oval_results_flag=""
-            debug_flag="--verbose INFO --verbose-log-file $LOG_FILE --oval-results"; shift ;;
-        -h|--help)
-            usage "${command}"
-            exit 0
-            ;;
-        --)
-            shift ; break ;;
-        *) echoerr "Error: invalid option!"; exit 1 ;;
-    esac
-done
-
-if [ "$(id -u)" -ne 0 ]; then
-   echoerr "Error: this script must be run with super-user privileges."
-   exit 1
+USG_BASE_DIR="/usr/share/usg"
+if [ ! -d "${USG_BASE_DIR}/usg" ]; then
+  echo "Fatal! Could not find usg module in ${USG_BASE_DIR}. Please reinstall the usg package."
+  exit 1
 fi
 
-# Check if there are benchmarks properly set through the current pointer
-realpath -e "${BASE_DIR}" &>/dev/null
-if [ $? -gt 0 ]; then
-    benchmarks_error
-    exit 1
-fi
-
-# If command-line contains no profile or tailoring file, try to use the default tailoring file
-if [ ! -v tailoring_file ] && [ -z "$1" ]; then
-    if [ -f $DEFAULT_TAILORING ]; then
-        echo "Using the default tailoring file at $DEFAULT_TAILORING"
-        tailoring_file=$DEFAULT_TAILORING
-    fi
-fi
-
-# If there isnt a tailoring file, check the profiles and build the oscap profile option to  with a profile
-if [ ! -v tailoring_file ]; then
-    ##Validate arguments if a level for scan is specified
-    validate_profile "$1"
-    profile=${1#disa_} # HACK: disa_stig is named stig on the XCCDF file.
-else
-    # assert that generate-tailoring command doesn't reach this code block
-    if [ "${command}" == $GENTAIL_CMD ]; then
-        echoerr "ABORT! WRONG CODE SECTION REACHED! $GEN_TAIL COMMAND DOESN'T ACCEPT OPTIONS OTHER THAN --help"
-        exit 2
-    fi
-
-    if [ -n "$1" ];then
-	echoerr "You cannot provide both a tailoring file and a profile!"
-	exit 1
-    fi
-
-    # Attempts to validate tailoring file. Exits with an error message if unable.
-    validate_tailoring_file
-
-    tailoring_flag="--tailoring-file $(realpath ${tailoring_file})"
-fi
-
-# Build the command based on the operation provided
-case "${command}" in
-    $AUDIT_CMD|$FIX_CMD)
-        audit_command="oscap xccdf eval --profile ${profile} --cpe $UBUNTU_CPE_DICTIONARY_FILE --results $RESULTS_FILE ${tailoring_flag} ${debug_flag} ${oval_results_flag} $UBUNTU_XCCDF_FILE"
-
-        # remove old results file
-        mkdir -p "$RESULTS_DIR"
-        rm -f "$RESULTS_FILE"
-
-        # Run the command
-        echoerr "USG will execute the following command for auditing: ${audit_command}"
-
-        # move to RESULTS_DIR so --oval-results generated files are together with
-        # the other files, as --oval-results creates the files in PWD/CWD
-        pushd "$RESULTS_DIR" > /dev/null
-        eval "$audit_command"
-        # some oscap logs are generated automatically and we cannot specify their name
-        # therefore this is needed if we want to have historical logs. For now this is
-        # hardcoded
-        if [ -n "${debug_flag}" ]; then
-            mv "ssg-ubuntu$UBUNTU_VERSION-oval.xml.result.xml" "ssg-ubuntu$UBUNTU_VERSION-oval.xml.result-$DATE.xml"
-            mv "%2Fusr%2Fshare%2Fubuntu-scap-security-guides%2Fcurrent%2Fbenchmarks%2Fssg-ubuntu$UBUNTU_VERSION-cpe-oval.xml.result.xml" "ssg-ubuntu$UBUNTU_VERSION-cpe-oval.xml.result-$DATE.xml"
-        fi
-        popd > /dev/null
-
-        if [ -e "${RESULTS_FILE}" ]; then
-            ##Generate a html report
-            oscap xccdf generate report "$RESULTS_FILE" > "$HTML_FILE"
-
-            if [ "${command}" == $FIX_CMD ]; then
-                pushd "$RESULTS_DIR" > /dev/null
-                generate_fix_script
-                command="bash -x ${remediation_file} 2>&1 1>remediation-$DATE.log | tee -a remediation-$DATE.log"
-                echoerr "USG will execute the following command for remediating: ${command}"
-                exec 3>"remediation-$DATE.log"
-                export BASH_XTRACEFD=3
-                eval "$command"
-                exec 3>&-
-                unset BASH_XTRACEFD
-                popd > /dev/null
-                echoerr "USG fix command completed."
-                echoerr "A system reboot is required to complete the fix process."
-                echoerr "Please run usg audit after reboot."
-            else
-                echoerr "USG audit scan command completed. The scan results are available in $HTML_FILE report or in $RESULTS_FILE."
-            fi
-        else
-            echoerr "USG audit scan command failed!"
-            exit 1
-        fi
-        ;;
-    $GENFIX_CMD)
-        generate_fix_script
-        ;;
-    $GENTAIL_CMD)
-        # generate-tailoring command is the only one which has 2 parameters after this. Check for them
-        if [ $# -ne 2 ]; then
-            usage "${command}"
-            exit 1
-        fi
-
-        command="cp $TAILORING_DIR/${PROFILES[${profile/#stig/disa_stig}]} ${2}" # HACK: disa_stig is the accepted profile by the script, while the XCCDF uses stig
-
-        echoerr "USG will execute the following command for generating a new tailoring file: ${command}"
-        if eval "$command"; then
-            echoerr "USG generate-tailoring command completed."
-        else
-            echoerr "USG generate-tailoring command failed!"
-            exit 1
-        fi
-        ;;
-    *)
-        ;;
-esac
-exit 0
+PYTHONPATH="$USG_BASE_DIR:$PYTHONPATH" "${PYTHON3}" -m usg "$@"

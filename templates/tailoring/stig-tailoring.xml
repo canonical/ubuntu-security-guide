@@ -5,6 +5,10 @@
   <Profile id="xccdf_org.ssgproject.content_profile_stig_customized"
       extends="xccdf_org.ssgproject.content_profile_stig">
     <title xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">DISA-STIG Benchmark [CUSTOMIZED]</title>
+<<<<<<< HEAD
     <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">This baseline aligns to the DISA-STIG v.1, rel.1, released 2024-04-10.</description>
+=======
+    <description xmlns:xhtml="http://www.w3.org/1999/xhtml" xml:lang="en-US" override="true">This baseline aligns to the DISA-STIG v.1, rel.1, released 2025-01-28.</description>
+>>>>>>> a2f9469 (Initial squashed commit of python usg)
   </Profile>
 </Tailoring>

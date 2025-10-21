@@ -5,31 +5,28 @@
 
 include /usr/share/dpkg/pkg-info.mk
 
-# see FEATURE AREAS in dpkg-buildflags(1)
-#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-
-# see ENVIRONMENT in dpkg-buildflags(1)
-# package maintainers to append CFLAGS
-#export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
-# package maintainers to append LDFLAGS
-#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
-
-export DESTDIR=usr/share/ubuntu-scap-security-guides
-export DEB_VERSION
-#PKG_NAME:=$(shell grep -Po '(?<=Package: )usg-benchmarks-\d+' debian/control)
-BENCHMARK_NAME?=$(shell grep -Po '(?<=Package: )usg-benchmarks-\d+' debian/control)
-BENCHMARK_VERSION?=$(shell grep -Po '(?<=Package: usg-benchmarks-)\d+' debian/control)
-export BENCHMARK_VERSION
+export USG_STATE_DIR=var/lib/usg
+export USG_MODULE_DIR=usr/share/usg
+export USG_BENCHMARKS_DIR=usr/share/usg-benchmarks
 
 %:
-	dh $@
+	dh $@ --with=python3 --buildsystem=pybuild
 
-override_dh_auto_build-indep:
-	# Compile the documents
+# avoid changing gzipped datastreams (they are static anyhow)
+override_dh_strip_nondeterminism:
+	dh_strip_nondeterminism --exclude=.xml.gz
+
+# usg is installed as a private module to /usr/share/usg
+# so we need to byte-compile manually
+override_dh_python3:
+	dh_python3 usr/share/usg/usg
+
+override_dh_auto_build:
 	pandoc doc/man8/usg.md -s -t man -o doc/man8/usg.8
 	pandoc doc/man7/usg-variables.md -s -t man -o doc/man7/usg-variables.7
 	pandoc doc/man7/usg-rules.md -s -t man -o doc/man7/usg-rules.7
 	pandoc doc/man7/usg-cis.md -s -t man -o doc/man7/usg-cis.7
+<<<<<<< HEAD
 	pandoc doc/man7/usg-disa-stig.md -s -t man -o doc/man7/usg-disa-stig.7
 
 override_dh_install:
@@ -59,3 +56,12 @@ override_dh_clean:
 # This is example for Cmake (See https://bugs.debian.org/641051 )
 #override_dh_auto_configure:
 #       dh_auto_configure -- #  -DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
+=======
+	dh_auto_build
+
+override_dh_auto_clean:
+	rm -rf doc/man7/usg-cis.7
+	rm -rf doc/man7/usg-rules.7
+	rm -rf doc/man7/usg-variables.7
+	dh_auto_clean
+>>>>>>> a2f9469 (Initial squashed commit of python usg)
