@@ -454,7 +454,7 @@ class TailoringFile:
             benchmark_id = Path(benchmark_href).name
         elif "/usr/share/ubuntu-scap-security-guide" in benchmark_href:
             # legacy href (e.v. /usr/share/ubuntu-scap-security-guide/...)
-            logger.warning("Using legacy tailoring file.")
+            logger.info("Using legacy tailoring file.")
             benchmark_id = TailoringFile._map_benchmark_id_from_legacy(
                     benchmark_href, profile_id
                     )
