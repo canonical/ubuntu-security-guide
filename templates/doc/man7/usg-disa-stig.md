@@ -29,20 +29,6 @@ The list of variables below contains a brief explanation of the variables which 
 The setting for remote_server in /etc/audisp/audisp-remote.conf
 ```
 
-
-### Rule id: var\_multiple\_time\_servers
-#### Title: Approved time servers
-#### Description:
-
-```
-Comma-separated list of NTP server hostnames, approved for use in your environment,
-e.g. 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org
-
-Note that any existing 'server' configuration in /etc/chronyd/chrony.conf will not be
-replaced automatically and must be manually removed beforehand.
-```
-
-
 ## Rules limitations
 A few rules provided by the stig profile require manual inspection and fix.
 
@@ -79,6 +65,35 @@ This rule will verify if the system is in FIPS mode.
 A manual fix is required in case it is not.
 For more informations on how to run the system in FIPS-140-2 mode, please see
 https://ubuntu.com/security/certifications/docs/fips-enablement
+```
+
+### Rule id: install\_endpoint\_security\_software
+#### Title: Install an Endpoint Security Software
+#### Description:
+
+```
+This rule requires a third-party software to be installed.
+A manual fix is required if the software is not available.
+```
+
+### Rule id: smartcard\_pam\_enabled
+#### Title: Enable Smart Card Logins in PAM
+#### Description:
+
+```
+This rule requires that the pam_pkcs11.so module is added to the PAM
+authentication stack. Due to potential complexity of PAM configurations,
+and risk of lock-out, the automated remediation has been disabled.
+
+Add the following to the top of the stack in /etc/pam.d/common-auth,
+replacing N with the correct number of jumps:
+
+auth     [success=N default=ignore]     pam_pkcs11.so
+
+e.g.
+auth     [success=3 default=ignore]     pam_pkcs11.so
+auth     [success=2 default=ignore]     pam_unix.so nullok
+auth     [success=1 default=ignore]     pam_sss.so use_first_pass
 ```
 
 ### Rule id: grub2\_password
@@ -126,6 +141,17 @@ $ ss -l46ut
 $ ufw limit SERVICE_NAME
 ```
 
+### Rule id: encrypt\_partitions
+#### Title: Encrypt Partitions
+#### Description:
+
+```
+The system should be configured to prevent unauthorized disclosure or
+modification of all information requiring at-rest protection by using disk encryption. 
+
+The rule presently does not perform this check and it must be done manually.
+```
+
 ### Rule id: account\_temp\_expire_date
 #### Title: Assign Expiration Date to Temporary Accounts
 #### Description:
@@ -135,7 +161,16 @@ This rule is not automated as temporary accounts cannot be differentiated
 from regular accounts.
 ```
 
-### Rule id: ensure\_sudo\_group\_restricted
+### Rule id: temp\_passwords\_immediate\_change
+#### Title: Policy Requires Immediate Change of Temporary Passwords
+#### Description:
+
+```
+This rule is not automated as temporary accounts cannot be differentiated
+from regular accounts.
+```
+
+### Rule id: sudo\_group\_restricted
 #### Title: Ensure sudo group has only necessary members
 #### Description:
 
@@ -164,19 +199,10 @@ The rule is not automated. It requires that all certifications found in
 /etc/ssl/certs are approved by the AO.
 ```
 
-### Rule id: sssd\_enable\_user\_cert
-#### Title: Enable Certificates Mapping in SSSD
-#### Description:
-
-```
-The remediation for this rule is not automated as the configuration section
-is unique to the end-user's environment.
-```
-
 
 
 # INTERNET RESOURCES
-Ubuntu 24.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_24-04\_LTS\_V1R1\_STIG.zip
+Ubuntu 22.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_22-04\_LTS\_V2R3\_STIG.zip
 
 # SEE ALSO
 **usg**(8), **usg-rules**(7), **usg-variables**(7)
