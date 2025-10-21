@@ -33,7 +33,7 @@ declare -A PROFILES=( ["cis_level1_server"]="cis_level1_server-tailoring.xml" \
 
 BASE_DIR="/usr/share/ubuntu-scap-security-guides/current"
 TAILORING_DIR="$BASE_DIR/tailoring"
-UBUNTU_VERSION="2204"
+UBUNTU_VERSION="2404"
 UBUNTU_CPE_DICTIONARY_FILE="$BASE_DIR/benchmarks/ssg-ubuntu${UBUNTU_VERSION}-cpe-dictionary.xml"
 UBUNTU_XCCDF_FILE="$BASE_DIR/benchmarks/ssg-ubuntu${UBUNTU_VERSION}-xccdf.xml"
 DATE=$(date +%Y%m%d.%H%M)
