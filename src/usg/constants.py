@@ -1,6 +1,4 @@
-"""
-Default config options, paths, etc.
-"""
+"""Default config options, paths, etc."""
 
 from pathlib import Path
 
@@ -28,4 +26,3 @@ BENCHMARK_METADATA_PATH = Path("/usr/share/usg-benchmarks/benchmarks.json")
 BENCHMARK_PKG = "usg-benchmarks"
 STATE_DIR = Path("/var/lib/usg")
 OPENSCAP_BIN_PATH = Path("/usr/bin/oscap")
-

@@ -1,5 +1,9 @@
+from pathlib import Path
+
 import pytest
+
 from usg.results import AuditResult, AuditResults, BackendArtifacts, FileMoveError
+
 
 def test_usgauditresults_add_and_summary():
     results = AuditResults()
@@ -19,7 +23,9 @@ def test_usgauditresults_add_and_summary():
 
     # Check summary output
     summary = results.get_summary()
-    assert summary == """\
+    assert (
+        summary
+        == """\
 Pass:  1
 Fail:  1
 Error: 1
@@ -27,17 +33,22 @@ NotChecked: 1
 Unknown: 2
 N/A:   1
 """
+    )
 
-def test_backend_output_files(tmp_path):
+
+def test_backend_artifact_paths(tmp_path):
     # test that the file paths are correct
     output_files = BackendArtifacts()
     output_files.add_artifact("test_type1", "test_file1")
-    output_files.add_artifact("test_type2", tmp_path /"test_file2")
+    output_files.add_artifact("test_type2", tmp_path / "test_file2")
     assert output_files.get_by_type("test_type1").path == Path("test_file1").resolve()
-    assert output_files.get_by_type("test_type2").path == (tmp_path / "test_file2").resolve()
+    assert (
+        output_files.get_by_type("test_type2").path
+        == (tmp_path / "test_file2").resolve()
+    )
 
-    
-def test_backend_output_files(tmp_path):
+
+def test_backend_artifact_move(tmp_path):
     # test that the files are moved to the correct location
     output_files = BackendArtifacts()
     test_file = tmp_path / "test_file"
@@ -53,7 +64,7 @@ def test_backend_output_files(tmp_path):
     assert (new_dir / "test_file").read_text() == "test_file_contents"
 
 
-def test_backend_output_missing_files(tmp_path):
+def test_backend_artifact_missing(tmp_path):
     # test that it fails to move non-existent files
     output_files = BackendArtifacts()
     test_file = tmp_path / "test_file"
