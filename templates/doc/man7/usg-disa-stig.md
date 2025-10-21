@@ -1,4 +1,4 @@
-% USG-DISA-STIG(7) usg-benchmarks-<<USG_BENCHMARKS_ALTERNATIVE_PLACEHOLDER>> <<USG_BENCHMARKS_VERSION_PLACEHOLDER>>
+% USG-DISA-STIG(7) usg-benchmarks <<USG_BENCHMARKS_VERSION_PLACEHOLDER>>
 % Eduardo Barretto <eduardo.barretto@canonical.com>
 % Miha Purg <miha.purg@canonical.com>
 % <<DATE_PLACEHOLDER>>
@@ -202,7 +202,7 @@ The rule is not automated. It requires that all certifications found in
 
 
 # INTERNET RESOURCES
-Ubuntu 22.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_22-04\_LTS\_V1R1\_STIG.zip
+Ubuntu 22.04 STIG Benchmark: https://dl.dod.cyber.mil/wp-content/uploads/stigs/zip/U\_CAN\_Ubuntu\_22-04\_LTS\_V2R3\_STIG.zip
 
 # SEE ALSO
 **usg**(8), **usg-rules**(7), **usg-variables**(7)
