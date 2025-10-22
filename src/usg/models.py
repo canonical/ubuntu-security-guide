@@ -337,10 +337,10 @@ class TailoringFile:
 
 
     @staticmethod
-    def _map_benchmark_id_from_legacy(benchmark_href: str, profile_id: str) -> str:
-        """Map benchmark id from legacy href attribute and profile id.
+    def _map_benchmark_channel_id_from_legacy(benchmark_href: str, profile_id: str) -> str:
+        """Map benchmark release channel id from legacy href attribute and profile id.
 
-        Maps the legacy href to the new ID scheme (e.g. ubuntu2404_CIS_1)
+        Maps the legacy href to the new channel id (e.g. ubuntu2404_CIS_1)
         by extracting the tailoring_file version and the
         product name from the href itself.
         The benchmark type can be inferred from the profile.
@@ -351,14 +351,14 @@ class TailoringFile:
             profile_id: profile id attribute from tailoring file
 
         Returns:
-            (benchmark_id, profile_id)
+            (channel_id, profile_id)
 
         Raises:
             TailoringFileError: parsing issues
 
         """
         logger.debug(
-                f"Extracting benchmark_id from legacy href "
+                f"Extracting channel_id from legacy href "
                 f"{benchmark_href} and profile {profile_id}"
                 )
         # example match: (1, 'ubuntu2404')
@@ -382,21 +382,21 @@ class TailoringFile:
                 f"Cannot infer benchmark type from profile {profile_id}"
             )
 
-        benchmark_id = f"{product}_{benchmark_type}_{channel_number}"
+        channel_id = f"{product}_{benchmark_type}_{channel_number}"
         logger.debug(
-            f"Extracted benchmark id from legacy tailoring file: {benchmark_id}"
+            f"Extracted channel id from legacy tailoring file: {channel_id}"
         )
-        return benchmark_id
+        return channel_id
 
     @staticmethod
     def _parse_tailoring_scap(tailoring_file_contents: str) -> tuple[str, str, str]:
-        """Parse scap tailoring file contents and returns benchmark and profile IDs.
+        """Parse scap tailoring file contents and returns channel and profile IDs.
 
         Args:
             tailoring_file_contents: string contents of tailoring file
 
         Returns:
-            (benchmark_id, tailoring_profile_id, base_profile_name)
+            (channel_id, tailoring_profile_id, base_profile_name)
 
         Raises:
             TailoringFileError: parsing issues
@@ -450,12 +450,12 @@ class TailoringFile:
 
         if "/usr/share/usg-benchmarks" in benchmark_href:
             # new href (e.g. /usr/share/usg-benchmarks/ubuntu2404_CIS_1,
-            # benchmark_id is equal to ubuntu2404_CIS_1)
-            benchmark_id = Path(benchmark_href).name
+            # channel_id is equal to ubuntu2404_CIS_1)
+            channel_id = Path(benchmark_href).name
         elif "/usr/share/ubuntu-scap-security-guide" in benchmark_href:
             # legacy href (e.v. /usr/share/ubuntu-scap-security-guide/...)
             logger.info("Using legacy tailoring file.")
-            benchmark_id = TailoringFile._map_benchmark_id_from_legacy(
+            channel_id = TailoringFile._map_benchmark_channel_id_from_legacy(
                     benchmark_href, profile_id
                     )
         else:
@@ -466,4 +466,4 @@ class TailoringFile:
         # remove xccdf prefixes
         profile_id = profile_id.replace("xccdf_org.ssgproject.content_profile_", "")
         base_profile_id = base_profile_id.replace("xccdf_org.ssgproject.content_profile_", "")
-        return benchmark_id, profile_id, base_profile_id
+        return channel_id, profile_id, base_profile_id
