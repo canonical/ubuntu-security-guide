@@ -1,4 +1,4 @@
-ubuntu-security-guides-enhanced (22.04.14) jammy; urgency=medium
+ubuntu-security-guides-enhanced (22.04.15) jammy; urgency=medium
 
   [Alan Moore]
   * Add new profiles for benchmark CIS v2.0.0
@@ -14,7 +14,7 @@ ubuntu-security-guides-enhanced (22.04.14) jammy; urgency=medium
   * Add bash completion for USG
   * Add autopkgtest script
 
- -- Miha Purg <miha.purg@canonical.com>  Tue, 21 Oct 2025 16:44:27 +0200
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 22 Oct 2025 15:44:24 +0200
 
 ubuntu-security-guides-enhanced (22.04.13) jammy; urgency=medium
 

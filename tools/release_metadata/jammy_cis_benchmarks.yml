@@ -7,7 +7,7 @@ benchmark_releases:
   parent_tag: jammy-cis-1.14
   release_channel: 2
   cac_commit: 5300eca5cc88b4c1f5c710bf9d87d866cd22ccd9
-  usg_version: 22.04.14
+  usg_version: 22.04.15
   benchmark_data:
     version: v2.0.0
     profiles:
@@ -16,13 +16,13 @@ benchmark_releases:
       cis_level1_workstation: {}
       cis_level2_workstation: {}
     description: ComplianceAsCode implementation of CIS Ubuntu 22.04 LTS v2.0.0 benchmark.
-    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/100
+    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/105
     reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 - cac_tag: jammy-cis-1.14
   parent_tag: jammy-cis-1.13
   release_channel: 1
   cac_commit: 7fb4a79e7dfc13f7d2b941ddfb0d915bef269970
-  usg_version: 22.04.14
+  usg_version: 22.04.15
   benchmark_data:
     version: v1.0.0
     profiles:
@@ -32,7 +32,7 @@ benchmark_releases:
       cis_level1_workstation: {}
       cis_level2_workstation: {}
     description: ComplianceAsCode implementation of CIS Ubuntu 22.04 LTS v1.0.0 benchmark.
-    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/100
+    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/105
     reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
 - cac_tag: jammy-cis-1.13
   parent_tag: jammy-cis-1.12
