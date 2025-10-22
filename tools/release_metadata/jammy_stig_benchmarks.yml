@@ -7,13 +7,13 @@ benchmark_releases:
   parent_tag: jammy-stig-1.6
   release_channel: 1
   cac_commit: a3a49e112f3d7c0bdbf837d985bf77b192bf47cc
-  usg_version: 22.04.14
+  usg_version: 22.04.15
   benchmark_data:
     version: V2R3
     profiles:
       stig: {}
     description: ComplianceAsCode implementation of STIG Ubuntu 22.04 LTS V2R3 benchmark.
-    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/100
+    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/105
     reference_url: https://public.cyber.mil/stigs/downloads/
 - cac_tag: jammy-stig-1.6
   parent_tag: jammy-stig-1.5
