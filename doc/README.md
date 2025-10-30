@@ -1,7 +1,7 @@
 ## Overview
 
-This document gives a brief technical overview of the contents of the ubuntu-security-guide repository,
-including the USG python module, build tooling, debian maintainer scripts and other important files.
+This document gives a brief technical overview of the contents of the Ubuntu Security Guide (USG) repository,
+including the USG python module, build tooling, debian maintainer scripts, and other important files.
 
 ### USG
 
@@ -13,7 +13,7 @@ The core functionality resides in src/usg/, which contains the Python module, th
 src/
 ├── cli
 │   └── usg                  # CLI wrapper script (installed to /sbin; calls usg.cli)
-├── legacy 
+├── legacy
 │   └── usg                  # legacy Bash usg (fallback if python3 is not available)
 └── usg
     ├── backends.py          # adapter classes for auditing/remediation
@@ -57,12 +57,12 @@ The `tools/` folder contains several utility scripts for building benchmark data
 
 #### Build tooling
 
-The build script `build.py` is used call the various tools to:
+The build script `build.py` is used to call the various tools to:
 - Compile [ComplianceAsCode content](https://github.com/ComplianceAsCode/content) based on tags defined in `tools/release_metadata/`.
 - Extract SCAP datastreams.
 - Generate tailoring files and manpages from templates.
 - Generate the necessary metadata files for USG.
-- Populate `benchmarks/` and `docs/` folders.
+- Populate `benchmarks/` and `doc/` folders.
 
 ##### Example build
 
@@ -71,7 +71,7 @@ The build script `build.py` is used call the various tools to:
 # (Example for Ubuntu 24.04)
 sudo apt install openscap-scanner cmake make python3-jinja2 ninja-build xsltproc libexpat1 python3-yaml python3-lxml
 
-# Obtain a copy of the CaC-content repo
+# Obtain a copy of the ComplianceAsCode content repo
 git clone https://github.com/ComplianceAsCode/content /tmp/CaC-content
 
 # Define benchmark release metadata in "tools/release_metadata" (see below)
@@ -95,7 +95,7 @@ general:
   product_long: Ubuntu 24.04 LTS (Noble Numbat)
 
 benchmark_releases:
-  - cac_tag: v0.1.78           # Git tag in ComplianceAsContent-content
+  - cac_tag: v0.1.78           # Git tag in ComplianceAsCode/content
     parent_tag: v0.1.77        # Tag of parent CaC release
     release_channel: 2         # Benchmark release channel (must be incremented with every breaking release)
     cac_commit: f7d79485...    # Git commit corresponding to above tag
@@ -157,12 +157,12 @@ The debian packaging uses the pybuild backend, based on the metadata in `pyproje
 
 Install locations:
 - The `usg` python package is installed as a private package to `/usr/share/usg`.
-- The USG CLI wrappper is installed to `/sbin/usg`.
+- The USG CLI wrapper is installed to `/sbin/usg`.
 - Benchmark data is installed to `/usr/share/usg-benchmarks`.
 
 #### Autopkgtests
 
-Autopkgtests scripts are stored in `debian/tests` and include a version check and E2E tests for the USG CLI.
+Autopkgtests scripts are stored in `debian/tests` and include a version check and end-to-end (E2E) tests for the USG CLI.
 
 #### Bash completions
 
@@ -252,12 +252,12 @@ Functions like `audit` and `fix` take a **Profile** object, initialize a backend
 
 #### CLI
 
-The CLI, implemented in `usg.cli` performs the following tasks:
-- Parses CMDline arguments, ensuring backwards compatibility with legacy USG.
-- Loads default configuration and overrides with `/etc/usg.conf` and CMDline args.
+The CLI, implemented in `usg.cli`, performs the following tasks:
+- Parses command-line arguments, ensuring backward compatibility with legacy USG.
+- Loads default configuration and overrides with `/etc/usg.conf` and command-line args.
 - Initializes logging to a log file defined in config.
 - Initializes the main `usg.USG()` class.
-- Routes subcommands (`audit`, `fix`, `generate-fix`, `generate-tailoring`) to USG
-- Implements the `list` subcommand for listing available profiles
-- Implements the `info` subcommand for printing information on a selected profile or tailoring file
+- Routes subcommands (`audit`, `fix`, `generate-fix`, `generate-tailoring`) to USG.
+- Implements the `list` subcommand for listing available profiles.
+- Implements the `info` subcommand for printing information on a selected profile or tailoring file.
 
