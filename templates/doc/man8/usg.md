@@ -14,7 +14,7 @@ usg - Audit and remediation tool for security benchmarks compliance automatizati
 
 **usg** **audit** [**`--tailoring-file` filename** | **profile**]
 
-**usg** **fix** [**`--tailoring-file` filename** | **profile**]
+**usg** **fix** [**`--only-failed`**] [**`--tailoring-file` filename** | **profile**]
 
 **usg** **generate-fix** [**`--output` filename**] [**`--tailoring-file` filename** | **profile**]
 
@@ -59,6 +59,9 @@ Running usg without any command line parameters will display usage.
 **`--tailoring-file`**
 : Sets the path to the tailoring-file, which contains a set of rules-selectors and value-customization elements, effectively letting the user customize the rules which will be applied. If that option is used, then the profile parameter is ignored! This option can be used for both commands. Check the **Tailoring Files** section for more info on them.
 
+**`--only-failed`**
+: Use this option with **usg fix** to remediate only the rules which fail the initial audit, instead of remediating all rules.
+
 # EXAMPLES
 1. list all profiles, including deprecated versions
 
@@ -84,13 +87,17 @@ Running usg without any command line parameters will display usage.
 
     `# usg generate-tailoring cis_level2_workstation /etc/usg/default-tailoring.xml`
 
-7. audit and remediate system using the default tailoring file for the system
+7. audit and remediate system
 
     `# usg fix`
 
+8. audit the system and remediate only the failed rules
+
+    `# usg fix --only-failed`
+
 
 # TAILORING FILES
-usg rules are associated with **usg profiles** (and their benchmark counterparts) on datastream files used by OpenSCAP, which also contain the parameters used by the rules.
+usg rules are associated with **usg profiles** (and their benchmark counterparts) in datastream files used by OpenSCAP, which also contain the parameters used by the rules.
 The datastream files, however, are quite verbose and complicated and usg hides the complexity of dealing with them. **Tailoring files** is the way to customize profiles with usg.
 
 A tailoring file is a XML file which contains the list of rules that are used in auditing and fixing with their corresponding parameters.
@@ -105,7 +112,7 @@ This element sets if a given **usg rule** will be audited (and/or fixed, dependi
 <xccdf:select idref="sshd_set_loglevel_info_or_verbose" selected="false"/>
 ```
 
-## the xccdf:set-value element
+## The xccdf:set-value element
 This element sets a variable associated with a given usg rule. The variable will change the way the rule executes in a specific way for that rule. So, as an example, if the administrator wants to customize his tailoring file to change the *var\_sshd\_set\_loglevel* variable to the value 'VERBOSE', its associated *xccdf:set-value* element must be set as below:
 
 ```
@@ -115,18 +122,13 @@ This element sets a variable associated with a given usg rule. The variable will
 For a list of rules and their descriptions, see the **usg-rules** man page.
 For a list of variables and their descriptions, see the **usg-variables** man page.
 
-## Tailoring files and Benchmark rules
+## Obtaining tailoring files
 The **usg-benchmarks** package provides tailoring files for each version of each profile in the *tailoring* subdirectory inside its installation directory.
+
 Those tailoring files are essentially a copy of their respective profiles, containing their respective rules, so an admin can can disable specific ones.
+The *usg rules* in the tailoring files are grouped according to the benchmark rules they belong to, with the comments pointing to the benchmark rule identifier and its name.
 
-The provided tailoring files also group the *usg rules* according to the benchmark rules they belong to, with the comments pointing to the benchmark rule identifier and its name.
-
-**We strongly recommend using the command generate-tailoring to get a copy of the tailoring file and customize that copy, instead of modifying the original ones**
-
-Note that the *generate-tailoring* command uses the aforementioned original tailoring files to generate new ones.
-
-The *usg* tool depends on the *usg-benchmarks* package to be able to execute its operations. The *usg* tool quits with an error message if the package is missing.
-
+Use the command **generate-tailoring** to get a copy of the tailoring file for a specific profile.
 
 # TAILORING FILES COMPATIBILITY
 Tailoring files are tied to a major version of a profile and are incompatible with other versions.
