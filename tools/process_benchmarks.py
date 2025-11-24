@@ -28,15 +28,15 @@ import gzip
 import hashlib
 import json
 import logging
-import os
+from lxml import etree
 import shutil
 import subprocess
 import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
-
 import yaml
+
 from generate_tailoring_file import (
     GenerateTailoringError,
     generate_tailoring_file,
@@ -184,6 +184,7 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
             "benchmark_ids": [], # populated below
             "channel_number": channel_number,
             "is_latest": channel_number == latest_channel_number,
+            "benchmark_type": benchmark_type,
             "cac_product": product,
             "cac_profiles": list(latest_release["benchmark_data"]["profiles"]), # store profiles here to ensure all benchmarks in one channel have same profiles
             "release_tag": latest_release["cac_tag"],
@@ -459,8 +460,109 @@ def _calc_sha256(path: Path) -> str:
     return digest
 
 
+def _cleanup_datastream_references(
+        datastream_path: Path,
+        benchmark_type: str,
+        benchmark_version: str,
+        ):
+    # Remove all references except the CIS/STIG from datastream and update text
+
+    logger.debug(f"Cleaning up datastream references in {datastream_path}")
+    logger.debug(f"Benchmark type: {benchmark_type}, version: {benchmark_version}")
+
+    ref_map = {
+        "CIS": {
+            "href": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+            "text_base": f"CIS {benchmark_version} recommendation",
+        },
+        "STIG": {
+            "href": "https://public.cyber.mil/stigs/downloads/",
+            "text_base": f"STIG {benchmark_version} rule",
+        }
+    }
+    if benchmark_type not in ref_map:
+        raise BenchmarkProcessingError(
+            f"Failed to cleanup datastream references - unknown benchmark type {benchmark_type}."
+        )
+    
+    # Find all reference elements and remove those not matching benchmark type
+    ds_tree = etree.parse(datastream_path)
+    for ref in ds_tree.findall(f".//{{*}}reference"):
+        if ref.get("href", "") != ref_map[benchmark_type]["href"]:
+            logger.debug(f"Removing reference href={ref.get('href','')}, text={ref.text}")
+            ref.getparent().remove(ref)
+        else:
+            ref.text = f"{ref_map[benchmark_type]['text_base']} {benchmark_version}"
+
+    # Write to temp file and validate the diff is only the expected changes
+    logger.debug("Writing cleaned datastream to temporary file for diff validation.")
+    with tempfile.NamedTemporaryFile() as tmp_file:
+        tmp_path = Path(tmp_file.name)
+        ds_tree.write(
+            tmp_path,
+            encoding="utf-8",
+            xml_declaration=True,
+        )
+
+        # Diffs on datastreams are slow, do a line-by-line comparison allowing only expected changes
+        new_lines = tmp_path.read_text(encoding="utf-8").splitlines(keepends=True)
+        old_lines = datastream_path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+        new_line_i = 0
+        for old_line_i, old_line in enumerate(old_lines):
+
+            # Same lines, increment new_line_i
+            if old_line == new_lines[new_line_i]:
+                new_line_i += 1
+            
+            # XML declaration line has minor formatting changes (" -> ', utf-8 -> UTF-8).
+            elif old_line_i == 0 and old_line == new_lines[new_line_i].replace("'", '"').replace('utf-8', "UTF-8"):
+                new_line_i += 1
+
+            # In older versions, the encoding part is missing and is now added as utf-8
+            elif old_line_i == 0 and old_line == new_lines[new_line_i].replace("'", '"').replace(' encoding="UTF-8"', ''):
+                new_line_i += 1
+
+            # Reference changed in new file
+            elif "<reference " in old_line and "<reference " in new_lines[new_line_i]:
+                new_line_i += 1
+
+            # Reference removed in new file - dont advance new_line_i
+            elif "<reference " in old_line and "<reference " not in new_lines[new_line_i]:
+                pass
+
+            else:
+                raise BenchmarkProcessingError(
+                    f"Unexpected change in datastream {datastream_path} "
+                    f"at old line {old_line_i+1}: {old_line.strip()} != "
+                    f"new line {new_line_i+1}: {new_lines[new_line_i].strip()}"
+                )
+
+        logger.debug(f"Datastream diff validation successful. Saving to {datastream_path}.")
+        shutil.move(tmp_path, datastream_path)
+    
+    # Validate resulting datastream with oscap
+    logger.debug(f"Validating cleaned datastream {datastream_path} with oscap")
+    cmd = ["/usr/bin/oscap", "ds-validate", str(datastream_path)]
+    try:
+        logger.debug(f"Calling cmd: {cmd}")
+        p = subprocess.run(
+                cmd,
+                check=True,
+                text=True,
+                capture_output=True
+                )
+    except subprocess.CalledProcessError as e:
+        logger.error(p.stderr or p.stdout)
+        raise BenchmarkProcessingError(
+            f"Failed to validate cleaned datastream {datastream_path}: {e}"
+            ) from e
+    
+    logger.debug("Done cleaning up datastream references.")
+
+
 def _build_active_releases(
-    release_channels: list[dict[str, Any]],
+    benchmarks_data: dict[str, list[dict[str, Any]]],
     cac_repo_dir: Path,
     tailoring_templates_dir: Path,
     dst_dir: Path,
@@ -471,8 +573,12 @@ def _build_active_releases(
     # - generate tailoring files
     # - generate checksums
 
+    release_channels = benchmarks_data["release_channels"]
     logger.info(f"Building {len(release_channels)} active releases...")
 
+    import pprint
+    pp = pprint.PrettyPrinter(indent=2)
+    pp.pprint(benchmarks_data)
     for i, channel_data in enumerate(release_channels):
         cac_tag = channel_data["release_tag"]
         channel_id = channel_data["id"]
@@ -500,6 +606,7 @@ def _build_active_releases(
                 logger.debug(f"Copying test data from {release_dir} to {tmp_build_dir}")
                 shutil.copytree(release_dir, tmp_build_dir, dirs_exist_ok=True)
                 release_timestamp = i+1 # dummy timestamp
+                channel_data["release_timestamp"] = release_timestamp
             else:
                 logger.debug(
                     f"Copying the CaC repo {cac_repo_dir} to tmp dir {tmp_build_dir}"
@@ -515,15 +622,28 @@ def _build_active_releases(
                     channel_data["release_commit"],
                     channel_data["cac_product"]
                 )
+                channel_data["release_timestamp"] = release_timestamp
                 logger.info("Successfully built CaC content.")
 
-
-            channel_data["release_timestamp"] = release_timestamp
-
-            # Compress datastream and save to destination dir
-            # (e.g. dst dir/ubuntu2404_CIS_2/...)
+            # Path to built datastream
             datastream_filename = CAC_RELEASE_NAME.format(channel_data["cac_product"])
             datastream_build_path = tmp_build_dir / "build" / datastream_filename
+
+            # Cleanup the references in the datastream file
+            # using type and version of latest benchmark in channel
+            latest_benchmark_id_in_channel = channel_data["benchmark_ids"][-1]
+            latest_benchmark = [
+                benchmark for benchmark in benchmarks_data["benchmarks"] \
+                    if benchmark["id"] == latest_benchmark_id_in_channel
+            ][0]
+            _cleanup_datastream_references(
+                datastream_build_path,
+                benchmark_type=latest_benchmark["benchmark_type"],
+                benchmark_version=latest_benchmark["version"]
+            )
+            
+            # Compress datastream and save to destination dir
+            # (e.g. dst dir/ubuntu2404_CIS_2/...)
             datastream_dst_gz_path = (
                     output_benchmark_dir / datastream_filename
                     ).with_suffix(".xml.gz")
@@ -651,7 +771,7 @@ def process_benchmarks(
     with tempfile.TemporaryDirectory() as tmp_dst_dir:
         logger.info(f"Building benchmark data in {tmp_dst_dir}")
         _build_active_releases(
-            benchmarks_json_data["release_channels"],
+            benchmarks_json_data,
             cac_repo_dir,
             tailoring_templates_dir,
             Path(tmp_dst_dir),
