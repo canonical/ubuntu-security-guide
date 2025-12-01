@@ -1,3 +1,24 @@
+ubuntu-security-guides-enhanced (24.04.6) noble; urgency=medium
+
+  * Rewrite USG in Python:
+    - Add support for multiple versions of benchmark profiles
+    - Add funcionality to list and display informatino about profiles
+    - Add functionality for fixing only failing rules (--only-failed)
+    - Improve tests, configuration, logging
+  * Rewrite build tooling to process multiple benchmarks
+  * Switch to benchmarks package usg-benchmarks and drop debian-alternatives
+  * Add bash completion for USG
+  * Add autopkgtest script
+  * Update CaC content:
+    - Add support for distributed sshd configuration (CIS v1.0.0)
+    - Add timeout for acquiring the APT lock to mitigate issues with
+      failing rules due to unattended-upgrades running in the background
+    - Improve set_loopback_traffic
+    - Fix audit_rules_privileged_commands_kmod check to allow old auditd
+      watch format (STIG V1R1)
+
+ -- Miha Purg <miha.purg@canonical.com>  Mon, 01 Dec 2025 15:55:43 +0100
+
 ubuntu-security-guides-enhanced (24.04.5) noble; urgency=medium
 
   * CaC content:
