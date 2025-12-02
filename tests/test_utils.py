@@ -159,10 +159,12 @@ def test_check_perms_not_owned(tmp_path, monkeypatch, caplog):
 
 @pytest.mark.parametrize("uid,gid,expected_return", [
     [0, 0, True],
-    [0, os.getgid(), True],
-    [os.getuid(), os.getgid(), True],
+    [0, 1000, True],
+    [1000, 0, True],
+    [1000, 1000, True],
     [0, 12345, False],
-    [12345, 0, False]
+    [12345, 0, False],
+    [12345, 12345, False]
     ])
 def test_has_good_ownership(uid, gid, expected_return):
     class FakeStatResult(object):
