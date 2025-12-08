@@ -519,10 +519,11 @@ def _build_active_releases(
 
 
             channel_data["release_timestamp"] = release_timestamp
-
+            cac_product = channel_data["cac_product"]
+            
             # Compress datastream and save to destination dir
             # (e.g. dst dir/ubuntu2404_CIS_2/...)
-            datastream_filename = CAC_RELEASE_NAME.format(channel_data["cac_product"])
+            datastream_filename = CAC_RELEASE_NAME.format(cac_product)
             datastream_build_path = tmp_build_dir / "build" / datastream_filename
             datastream_dst_gz_path = (
                     output_benchmark_dir / datastream_filename
@@ -537,6 +538,38 @@ def _build_active_releases(
                     "sha256_orig": _calc_sha256(datastream_build_path)
                 }
             }
+
+            # Copy other SCAP files to destination dir
+            scap_files = {
+                "xccdf": f"ssg-{cac_product}-xccdf.xml",
+                "oval": f"ssg-{cac_product}-oval.xml",
+                "cpe-dict": f"ssg-{cac_product}-cpe-dictionary.xml",
+                "cpe-oval": f"ssg-{cac_product}-cpe-oval.xml",
+                "ocil": f"ssg-{cac_product}-ocil.xml",
+            }
+            for file_key, file_name in scap_files.items():
+                src_path = tmp_build_dir / "build" / file_name
+                dst_path = output_benchmark_dir / file_name
+                logger.debug(f"Copying {file_key} file from {src_path} to {dst_path}")
+                shutil.copy(src_path, dst_path)
+                channel_data["data_files"][file_key] = {
+                    "path": str(dst_path.relative_to(dst_dir)),
+                    "sha256": _calc_sha256(dst_path)
+                }
+
+            # Copy SCE scripts
+            logger.debug("Copying SCE scripts...")
+            sce_scripts = (
+                tmp_build_dir / "build" / cac_product / "checks/sce"
+                ).glob("*")
+            
+            sce_dst_dir = output_benchmark_dir / cac_product / "checks/sce"
+            sce_dst_dir.mkdir(parents=True)
+            for sce_script in sce_scripts:
+                logger.debug(f"Copying SCE script {sce_script}...")
+                sce_dst_path = sce_dst_dir / Path(sce_script).name
+                shutil.copy(sce_script, sce_dst_path)
+                sce_dst_path.chmod(0o755)  # SCEs must be executable
 
             # Generate tailoring files
             logger.debug("Generating tailoring files for benchmark {benchmark_id}...")
