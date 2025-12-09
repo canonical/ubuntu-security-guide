@@ -74,7 +74,10 @@ class ReleaseChannel:
                     data_file_type,
                     Path(data["data_files"][data_file_type]["path"]),
                     data["data_files"][data_file_type]["sha256"],
-                    data["data_files"][data_file_type]["sha256_orig"]
+                    data["data_files"][data_file_type].get(
+                        "sha256_orig",
+                        data["data_files"][data_file_type]["sha256"]
+                        )
                 )
                 for data_file_type in data["data_files"]
             }

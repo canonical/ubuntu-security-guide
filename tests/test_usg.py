@@ -25,7 +25,7 @@ from pytest import MonkeyPatch
 from usg import USGError, config, usg as usg_module
 from usg import constants
 from usg.exceptions import BackendError, ProfileNotFoundError
-from usg.models import Benchmark, Metadata, Profile, TailoringFile
+from usg.models import Metadata, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
 from usg.usg import USG
 
@@ -133,7 +133,6 @@ def patch_usg(tmp_path_factory, test_metadata):
     mp.setattr(usg_module, "OpenscapBackend", DummyBackend)
     mp.setattr(usg_module, "check_perms", lambda *a, **k: None)
     mp.setattr(usg_module, "verify_integrity", lambda *a, **k: None)
-    mp.setattr(usg_module, "gunzip_file", lambda *a, **k: None)
 
     class DummyDatetime(datetime.datetime):
         @classmethod
@@ -302,18 +301,20 @@ def test_move_artifacts_error_handling(patch_usg, monkeypatch):
     ["audit", BackendError, USGError, "Failed to run backend operation"],
     ["fix", BackendError, USGError, "Failed to run backend operation"],
     ["generate_fix", BackendError, USGError, "Failed to run backend operation"],
-    ["audit", KeyboardInterrupt, KeyboardInterrupt, ""],
-    ["fix", KeyboardInterrupt, KeyboardInterrupt, ""],
-    ["generate_fix", KeyboardInterrupt, KeyboardInterrupt, ""],
-    ["audit", RuntimeError, RuntimeError, ""],
-    ["fix", RuntimeError, RuntimeError, ""],
-    ["generate_fix", RuntimeError, RuntimeError, ""],
+    ["audit", KeyboardInterrupt, KeyboardInterrupt, "test induced error"],
+    ["fix", KeyboardInterrupt, KeyboardInterrupt, "test induced error"],
+    ["generate_fix", KeyboardInterrupt, KeyboardInterrupt, "test induced error"],
+    ["audit", RuntimeError, RuntimeError, "test induced error"],
+    ["fix", RuntimeError, RuntimeError, "test induced error"],
+    ["generate_fix", RuntimeError, RuntimeError, "test induced error"],
 ])
-def test_error_handling_in_backend_operations(patch_usg, monkeypatch, caplog, function_name,
-                                              backend_error_type, reraised_error_type, error_text):
+def test_error_handling_in_backend_operations(
+    patch_usg, monkeypatch, caplog, function_name,
+    backend_error_type, reraised_error_type, error_text
+):
     # test that errors returned by backend are properly handled
     def backend_function(*a, **kw):
-        raise backend_error_type
+        raise backend_error_type("test induced error")
 
     monkeypatch.setattr(usg_module.OpenscapBackend, function_name, backend_function)
     usg = USG()
