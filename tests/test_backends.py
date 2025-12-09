@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 
-import configparser
 import os
 
 import pytest
@@ -25,19 +24,10 @@ from usg.backends import OpenscapBackend, run_cmd
 from usg.exceptions import BackendCommandError, BackendError
 from usg.results import AuditResults, BackendArtifacts
 
-import inspect
 
-TEST_DS_NAME = "ssg-testproduct-ds.xml"
+TEST_XCCDF_PATH = "ssg-testproduct-xccdf.xml"
+TEST_CPE_DICT_PATH = "ssg-testproduct-cpe-dictionary.xml"
 TEST_PROFILE_ID = "test_profile"
-
-
-@pytest.fixture
-def dummy_datastream(tmp_path):
-    # Create a dummy datastream file
-    ds_path = tmp_path / TEST_DS_NAME
-    ds_path.write_text("<Benchmark></Benchmark>")
-    os.chmod(ds_path, 0o600)
-    return ds_path
 
 
 @pytest.fixture
@@ -73,8 +63,8 @@ if grep -qw -- "eval" <<< "$@"; then
     done
 
     # dummy oval results files (hardcoded names)
-    echo "test_oval_results" > {TEST_DS_NAME.replace("-ds.xml", "-oval.xml.result.xml")}
-    echo "test_oval_cpe_results" > {TEST_DS_NAME.replace("-ds.xml", "-cpe-oval.xml.result.xml")}
+    echo "test_oval_results" > {TEST_XCCDF_PATH.replace("-xccdf.xml", "-oval.xml.result.xml")}
+    echo "test_oval_cpe_results" > {TEST_XCCDF_PATH.replace("-xccdf.xml", "-cpe-oval.xml.result.xml")}
 
 elif grep -qw -- "generate" <<< "$@"; then
     if grep -qw -- "--result-id" <<< "$@"; then
@@ -102,7 +92,7 @@ exit 0
 
 @pytest.fixture
 def oscap_backend(
-    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
+    monkeypatch, tmp_path, dummy_openscap_bin
 ):
     # Fixture to create a dummy OpenscapBackend
     # - Patch check_perms to always pass
@@ -116,7 +106,8 @@ def oscap_backend(
                         lambda *a: (1, 3, 9))
 
     return OpenscapBackend(
-        datastream_file=dummy_datastream,
+        xccdf_path=TEST_XCCDF_PATH,
+        cpe_dict_path=TEST_CPE_DICT_PATH,
         openscap_bin_path=dummy_openscap_bin,
         work_dir=tmp_path,
     )
@@ -124,13 +115,14 @@ def oscap_backend(
 
 # ---- OpenscapBackend initialization ----
 def test_oscap_backend_initialization(
-    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
+    monkeypatch, tmp_path, dummy_openscap_bin
 ):
     monkeypatch.setattr(backends, "check_perms", lambda path, *a, **kw: None)
     monkeypatch.setattr(os, "access", lambda path, mode: True)
 
-    oscap = OpenscapBackend(
-        datastream_file=dummy_datastream,
+    _ = OpenscapBackend(
+        xccdf_path=TEST_XCCDF_PATH,
+        cpe_dict_path=TEST_CPE_DICT_PATH,
         openscap_bin_path=dummy_openscap_bin,
         work_dir=tmp_path,
     )
@@ -140,27 +132,29 @@ def test_oscap_backend_initialization(
 
 
 def test_oscap_backend_error_on_non_executable_oscap(
-    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin
+    monkeypatch, tmp_path, dummy_openscap_bin
 ):
     # Test that a non-executable oscap fails
     os.chmod(dummy_openscap_bin, 0o644)
     monkeypatch.setattr(backends, "check_perms", lambda path, *a, **kw: None)
     with pytest.raises(BackendError):
         OpenscapBackend(
-            datastream_file=dummy_datastream,
+            xccdf_path=TEST_XCCDF_PATH,
+            cpe_dict_path=TEST_CPE_DICT_PATH,
             openscap_bin_path=dummy_openscap_bin,
             work_dir=tmp_path,
         )
 
 
 def test_oscap_backend_log_on_bad_oscap_permissions(
-    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin, caplog
+    monkeypatch, tmp_path, dummy_openscap_bin, caplog
 ):
     # Test that a bad permissions oscap is logged
     os.chmod(dummy_openscap_bin, 0o777)
     with caplog.at_level("WARNING"):
         OpenscapBackend(
-            datastream_file=dummy_datastream,
+            xccdf_path=TEST_XCCDF_PATH,
+            cpe_dict_path=TEST_CPE_DICT_PATH,
             openscap_bin_path=dummy_openscap_bin,
             work_dir=tmp_path,
         )
@@ -168,13 +162,14 @@ def test_oscap_backend_log_on_bad_oscap_permissions(
 
 
 def test_oscap_backend_log_on_bad_tmp_work_dir_permissions(
-    monkeypatch, tmp_path, dummy_datastream, dummy_openscap_bin, caplog
+    monkeypatch, tmp_path, dummy_openscap_bin, caplog
 ):
     # Test that a bad permissions tmp_work_dir is logged
     os.chmod(tmp_path, 0o777)
     with caplog.at_level("WARNING"):
         OpenscapBackend(
-            datastream_file=dummy_datastream,
+            xccdf_path=TEST_XCCDF_PATH,
+            cpe_dict_path=TEST_CPE_DICT_PATH,
             openscap_bin_path=dummy_openscap_bin,
             work_dir=tmp_path,
         )
@@ -208,7 +203,7 @@ def test_audit_runs_and_parses_results(oscap_backend, tmp_path):
 
 
 def test_audit_command_line_options(
-    monkeypatch, oscap_backend, tmp_path, dummy_datastream
+    monkeypatch, oscap_backend, tmp_path,
 ):
     # Test that command line options are correct
     monkeypatch.setattr(oscap_backend, "_parse_audit_results", lambda x: None)
@@ -229,12 +224,13 @@ def test_audit_command_line_options(
         f"--results {results_file} "
         f"--report {report_file} "
         f"--profile {TEST_PROFILE_ID} "
-        f"{dummy_datastream}"
+        f"--cpe {TEST_CPE_DICT_PATH} "
+        f"{TEST_XCCDF_PATH}"
     )
 
 
 def test_audit_command_line_options_old_oscap_version(
-    monkeypatch, oscap_backend, tmp_path, dummy_datastream
+    monkeypatch, oscap_backend, tmp_path,
 ):
     # Test that command line options are correct on oscap < 1.3.0
     monkeypatch.setattr(oscap_backend, "_parse_audit_results", lambda x: None)
@@ -257,7 +253,8 @@ def test_audit_command_line_options_old_oscap_version(
         f"--report {report_file} "
         f"--profile {TEST_PROFILE_ID} "
         f"--verbose WARNING "
-        f"{dummy_datastream}"
+        f"--cpe {TEST_CPE_DICT_PATH} "
+        f"{TEST_XCCDF_PATH}"
     )
 
 
@@ -428,7 +425,7 @@ def test_generate_fix_runs_and_creates_fix_file(oscap_backend):
     assert fix_file.read_text() == "#TEST FIX OUTPUT WITHOUT AUDIT RESULTS"
 
 
-def test_generate_fix_command_line_options(oscap_backend, tmp_path, dummy_datastream):
+def test_generate_fix_command_line_options(oscap_backend, tmp_path):
     # Test that command line options are correct
     tailoring_file = tmp_path / "dummy_tailoring_file.xml"
     artifacts = oscap_backend.generate_fix(
@@ -442,7 +439,8 @@ def test_generate_fix_command_line_options(oscap_backend, tmp_path, dummy_datast
         f"--output {fix_file} "
         f"--tailoring-file {tailoring_file} "
         f"--profile {TEST_PROFILE_ID} "
-        f"{dummy_datastream}"
+        f"--cpe {TEST_CPE_DICT_PATH} "
+        f"{TEST_XCCDF_PATH}"
     )
 
 def test_generate_fix_command_line_options_with_audit_results(oscap_backend, tmp_path):
