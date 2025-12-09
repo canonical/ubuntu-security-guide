@@ -103,6 +103,10 @@ RUN cd /root/usg \
     && cp ./conf/logrotate.d/usg /etc/logrotate.d/ \
     && cp ./debian/usg.bash-completion /usr/share/bash-completion/completions/usg
 
+# extract all the SCE checks
+RUN cd /usr/share/usg-benchmarks \
+    && for d in */; do gunzip -k \$d/*gz; oscap ds sds-split \$d/ssg-$product-ds.xml \$d; done
+
 # run post-install fixes
 $post_commands
 
