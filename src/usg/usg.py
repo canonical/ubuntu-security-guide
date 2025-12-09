@@ -36,7 +36,7 @@ from usg.exceptions import (
 )
 from usg.models import Benchmark, Metadata, Profile, TailoringFile
 from usg.results import AuditResults, BackendArtifacts
-from usg.utils import check_perms, gunzip_file, verify_integrity
+from usg.utils import check_perms, verify_integrity
 
 logger = logging.getLogger(__name__)
 
@@ -75,12 +75,12 @@ class USG:
         if benchmark_metadata_path is None:
             self._benchmark_metadata_path = constants.BENCHMARK_METADATA_PATH
         else:
-            self._benchmark_metadata_path = Path(benchmark_metadata_path).resolve()
+            self._benchmark_metadata_path = Path(benchmark_metadata_path)
 
         if state_dir is None:
             self._state_dir = constants.STATE_DIR
         else:
-            self._state_dir = Path(state_dir).resolve()
+            self._state_dir = Path(state_dir)
 
         # ensure new files are created with the correct permissions
         os.umask(0o077)
@@ -205,21 +205,19 @@ class USG:
         logger.debug(f"Initializing Openscap backend for {benchmark.id}")
         logger.debug(f"Working directory: {work_dir}")
 
-        ds_gz_file = benchmark.channel.data_files["datastream_gz"]
-        ds_gz_path = self._benchmark_metadata_path.parent / ds_gz_file.rel_path
+        xccdf_file = benchmark.channel.data_files["xccdf"]
+        xccdf_path = self._benchmark_metadata_path.parent / xccdf_file.rel_path
+        check_perms(xccdf_path)
+        verify_integrity(xccdf_path, xccdf_file.sha256, "sha256")
 
-        check_perms(ds_gz_path)
-
-        verify_integrity(ds_gz_path, ds_gz_file.sha256, "sha256")
-
-        ds_path = work_dir / ds_gz_path.with_suffix("").name
-        ds_path.parent.mkdir(parents=True, exist_ok=True)
-        gunzip_file(ds_gz_path, ds_path)
-
-        verify_integrity(ds_path, ds_gz_file.sha256_orig, "sha256")
+        cpe_dict_file = benchmark.channel.data_files["cpe-dict"]
+        cpe_dict_path = self._benchmark_metadata_path.parent / cpe_dict_file.rel_path
+        check_perms(cpe_dict_path)
+        verify_integrity(cpe_dict_path, cpe_dict_file.sha256, "sha256")
 
         backend = OpenscapBackend(
-            ds_path,
+            xccdf_path,
+            cpe_dict_path,
             constants.OPENSCAP_BIN_PATH,
             work_dir,
         )
