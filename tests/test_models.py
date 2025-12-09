@@ -161,6 +161,14 @@ def test_channel_data(test_metadata):
         == "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6"
     )
 
+    xccdf_file = channel.data_files["xccdf"]
+    assert xccdf_file.type == "xccdf"
+    assert xccdf_file.rel_path == Path("ubuntu2404_CIS_2/ssg-ubuntu2404-xccdf.xml")
+    assert (
+        xccdf_file.sha256
+        == "3585fb5571954dc70d1c199f254cb9b69560337c6e8ddca71115b1f15e5b03a1"
+    )
+
 
 @pytest.mark.parametrize("missing_key", ["id", "profiles", "channel_number"])
 def test_benchmark_bad_data(test_metadata, missing_key):
