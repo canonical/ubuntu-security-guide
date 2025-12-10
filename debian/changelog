@@ -1,3 +1,9 @@
+ubuntu-security-guides-enhanced (24.04.7) noble; urgency=medium
+
+  * Fix errors in SCE checks when /tmp is mounted with noexec (LP: #2133895)
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 10 Dec 2025 09:20:44 +0100
+
 ubuntu-security-guides-enhanced (24.04.6) noble; urgency=medium
 
   * Rewrite USG in Python:
