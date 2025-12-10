@@ -561,7 +561,7 @@ def _build_active_releases(
             logger.debug("Copying SCE scripts...")
             sce_scripts = (
                 tmp_build_dir / "build" / cac_product / "checks/sce"
-                ).glob("*")
+                ).glob("*.sh")
             
             sce_dst_dir = output_benchmark_dir / cac_product / "checks/sce"
             sce_dst_dir.mkdir(parents=True)
