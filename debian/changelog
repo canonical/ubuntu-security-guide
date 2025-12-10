@@ -1,3 +1,9 @@
+ubuntu-security-guides-enhanced (22.04.16) jammy; urgency=medium
+
+  * Fix errors in SCE checks when /tmp is mounted with noexec (LP: #2133895)
+
+ -- Miha Purg <miha.purg@canonical.com>  Wed, 10 Dec 2025 09:45:28 +0100
+
 ubuntu-security-guides-enhanced (22.04.15) jammy; urgency=medium
 
   [Alan Moore]
