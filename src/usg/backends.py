@@ -117,14 +117,16 @@ class OpenscapBackend:
 
     def __init__(
         self,
-        datastream_file: Path | str,
-        openscap_bin_path: Path | str,
-        work_dir: Path | str,
+        xccdf_path: Path,
+        cpe_dict_path: Path,
+        openscap_bin_path: Path,
+        work_dir: Path,
     ) -> None:
         """Initialize openscap backend.
 
         Args:
-            datastream_file: path to SCAP datastream file
+            xccdf_path: path to SCAP XCCDF file
+            cpe_dict_path: path to SCAP CPE dictionary file
             openscap_bin_path: path to oscap binary
             work_dir: path to work directory for storing artifacts
 
@@ -132,9 +134,14 @@ class OpenscapBackend:
             BackendError on permission issues with input files/dirs
 
         """
-        self._datastream_path = Path(datastream_file).resolve()
-        self._work_dir = Path(work_dir).resolve()
-        self._oscap_path = Path(openscap_bin_path).resolve()
+        logger.debug((
+            f"Initializing OpenscapBackend with parameters: "
+            f"{xccdf_path}, {cpe_dict_path}, {openscap_bin_path}, {work_dir}"
+        ))
+        self._xccdf_path = xccdf_path
+        self._cpe_dict_path = cpe_dict_path
+        self._oscap_path = openscap_bin_path
+        self._work_dir = work_dir
 
         # do sanity checks on oscap binary and work_dir
         check_perms(self._oscap_path)
@@ -245,7 +252,9 @@ class OpenscapBackend:
             tailoring_path = Path(tailoring_file).resolve()
             cmd.extend(["--tailoring-file", str(tailoring_path)])
 
-        cmd.append(str(self._datastream_path))
+        cmd.extend([
+            "--cpe", str(self._cpe_dict_path), str(self._xccdf_path)
+        ])
 
         try:
             _ = run_cmd(
@@ -477,7 +486,8 @@ class OpenscapBackend:
         else:
             cmd.extend([
                 "--profile", cac_profile,
-                str(self._datastream_path)
+                "--cpe", str(self._cpe_dict_path),
+                str(self._xccdf_path)
                 ])
 
         logger.debug(f"Writing remediation script {fix_path}")

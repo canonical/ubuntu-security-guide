@@ -320,6 +320,26 @@
           "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-ds.xml.gz",
           "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
           "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
+        },
+        "xccdf": {
+          "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-xccdf.xml",
+          "sha256": "3585fb5571954dc70d1c199f254cb9b69560337c6e8ddca71115b1f15e5b03a1"
+        },
+        "oval": {
+          "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-oval.xml",
+          "sha256": "689505a5ae5505581ee913b19df77534105d60bdc2dc19370baeac05b34eb55d"
+        },
+        "cpe-dict": {
+          "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-cpe-dictionary.xml",
+          "sha256": "983b1a7af497c68a68086632042e6f29e6c43274e1f97249fee75f2cfd552c8e"
+        },
+        "cpe-oval": {
+          "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-cpe-oval.xml",
+          "sha256": "875a439d0f2d7092a00dac5f0cc8bd18d20870cbae523a57cc7d668a65212b11"
+        },
+        "ocil": {
+          "path": "ubuntu2404_CIS_1/ssg-ubuntu2404-ocil.xml",
+          "sha256": "5e0960dc44d3a5c7e6ce20e411733038ae77b37f0eb2eb1d8836ec339fbe8a8a"
         }
       },
       "tailoring_files": {
@@ -365,6 +385,26 @@
           "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-ds.xml.gz",
           "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
           "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
+        },
+        "xccdf": {
+          "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-xccdf.xml",
+          "sha256": "3585fb5571954dc70d1c199f254cb9b69560337c6e8ddca71115b1f15e5b03a1"
+        },
+        "oval": {
+          "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-oval.xml",
+          "sha256": "689505a5ae5505581ee913b19df77534105d60bdc2dc19370baeac05b34eb55d"
+        },
+        "cpe-dict": {
+          "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-cpe-dictionary.xml",
+          "sha256": "983b1a7af497c68a68086632042e6f29e6c43274e1f97249fee75f2cfd552c8e"
+        },
+        "cpe-oval": {
+          "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-cpe-oval.xml",
+          "sha256": "875a439d0f2d7092a00dac5f0cc8bd18d20870cbae523a57cc7d668a65212b11"
+        },
+        "ocil": {
+          "path": "ubuntu2404_CIS_2/ssg-ubuntu2404-ocil.xml",
+          "sha256": "5e0960dc44d3a5c7e6ce20e411733038ae77b37f0eb2eb1d8836ec339fbe8a8a"
         }
       },
       "tailoring_files": {
@@ -408,6 +448,26 @@
           "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-ds.xml.gz",
           "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
           "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
+        },
+        "xccdf": {
+          "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-xccdf.xml",
+          "sha256": "3585fb5571954dc70d1c199f254cb9b69560337c6e8ddca71115b1f15e5b03a1"
+        },
+        "oval": {
+          "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-oval.xml",
+          "sha256": "689505a5ae5505581ee913b19df77534105d60bdc2dc19370baeac05b34eb55d"
+        },
+        "cpe-dict": {
+          "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-cpe-dictionary.xml",
+          "sha256": "983b1a7af497c68a68086632042e6f29e6c43274e1f97249fee75f2cfd552c8e"
+        },
+        "cpe-oval": {
+          "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-cpe-oval.xml",
+          "sha256": "875a439d0f2d7092a00dac5f0cc8bd18d20870cbae523a57cc7d668a65212b11"
+        },
+        "ocil": {
+          "path": "ubuntu2404_CIS_3/ssg-ubuntu2404-ocil.xml",
+          "sha256": "5e0960dc44d3a5c7e6ce20e411733038ae77b37f0eb2eb1d8836ec339fbe8a8a"
         }
       },
       "tailoring_files": {
@@ -445,6 +505,26 @@
           "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-ds.xml.gz",
           "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
           "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
+        },
+        "xccdf": {
+          "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-xccdf.xml",
+          "sha256": "3585fb5571954dc70d1c199f254cb9b69560337c6e8ddca71115b1f15e5b03a1"
+        },
+        "oval": {
+          "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-oval.xml",
+          "sha256": "689505a5ae5505581ee913b19df77534105d60bdc2dc19370baeac05b34eb55d"
+        },
+        "cpe-dict": {
+          "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-cpe-dictionary.xml",
+          "sha256": "983b1a7af497c68a68086632042e6f29e6c43274e1f97249fee75f2cfd552c8e"
+        },
+        "cpe-oval": {
+          "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-cpe-oval.xml",
+          "sha256": "875a439d0f2d7092a00dac5f0cc8bd18d20870cbae523a57cc7d668a65212b11"
+        },
+        "ocil": {
+          "path": "ubuntu2404_STIG_1/ssg-ubuntu2404-ocil.xml",
+          "sha256": "5e0960dc44d3a5c7e6ce20e411733038ae77b37f0eb2eb1d8836ec339fbe8a8a"
         }
       },
       "tailoring_files": {
@@ -475,6 +555,26 @@
           "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-ds.xml.gz",
           "sha256": "501976f555746e204de66bf7b9ec722860d02771f5715163c1a49f0541dfa2d6",
           "sha256_orig": "d5698f5a7d570b9bd033215700a1f67543e6d2bf6bfd0822740b449f12325330"
+        },
+        "xccdf": {
+          "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-xccdf.xml",
+          "sha256": "3585fb5571954dc70d1c199f254cb9b69560337c6e8ddca71115b1f15e5b03a1"
+        },
+        "oval": {
+          "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-oval.xml",
+          "sha256": "689505a5ae5505581ee913b19df77534105d60bdc2dc19370baeac05b34eb55d"
+        },
+        "cpe-dict": {
+          "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-cpe-dictionary.xml",
+          "sha256": "983b1a7af497c68a68086632042e6f29e6c43274e1f97249fee75f2cfd552c8e"
+        },
+        "cpe-oval": {
+          "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-cpe-oval.xml",
+          "sha256": "875a439d0f2d7092a00dac5f0cc8bd18d20870cbae523a57cc7d668a65212b11"
+        },
+        "ocil": {
+          "path": "ubuntu2404_STIG_2/ssg-ubuntu2404-ocil.xml",
+          "sha256": "5e0960dc44d3a5c7e6ce20e411733038ae77b37f0eb2eb1d8836ec339fbe8a8a"
         }
       },
       "tailoring_files": {
