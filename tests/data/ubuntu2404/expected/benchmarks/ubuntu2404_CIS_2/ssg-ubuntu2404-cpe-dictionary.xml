@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cpe-dict:cpe-list xmlns:cpe-dict="http://cpe.mitre.org/dictionary/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://cpe.mitre.org/dictionary/2.0 http://cpe.mitre.org/files/cpe-dictionary_2.1.xsd">
+      <cpe-dict:cpe-item name="cpe:/o:canonical:ubuntu_linux:24.04::~~lts~~~">
+        <cpe-dict:title xml:lang="en-us">Ubuntu release 24.04 (Noble Numbat)</cpe-dict:title>
+        <cpe-dict:check system="http://oval.mitre.org/XMLSchema/oval-definitions-5" href="ssg-ubuntu2404-cpe-oval.xml">oval:ssg-installed_OS_is_ubuntu2404:def:1</cpe-dict:check>
+      </cpe-dict:cpe-item>
+    </cpe-dict:cpe-list>

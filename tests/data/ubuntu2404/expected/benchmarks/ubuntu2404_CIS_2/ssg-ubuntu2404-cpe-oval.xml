@@ -1,0 +1,1257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval-def:oval_definitions xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd  http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd  http://oval.mitre.org/XMLSchema/oval-definitions-5#independent independent-definitions-schema.xsd  http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd  http://oval.mitre.org/XMLSchema/oval-definitions-5#linux linux-definitions-schema.xsd">
+      <oval-def:generator>
+        <oval:product_name xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5">build_cpe.py from SCAP Security Guide</oval:product_name>
+        <oval:product_version xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5">ssg: [0, 1, 78], python: 3.12.3</oval:product_version>
+        <oval:schema_version xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5">5.11</oval:schema_version>
+        <oval:timestamp xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5">2025-07-17T09:46:05</oval:timestamp>
+      </oval-def:generator>
+      <oval-def:definitions>
+        <oval-def:definition id="oval:ssg-installed_env_has_grub2_package:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package grub2 is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/a:grub2" source="CPE"/>
+            <oval-def:description>Checks if package grub2-common is installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Package grub2-common is installed" test_ref="oval:ssg-test_env_has_grub2_installed:tst:1"/>
+            <oval-def:criteria operator="OR">
+              <oval-def:criterion negate="true" comment="Test for ppcle64 architecture" test_ref="oval:ssg-test_system_info_architecture_ppcle_64:tst:1"/>
+              <oval-def:criterion negate="true" comment="Test if OPAL is not used" test_ref="oval:ssg-test_system_using_opal:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_has_wifi_interface:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>WiFi interface is present</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/a:wifi-iface" source="CPE"/>
+            <oval-def:description>Checks if any wifi interface is present.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="WiFi interface is present" test_ref="oval:ssg-test_proc_net_wireless_exists:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_is_a_container:def:1" version="2" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Check if the scan target is a container</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/a:container" source="CPE"/>
+            <oval-def:description>Check for presence of files characterizing container filesystems.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criterion comment="Check if /.dockerenv exists" test_ref="oval:ssg-test_installed_env_is_a_docker_container:tst:1"/>
+            <oval-def:criterion comment="Check if /run/.containerenv exists" test_ref="oval:ssg-test_installed_env_is_a_podman_container:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_is_a_machine:def:1" version="2" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Check if the scan target is a machine</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/a:machine" source="CPE"/>
+            <oval-def:description>Check for absence of files characterizing container filesystems.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:extend_definition negate="true" comment="If environment is not a container, it is machine" definition_ref="oval:ssg-installed_env_is_a_container:def:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-proc_sys_kernel_osrelease_arch_aarch64:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Test that the architecture is aarch64</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>Check that architecture of kernel in /proc/sys/kernel is aarch64</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Architecture is aarch64" test_ref="oval:ssg-test_proc_sys_kernel_osrelease_arch_aarch64:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-proc_sys_kernel_osrelease_arch_not_s390x:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Test for different architecture than s390x</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>Check that architecture of kernel in /proc/sys/kernel/osrelease is not s390x</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:extend_definition negate="true" comment="Architecture is not s390x" definition_ref="oval:ssg-proc_sys_kernel_osrelease_arch_s390x:def:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-proc_sys_kernel_osrelease_arch_ppc64le:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Test that the architecture is ppc64le</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>Check that architecture of kernel in /proc/sys/kernel is ppc64le</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Architecture is ppc64le" test_ref="oval:ssg-test_proc_sys_kernel_osrelease_arch_ppc64le:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-proc_sys_kernel_osrelease_arch_s390x:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Test that the architecture is s390x</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>Check that architecture of kernel in /proc/sys/kernel is s390x</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Architecture is s390x" test_ref="oval:ssg-test_proc_sys_kernel_osrelease_arch_s390x:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-system_boot_mode_is_non_uefi:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Non-UEFI system boot mode check</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/a:non-uefi" source="CPE"/>
+            <oval-def:description>Check if System boot mode is non-UEFI.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:extend_definition negate="true" comment="Pass if System boot mode is non-UEFI" definition_ref="oval:ssg-system_boot_mode_is_uefi:def:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-system_boot_mode_is_uefi:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>UEFI system boot mode check</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/a:uefi" source="CPE"/>
+            <oval-def:description>Check if system boot mode is UEFI.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="check if /sys/firmware/efi folder exists" test_ref="oval:ssg-test_efi_dir_existence:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-system_with_kernel:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title/>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The kernel is installed</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criterion comment="kernel is installed" test_ref="oval:ssg-inventory_test_kernel_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_OS_is_part_of_Unix_family:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Installed operating system is part of the Unix family</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The operating system installed on the system is part of the Unix OS family</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Installed operating system is part of the unix family" test_ref="oval:ssg-test_unix_family:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_OS_is_rhcos4_rhel9:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Red Hat Enterprise Linux CoreOS RHEL9 Based</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/o:redhat:rhcos4:9" source="CPE"/>
+            <oval-def:description>The operating system installed on the system is
+      Red Hat Enterprise Linux CoreOS RHEL9 Based</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="RHCOS RHEL 9 is installed" test_ref="oval:ssg-test_rhcos4_rhel9:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_OS_is_ubuntu:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Ubuntu</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The operating system installed is an Ubuntu System</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria comment="System is Ubuntu" operator="AND">
+            <oval-def:extend_definition comment="Installed OS is part of the Unix family" definition_ref="oval:ssg-installed_OS_is_part_of_Unix_family:def:1"/>
+            <oval-def:criterion comment="lsb-based distrib" test_ref="oval:ssg-test_lsb:tst:1"/>
+            <oval-def:criterion comment="Ubuntu is installed" test_ref="oval:ssg-test_ubuntu:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_OS_is_ubuntu2404:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Ubuntu 24.04 LTS</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/o:canonical:ubuntu_linux:24.04" source="CPE"/>
+            <oval-def:description>The operating system installed on the system is Ubuntu 24.04 LTS</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria comment="current Ubuntu version is Noble" operator="AND">
+            <oval-def:extend_definition comment="Ubuntu is installed" definition_ref="oval:ssg-installed_OS_is_ubuntu:def:1"/>
+            <oval-def:criterion comment="Noble is installed" test_ref="oval:ssg-test_ubuntu_noble:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_is_osbuild:def:1" version="2" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Check if the environment is a OSBuild pipeline</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:reference ref_id="cpe:/a:osbuild" source="CPE"/>
+            <oval-def:description>Check the value of environment variable container.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Check the value of container variable" test_ref="oval:ssg-test_installed_env_is_osbuild:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-ipv6_enabled:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>IPv6 is enabled on system</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description/>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criterion comment="check if ipv6.disable argument is correct in GRUB_CMDLINE_LINUX" test_ref="oval:ssg-test_grub2_ipv6_disable_is_correct:tst:1"/>
+            <oval-def:criterion comment="check if ipv6.disable parameter is defined in /etc/default/grub" test_ref="oval:ssg-test_grub2_ipv6_disable_is_absent:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_mount_home:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Mountpoint /home is active (mounted) or configured in /etc/fstab</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description/>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /home is an active (mounted) mount point" test_ref="oval:ssg-test_mount_active_home_exists:tst:1"/>
+            </oval-def:criteria>
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /home is a mount point configured in /etc/fstab" test_ref="oval:ssg-test_mount_configured_fstab_home_exists:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_mount_tmp:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Mountpoint /tmp is active (mounted) or configured in /etc/fstab</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description/>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /tmp is an active (mounted) mount point" test_ref="oval:ssg-test_mount_active_tmp_exists:tst:1"/>
+            </oval-def:criteria>
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /tmp is a mount point configured in /etc/fstab" test_ref="oval:ssg-test_mount_configured_fstab_tmp_exists:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_mount_var-log-audit:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Mountpoint /var/log/audit is active (mounted) or configured in /etc/fstab</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description/>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /var/log/audit is an active (mounted) mount point" test_ref="oval:ssg-test_mount_active_var_log_audit_exists:tst:1"/>
+            </oval-def:criteria>
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /var/log/audit is a mount point configured in /etc/fstab" test_ref="oval:ssg-test_mount_configured_fstab_var_log_audit_exists:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_mount_var-log:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Mountpoint /var/log is active (mounted) or configured in /etc/fstab</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description/>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /var/log is an active (mounted) mount point" test_ref="oval:ssg-test_mount_active_var_log_exists:tst:1"/>
+            </oval-def:criteria>
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /var/log is a mount point configured in /etc/fstab" test_ref="oval:ssg-test_mount_configured_fstab_var_log_exists:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_mount_var-tmp:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Mountpoint /var/tmp is active (mounted) or configured in /etc/fstab</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description/>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /var/tmp is an active (mounted) mount point" test_ref="oval:ssg-test_mount_active_var_tmp_exists:tst:1"/>
+            </oval-def:criteria>
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /var/tmp is a mount point configured in /etc/fstab" test_ref="oval:ssg-test_mount_configured_fstab_var_tmp_exists:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-installed_env_mount_var:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Mountpoint /var is active (mounted) or configured in /etc/fstab</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description/>
+          </oval-def:metadata>
+          <oval-def:criteria operator="OR">
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /var is an active (mounted) mount point" test_ref="oval:ssg-test_mount_active_var_exists:tst:1"/>
+            </oval-def:criteria>
+            <oval-def:criteria operator="AND">
+              <oval-def:criterion comment="The path /var is a mount point configured in /etc/fstab" test_ref="oval:ssg-test_mount_configured_fstab_var_exists:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_aide:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package aide is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package aide should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package aide is installed" test_ref="oval:ssg-inventory_test_package_aide_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_apparmor:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package apparmor is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package apparmor should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package apparmor is installed" test_ref="oval:ssg-inventory_test_package_apparmor_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_apport:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package apport is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package apport should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package apport is installed" test_ref="oval:ssg-inventory_test_package_apport_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_audit:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package auditd is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package auditd should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package auditd is installed" test_ref="oval:ssg-inventory_test_package_audit_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_autofs:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package autofs is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package autofs should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package autofs is installed" test_ref="oval:ssg-inventory_test_package_autofs_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_avahi:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package avahi-daemon is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package avahi-daemon should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package avahi-daemon is installed" test_ref="oval:ssg-inventory_test_package_avahi_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_bash:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package bash is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package bash should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package bash is installed" test_ref="oval:ssg-inventory_test_package_bash_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_chrony:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package chrony is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package chrony should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package chrony is installed" test_ref="oval:ssg-inventory_test_package_chrony_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_gdm:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package gdm3 is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package gdm3 should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package gdm3 is installed" test_ref="oval:ssg-inventory_test_package_gdm_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_iptables:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package iptables is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package iptables should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package iptables is installed" test_ref="oval:ssg-inventory_test_package_iptables_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_libpwquality:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package libpwquality1 is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package libpwquality1 should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package libpwquality1 is installed" test_ref="oval:ssg-inventory_test_package_libpwquality_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_nftables:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package nftables is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package nftables should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package nftables is installed" test_ref="oval:ssg-inventory_test_package_nftables_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_ntp:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package ntp is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package ntp should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package ntp is installed" test_ref="oval:ssg-inventory_test_package_ntp_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_pam:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package libpam-runtime is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package libpam-runtime should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package libpam-runtime is installed" test_ref="oval:ssg-inventory_test_package_pam_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_postfix:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package postfix is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package postfix should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package postfix is installed" test_ref="oval:ssg-inventory_test_package_postfix_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_rsh-server:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package rsh-server is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package rsh-server should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package rsh-server is installed" test_ref="oval:ssg-inventory_test_package_rsh-server_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_rsyslog:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package rsyslog is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package rsyslog should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package rsyslog is installed" test_ref="oval:ssg-inventory_test_package_rsyslog_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_shadow-utils:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package login is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package login should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package login is installed" test_ref="oval:ssg-inventory_test_package_shadow-utils_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_snmpd:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package net-snmp is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package net-snmp should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package net-snmp is installed" test_ref="oval:ssg-inventory_test_package_snmpd_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_squid:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package squid is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package squid should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package squid is installed" test_ref="oval:ssg-inventory_test_package_squid_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_sssd:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package sssd is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package sssd should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package sssd is installed" test_ref="oval:ssg-inventory_test_package_sssd_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_sudo:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package sudo is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package sudo should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package sudo is installed" test_ref="oval:ssg-inventory_test_package_sudo_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_systemd-journal-remote:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package systemd-journal-remote is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package systemd-journal-remote should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package systemd-journal-remote is installed" test_ref="oval:ssg-inventory_test_package_systemd-journal-remote_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_systemd-timesyncd:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package systemd-timesyncd is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package systemd-timesyncd should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package systemd-timesyncd is installed" test_ref="oval:ssg-inventory_test_package_systemd-timesyncd_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_systemd:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package systemd is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package systemd should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package systemd is installed" test_ref="oval:ssg-inventory_test_package_systemd_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-package_ufw:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>Package ufw is installed</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The DPKG package ufw should be installed.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria operator="AND">
+            <oval-def:criterion comment="Platform package ufw is installed" test_ref="oval:ssg-inventory_test_package_ufw_installed:tst:1"/>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-service_disabled_firewalld:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>The firewalld is disabled on the system</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The firewalld service should be disabled.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria comment="package firewalld removed or service firewalld is not configured to start" operator="OR">
+            <oval-def:criterion comment="firewalld removed" test_ref="oval:ssg-service_disabled_firewalldtest_service_firewalld_package_firewalld_removed:tst:1"/>
+            <oval-def:criteria comment="service firewalld is not configured to start" operator="AND">
+              <oval-def:criterion comment="firewalld is not running" test_ref="oval:ssg-test_service_not_running_service_disabled_firewalld_firewalld:tst:1"/>
+              <oval-def:criterion comment="Property LoadState of service firewalld is masked" test_ref="oval:ssg-test_service_loadstate_is_masked_service_disabled_firewalld_firewalld:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-service_disabled_iptables:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>The iptables is disabled on the system</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The iptables service should be disabled.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria comment="package iptables removed or service iptables is not configured to start" operator="OR">
+            <oval-def:criterion comment="iptables removed" test_ref="oval:ssg-service_disabled_iptablestest_service_iptables_package_iptables_removed:tst:1"/>
+            <oval-def:criteria comment="service iptables is not configured to start" operator="AND">
+              <oval-def:criterion comment="iptables is not running" test_ref="oval:ssg-test_service_not_running_service_disabled_iptables_iptables:tst:1"/>
+              <oval-def:criterion comment="Property LoadState of service iptables is masked" test_ref="oval:ssg-test_service_loadstate_is_masked_service_disabled_iptables_iptables:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-service_disabled_nftables:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>The nftables is disabled on the system</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The nftables service should be disabled.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria comment="package nftables removed or service nftables is not configured to start" operator="OR">
+            <oval-def:criterion comment="nftables removed" test_ref="oval:ssg-service_disabled_nftablestest_service_nftables_package_nftables_removed:tst:1"/>
+            <oval-def:criteria comment="service nftables is not configured to start" operator="AND">
+              <oval-def:criterion comment="nftables is not running" test_ref="oval:ssg-test_service_not_running_service_disabled_nftables_nftables:tst:1"/>
+              <oval-def:criterion comment="Property LoadState of service nftables is masked" test_ref="oval:ssg-test_service_loadstate_is_masked_service_disabled_nftables_nftables:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-service_disabled_rsyslog:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>The rsyslog is disabled on the system</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The rsyslog service should be disabled.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria comment="package rsyslog removed or service rsyslog is not configured to start" operator="OR">
+            <oval-def:criterion comment="rsyslog removed" test_ref="oval:ssg-service_disabled_rsyslogtest_service_rsyslog_package_rsyslog_removed:tst:1"/>
+            <oval-def:criteria comment="service rsyslog is not configured to start" operator="AND">
+              <oval-def:criterion comment="rsyslog is not running" test_ref="oval:ssg-test_service_not_running_service_disabled_rsyslog_rsyslog:tst:1"/>
+              <oval-def:criterion comment="Property LoadState of service rsyslog is masked" test_ref="oval:ssg-test_service_loadstate_is_masked_service_disabled_rsyslog_rsyslog:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+        <oval-def:definition id="oval:ssg-service_disabled_ufw:def:1" version="1" class="inventory">
+          <oval-def:metadata>
+            <oval-def:title>The ufw is disabled on the system</oval-def:title>
+            <oval-def:affected family="unix">
+              <oval-def:platform>Ubuntu 24.04</oval-def:platform>
+            </oval-def:affected>
+            <oval-def:description>The ufw service should be disabled.</oval-def:description>
+          </oval-def:metadata>
+          <oval-def:criteria comment="package ufw removed or service ufw is not configured to start" operator="OR">
+            <oval-def:criterion comment="ufw removed" test_ref="oval:ssg-service_disabled_ufwtest_service_ufw_package_ufw_removed:tst:1"/>
+            <oval-def:criteria comment="service ufw is not configured to start" operator="AND">
+              <oval-def:criterion comment="ufw is not running" test_ref="oval:ssg-test_service_not_running_service_disabled_ufw_ufw:tst:1"/>
+              <oval-def:criterion comment="Property LoadState of service ufw is masked" test_ref="oval:ssg-test_service_loadstate_is_masked_service_disabled_ufw_ufw:tst:1"/>
+            </oval-def:criteria>
+          </oval-def:criteria>
+        </oval-def:definition>
+      </oval-def:definitions>
+      <oval-def:tests>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_env_has_grub2_installed:tst:1" version="1" check="all" comment="system has package grub2-common installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_env_has_grub2_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <unix:file_test xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-test_system_using_opal:tst:1" version="1" check="all" comment="Check if /sys/firmware/opal exists" check_existence="all_exist" state_operator="AND">
+          <unix:object object_ref="oval:ssg-object_system_using_opal:obj:1"/>
+        </unix:file_test>
+        <unix:file_test xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-test_proc_net_wireless_exists:tst:1" version="1" check="all" comment="Test if /proc/net/wireless exists" check_existence="all_exist" state_operator="AND">
+          <unix:object object_ref="oval:ssg-object_proc_net_wireless_exists:obj:1"/>
+        </unix:file_test>
+        <unix:file_test xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-test_installed_env_is_a_docker_container:tst:1" version="1" check="all" comment="Check if /.dockerenv exists" check_existence="all_exist" state_operator="AND">
+          <unix:object object_ref="oval:ssg-object_installed_env_is_a_docker_container:obj:1"/>
+        </unix:file_test>
+        <unix:file_test xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-test_installed_env_is_a_podman_container:tst:1" version="1" check="all" comment="Check if /run/.containerenv exists" check_existence="all_exist" state_operator="AND">
+          <unix:object object_ref="oval:ssg-object_installed_env_is_a_podman_container:obj:1"/>
+        </unix:file_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_proc_sys_kernel_osrelease_arch_aarch64:tst:1" version="1" check="all" comment="proc_sys_kernel is for aarch64 architecture" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_proc_sys_kernel_osrelease_arch_aarch64:obj:1"/>
+        </ind:textfilecontent54_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_proc_sys_kernel_osrelease_arch_ppc64le:tst:1" version="1" check="all" comment="proc_sys_kernel is for ppc64le architecture" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_proc_sys_kernel_osrelease_arch_ppc64le:obj:1"/>
+        </ind:textfilecontent54_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_proc_sys_kernel_osrelease_arch_s390x:tst:1" version="1" check="all" comment="proc_sys_kernel is for s390x architecture" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_proc_sys_kernel_osrelease_arch_s390x:obj:1"/>
+        </ind:textfilecontent54_test>
+        <unix:file_test xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-test_efi_dir_existence:tst:1" version="1" check="all" comment="Verify if /sys/firmware/efi folder exists" state_operator="AND">
+          <unix:object object_ref="oval:ssg-object_file_sys_firmware_efi:obj:1"/>
+        </unix:file_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_kernel_installed:tst:1" version="1" check="all" comment="package linux-base is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_kernel_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <ind:family_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_unix_family:tst:1" version="1" check="all" comment="Test installed OS is part of the unix family" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_unix_family:obj:1"/>
+          <ind:state state_ref="oval:ssg-state_unix_family:ste:1"/>
+        </ind:family_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_rhcos4_rhel9:tst:1" version="1" check="all" comment="rhcoreos is rhel9 based" state_operator="AND">
+          <ind:object object_ref="oval:ssg-obj_rhcos4_rhel9:obj:1"/>
+          <ind:state state_ref="oval:ssg-state_rhcos4_rhel9:ste:1"/>
+        </ind:textfilecontent54_test>
+        <unix:file_test xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-test_lsb:tst:1" version="1" check="all" comment="/etc/lsb-release exists" check_existence="all_exist" state_operator="AND">
+          <unix:object object_ref="oval:ssg-obj_lsb:obj:1"/>
+        </unix:file_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_ubuntu:tst:1" version="1" check="all" comment="Check Ubuntu" state_operator="AND">
+          <ind:object object_ref="oval:ssg-obj_ubuntu:obj:1"/>
+        </ind:textfilecontent54_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_ubuntu_noble:tst:1" version="1" check="all" comment="Check Ubuntu version" state_operator="AND">
+          <ind:object object_ref="oval:ssg-obj_ubuntu_noble:obj:1"/>
+        </ind:textfilecontent54_test>
+        <ind:environmentvariable58_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_installed_env_is_osbuild:tst:1" version="1" check="all" comment="environment variable container is set to bwrap-osbuild" check_existence="all_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_installed_env_is_osbuild:obj:1"/>
+          <ind:state state_ref="oval:ssg-state_installed_env_is_osbuild:ste:1"/>
+        </ind:environmentvariable58_test>
+        <unix:uname_test xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-test_system_info_architecture_ppcle_64:tst:1" version="1" check="all" comment="64 bit architecture" state_operator="AND">
+          <unix:object object_ref="oval:ssg-object_system_info_architecture_ppcle_64:obj:1"/>
+          <unix:state state_ref="oval:ssg-state_system_info_architecture_ppcle_64:ste:1"/>
+        </unix:uname_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_grub2_ipv6_disable_is_correct:tst:1" version="1" check="all" comment="check GRUB_CMDLINE_LINUX parameters in /etc/default/grub" check_existence="all_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_grub2_ipv6_disable_parameter:obj:1"/>
+          <ind:state state_ref="oval:ssg-state_grub2_ipv6_disable_argument:ste:1"/>
+        </ind:textfilecontent54_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_grub2_ipv6_disable_is_absent:tst:1" version="1" check="all" comment="ipv6.disable is not defined in /etc/default/grub" check_existence="none_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_grub2_ipv6_disable_parameter:obj:1"/>
+        </ind:textfilecontent54_test>
+        <linux:partition_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_mount_active_home_exists:tst:1" version="1" check="all" comment="Mountpoint /home exists" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-object_mount_active_home_exists:obj:1"/>
+        </linux:partition_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_mount_configured_fstab_home_exists:tst:1" version="1" check="all" comment="Mountpoint /home is configured" check_existence="all_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_mount_configured_fstab_home_exists:obj:1"/>
+        </ind:textfilecontent54_test>
+        <linux:partition_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_mount_active_tmp_exists:tst:1" version="1" check="all" comment="Mountpoint /tmp exists" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-object_mount_active_tmp_exists:obj:1"/>
+        </linux:partition_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_mount_configured_fstab_tmp_exists:tst:1" version="1" check="all" comment="Mountpoint /tmp is configured" check_existence="all_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_mount_configured_fstab_tmp_exists:obj:1"/>
+        </ind:textfilecontent54_test>
+        <linux:partition_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_mount_active_var_log_audit_exists:tst:1" version="1" check="all" comment="Mountpoint /var/log/audit exists" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-object_mount_active_var_log_audit_exists:obj:1"/>
+        </linux:partition_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_mount_configured_fstab_var_log_audit_exists:tst:1" version="1" check="all" comment="Mountpoint /var/log/audit is configured" check_existence="all_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_mount_configured_fstab_var_log_audit_exists:obj:1"/>
+        </ind:textfilecontent54_test>
+        <linux:partition_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_mount_active_var_log_exists:tst:1" version="1" check="all" comment="Mountpoint /var/log exists" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-object_mount_active_var_log_exists:obj:1"/>
+        </linux:partition_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_mount_configured_fstab_var_log_exists:tst:1" version="1" check="all" comment="Mountpoint /var/log is configured" check_existence="all_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_mount_configured_fstab_var_log_exists:obj:1"/>
+        </ind:textfilecontent54_test>
+        <linux:partition_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_mount_active_var_tmp_exists:tst:1" version="1" check="all" comment="Mountpoint /var/tmp exists" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-object_mount_active_var_tmp_exists:obj:1"/>
+        </linux:partition_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_mount_configured_fstab_var_tmp_exists:tst:1" version="1" check="all" comment="Mountpoint /var/tmp is configured" check_existence="all_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_mount_configured_fstab_var_tmp_exists:obj:1"/>
+        </ind:textfilecontent54_test>
+        <linux:partition_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_mount_active_var_exists:tst:1" version="1" check="all" comment="Mountpoint /var exists" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-object_mount_active_var_exists:obj:1"/>
+        </linux:partition_test>
+        <ind:textfilecontent54_test xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-test_mount_configured_fstab_var_exists:tst:1" version="1" check="all" comment="Mountpoint /var is configured" check_existence="all_exist" state_operator="AND">
+          <ind:object object_ref="oval:ssg-object_mount_configured_fstab_var_exists:obj:1"/>
+        </ind:textfilecontent54_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_aide_installed:tst:1" version="1" check="all" comment="package aide is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_aide_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_apparmor_installed:tst:1" version="1" check="all" comment="package apparmor is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_apparmor_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_apport_installed:tst:1" version="1" check="all" comment="package apport is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_apport_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_audit_installed:tst:1" version="1" check="all" comment="package auditd is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_audit_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_autofs_installed:tst:1" version="1" check="all" comment="package autofs is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_autofs_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_avahi_installed:tst:1" version="1" check="all" comment="package avahi-daemon is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_avahi_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_bash_installed:tst:1" version="1" check="all" comment="package bash is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_bash_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_chrony_installed:tst:1" version="1" check="all" comment="package chrony is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_chrony_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_gdm_installed:tst:1" version="1" check="all" comment="package gdm3 is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_gdm_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_iptables_installed:tst:1" version="1" check="all" comment="package iptables is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_iptables_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_libpwquality_installed:tst:1" version="1" check="all" comment="package libpwquality1 is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_libpwquality_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_nftables_installed:tst:1" version="1" check="all" comment="package nftables is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_nftables_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_ntp_installed:tst:1" version="1" check="all" comment="package ntp is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_ntp_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_pam_installed:tst:1" version="1" check="all" comment="package libpam-runtime is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_pam_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_postfix_installed:tst:1" version="1" check="all" comment="package postfix is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_postfix_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_rsh-server_installed:tst:1" version="1" check="all" comment="package rsh-server is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_rsh-server_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_rsyslog_installed:tst:1" version="1" check="all" comment="package rsyslog is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_rsyslog_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_shadow-utils_installed:tst:1" version="1" check="all" comment="package login is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_shadow-utils_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_snmpd_installed:tst:1" version="1" check="all" comment="package net-snmp is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_snmpd_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_squid_installed:tst:1" version="1" check="all" comment="package squid is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_squid_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_sssd_installed:tst:1" version="1" check="all" comment="package sssd is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_sssd_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_sudo_installed:tst:1" version="1" check="all" comment="package sudo is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_sudo_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_systemd-journal-remote_installed:tst:1" version="1" check="all" comment="package systemd-journal-remote is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_systemd-journal-remote_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_systemd-timesyncd_installed:tst:1" version="1" check="all" comment="package systemd-timesyncd is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_systemd-timesyncd_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_systemd_installed:tst:1" version="1" check="all" comment="package systemd is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_systemd_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-inventory_test_package_ufw_installed:tst:1" version="1" check="all" comment="package ufw is installed" check_existence="all_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_inventory_test_package_ufw_installed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_not_running_service_disabled_firewalld_firewalld:tst:1" version="1" check="all" comment="Test that the firewalld service is not running" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_not_running_service_disabled_firewalld_firewalld:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_not_running_service_disabled_firewalld_firewalld:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_loadstate_is_masked_service_disabled_firewalld_firewalld:tst:1" version="1" check="all" comment="Test that the property LoadState from the service firewalld is masked" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_loadstate_is_masked_service_disabled_firewalld_firewalld:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_loadstate_is_masked_service_disabled_firewalld_firewalld:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-service_disabled_firewalldtest_service_firewalld_package_firewalld_removed:tst:1" version="1" check="all" comment="package firewalld is removed" check_existence="none_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_disabled_firewalldtest_service_firewalld_package_firewalld_removed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_not_running_service_disabled_iptables_iptables:tst:1" version="1" check="all" comment="Test that the iptables service is not running" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_not_running_service_disabled_iptables_iptables:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_not_running_service_disabled_iptables_iptables:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_loadstate_is_masked_service_disabled_iptables_iptables:tst:1" version="1" check="all" comment="Test that the property LoadState from the service iptables is masked" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_loadstate_is_masked_service_disabled_iptables_iptables:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_loadstate_is_masked_service_disabled_iptables_iptables:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-service_disabled_iptablestest_service_iptables_package_iptables_removed:tst:1" version="1" check="all" comment="package iptables is removed" check_existence="none_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_disabled_iptablestest_service_iptables_package_iptables_removed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_not_running_service_disabled_nftables_nftables:tst:1" version="1" check="all" comment="Test that the nftables service is not running" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_not_running_service_disabled_nftables_nftables:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_not_running_service_disabled_nftables_nftables:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_loadstate_is_masked_service_disabled_nftables_nftables:tst:1" version="1" check="all" comment="Test that the property LoadState from the service nftables is masked" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_loadstate_is_masked_service_disabled_nftables_nftables:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_loadstate_is_masked_service_disabled_nftables_nftables:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-service_disabled_nftablestest_service_nftables_package_nftables_removed:tst:1" version="1" check="all" comment="package nftables is removed" check_existence="none_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_disabled_nftablestest_service_nftables_package_nftables_removed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_not_running_service_disabled_rsyslog_rsyslog:tst:1" version="1" check="all" comment="Test that the rsyslog service is not running" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_not_running_service_disabled_rsyslog_rsyslog:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_not_running_service_disabled_rsyslog_rsyslog:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_loadstate_is_masked_service_disabled_rsyslog_rsyslog:tst:1" version="1" check="all" comment="Test that the property LoadState from the service rsyslog is masked" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_loadstate_is_masked_service_disabled_rsyslog_rsyslog:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_loadstate_is_masked_service_disabled_rsyslog_rsyslog:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-service_disabled_rsyslogtest_service_rsyslog_package_rsyslog_removed:tst:1" version="1" check="all" comment="package rsyslog is removed" check_existence="none_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_disabled_rsyslogtest_service_rsyslog_package_rsyslog_removed:obj:1"/>
+        </linux:dpkginfo_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_not_running_service_disabled_ufw_ufw:tst:1" version="1" check="all" comment="Test that the ufw service is not running" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_not_running_service_disabled_ufw_ufw:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_not_running_service_disabled_ufw_ufw:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:systemdunitproperty_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-test_service_loadstate_is_masked_service_disabled_ufw_ufw:tst:1" version="1" check="all" comment="Test that the property LoadState from the service ufw is masked" check_existence="any_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_loadstate_is_masked_service_disabled_ufw_ufw:obj:1"/>
+          <linux:state state_ref="oval:ssg-state_service_loadstate_is_masked_service_disabled_ufw_ufw:ste:1"/>
+        </linux:systemdunitproperty_test>
+        <linux:dpkginfo_test xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-service_disabled_ufwtest_service_ufw_package_ufw_removed:tst:1" version="1" check="all" comment="package ufw is removed" check_existence="none_exist" state_operator="AND">
+          <linux:object object_ref="oval:ssg-obj_service_disabled_ufwtest_service_ufw_package_ufw_removed:obj:1"/>
+        </linux:dpkginfo_test>
+      </oval-def:tests>
+      <oval-def:objects>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_env_has_grub2_installed:obj:1" version="1">
+          <linux:name>grub2-common</linux:name>
+        </linux:dpkginfo_object>
+        <unix:file_object xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-object_system_using_opal:obj:1" version="1">
+          <unix:filepath>/sys/firmware/opal</unix:filepath>
+        </unix:file_object>
+        <unix:file_object xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-object_proc_net_wireless_exists:obj:1" version="1" comment="/proc/net/wireless file">
+          <unix:filepath>/proc/net/wireless</unix:filepath>
+        </unix:file_object>
+        <unix:file_object xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-object_installed_env_is_a_docker_container:obj:1" version="1" comment="Check file /.dockerenv">
+          <unix:filepath datatype="string">/.dockerenv</unix:filepath>
+        </unix:file_object>
+        <unix:file_object xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-object_installed_env_is_a_podman_container:obj:1" version="1" comment="Check file /run/.containerenv">
+          <unix:filepath datatype="string">/run/.containerenv</unix:filepath>
+        </unix:file_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_proc_sys_kernel_osrelease_arch_aarch64:obj:1" version="1">
+          <ind:filepath operation="pattern match">^/proc/sys/kernel/(osrelease|arch)</ind:filepath>
+          <ind:pattern operation="pattern match">^.*\.aarch64$|^aarch64$</ind:pattern>
+          <ind:instance datatype="int" operation="greater than or equal">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_proc_sys_kernel_osrelease_arch_ppc64le:obj:1" version="1">
+          <ind:filepath operation="pattern match">^/proc/sys/kernel/(osrelease|arch)</ind:filepath>
+          <ind:pattern operation="pattern match">^.*\.ppc64le$|^ppc64le$</ind:pattern>
+          <ind:instance datatype="int" operation="greater than or equal">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_proc_sys_kernel_osrelease_arch_s390x:obj:1" version="1">
+          <ind:filepath operation="pattern match">^/proc/sys/kernel/(osrelease|arch)</ind:filepath>
+          <ind:pattern operation="pattern match">^.*\.s390x$|^s390x$</ind:pattern>
+          <ind:instance datatype="int" operation="greater than or equal">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <unix:file_object xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-object_file_sys_firmware_efi:obj:1" version="1" comment="/sys/firmware/efi">
+          <unix:path>/sys/firmware/efi</unix:path>
+          <unix:filename xsi:nil="true"/>
+        </unix:file_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_kernel_installed:obj:1" version="1">
+          <linux:name>linux-base</linux:name>
+        </linux:dpkginfo_object>
+        <ind:family_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_unix_family:obj:1" version="1"/>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-obj_rhcos4_rhel9:obj:1" version="1">
+          <ind:filepath>/etc/os-release</ind:filepath>
+          <ind:pattern operation="pattern match">^RHEL_VERSION="(\d).*"$</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <unix:file_object xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-obj_lsb:obj:1" version="1" comment="check /etc/lsb-release file">
+          <unix:filepath>/etc/lsb-release</unix:filepath>
+        </unix:file_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-obj_ubuntu:obj:1" version="1" comment="Check Ubuntu">
+          <ind:filepath>/etc/lsb-release</ind:filepath>
+          <ind:pattern operation="pattern match">^DISTRIB_ID=Ubuntu$</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-obj_ubuntu_noble:obj:1" version="1" comment="Check Ubuntu version">
+          <ind:filepath>/etc/lsb-release</ind:filepath>
+          <ind:pattern operation="pattern match">^DISTRIB_CODENAME=noble$</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <ind:environmentvariable58_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_installed_env_is_osbuild:obj:1" version="1">
+          <ind:pid xsi:nil="true" datatype="int"/>
+          <ind:name>container</ind:name>
+        </ind:environmentvariable58_object>
+        <unix:uname_object xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-object_system_info_architecture_ppcle_64:obj:1" version="1" comment="64 bit architecture"/>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_grub2_ipv6_disable_parameter:obj:1" version="1">
+          <ind:filepath>/etc/default/grub</ind:filepath>
+          <ind:pattern operation="pattern match">^\s*GRUB_CMDLINE_LINUX=".*ipv6\.disable=(\d).*$</ind:pattern>
+          <ind:instance datatype="int" operation="greater than or equal">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <linux:partition_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-object_mount_active_home_exists:obj:1" version="1">
+          <linux:mount_point>/home</linux:mount_point>
+        </linux:partition_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_mount_configured_fstab_home_exists:obj:1" version="1">
+          <ind:filepath>/etc/fstab</ind:filepath>
+          <ind:pattern operation="pattern match">^[\s]*[\S]+[\s]+/home[\s]+[\S]+[\s]+([\S]+)</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <linux:partition_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-object_mount_active_tmp_exists:obj:1" version="1">
+          <linux:mount_point>/tmp</linux:mount_point>
+        </linux:partition_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_mount_configured_fstab_tmp_exists:obj:1" version="1">
+          <ind:filepath>/etc/fstab</ind:filepath>
+          <ind:pattern operation="pattern match">^[\s]*[\S]+[\s]+/tmp[\s]+[\S]+[\s]+([\S]+)</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <linux:partition_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-object_mount_active_var_log_audit_exists:obj:1" version="1">
+          <linux:mount_point>/var/log/audit</linux:mount_point>
+        </linux:partition_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_mount_configured_fstab_var_log_audit_exists:obj:1" version="1">
+          <ind:filepath>/etc/fstab</ind:filepath>
+          <ind:pattern operation="pattern match">^[\s]*[\S]+[\s]+/var/log/audit[\s]+[\S]+[\s]+([\S]+)</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <linux:partition_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-object_mount_active_var_log_exists:obj:1" version="1">
+          <linux:mount_point>/var/log</linux:mount_point>
+        </linux:partition_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_mount_configured_fstab_var_log_exists:obj:1" version="1">
+          <ind:filepath>/etc/fstab</ind:filepath>
+          <ind:pattern operation="pattern match">^[\s]*[\S]+[\s]+/var/log[\s]+[\S]+[\s]+([\S]+)</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <linux:partition_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-object_mount_active_var_tmp_exists:obj:1" version="1">
+          <linux:mount_point>/var/tmp</linux:mount_point>
+        </linux:partition_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_mount_configured_fstab_var_tmp_exists:obj:1" version="1">
+          <ind:filepath>/etc/fstab</ind:filepath>
+          <ind:pattern operation="pattern match">^[\s]*[\S]+[\s]+/var/tmp[\s]+[\S]+[\s]+([\S]+)</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <linux:partition_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-object_mount_active_var_exists:obj:1" version="1">
+          <linux:mount_point>/var</linux:mount_point>
+        </linux:partition_object>
+        <ind:textfilecontent54_object xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-object_mount_configured_fstab_var_exists:obj:1" version="1">
+          <ind:filepath>/etc/fstab</ind:filepath>
+          <ind:pattern operation="pattern match">^[\s]*[\S]+[\s]+/var[\s]+[\S]+[\s]+([\S]+)</ind:pattern>
+          <ind:instance datatype="int">1</ind:instance>
+        </ind:textfilecontent54_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_aide_installed:obj:1" version="1">
+          <linux:name>aide</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_apparmor_installed:obj:1" version="1">
+          <linux:name>apparmor</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_apport_installed:obj:1" version="1">
+          <linux:name>apport</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_audit_installed:obj:1" version="1">
+          <linux:name>auditd</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_autofs_installed:obj:1" version="1">
+          <linux:name>autofs</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_avahi_installed:obj:1" version="1">
+          <linux:name>avahi-daemon</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_bash_installed:obj:1" version="1">
+          <linux:name>bash</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_chrony_installed:obj:1" version="1">
+          <linux:name>chrony</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_gdm_installed:obj:1" version="1">
+          <linux:name>gdm3</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_iptables_installed:obj:1" version="1">
+          <linux:name>iptables</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_libpwquality_installed:obj:1" version="1">
+          <linux:name>libpwquality1</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_nftables_installed:obj:1" version="1">
+          <linux:name>nftables</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_ntp_installed:obj:1" version="1">
+          <linux:name>ntp</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_pam_installed:obj:1" version="1">
+          <linux:name>libpam-runtime</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_postfix_installed:obj:1" version="1">
+          <linux:name>postfix</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_rsh-server_installed:obj:1" version="1">
+          <linux:name>rsh-server</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_rsyslog_installed:obj:1" version="1">
+          <linux:name>rsyslog</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_shadow-utils_installed:obj:1" version="1">
+          <linux:name>login</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_snmpd_installed:obj:1" version="1">
+          <linux:name>net-snmp</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_squid_installed:obj:1" version="1">
+          <linux:name>squid</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_sssd_installed:obj:1" version="1">
+          <linux:name>sssd</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_sudo_installed:obj:1" version="1">
+          <linux:name>sudo</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_systemd-journal-remote_installed:obj:1" version="1">
+          <linux:name>systemd-journal-remote</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_systemd-timesyncd_installed:obj:1" version="1">
+          <linux:name>systemd-timesyncd</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_systemd_installed:obj:1" version="1">
+          <linux:name>systemd</linux:name>
+        </linux:dpkginfo_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_inventory_test_package_ufw_installed:obj:1" version="1">
+          <linux:name>ufw</linux:name>
+        </linux:dpkginfo_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_not_running_service_disabled_firewalld_firewalld:obj:1" version="1" comment="Retrieve the ActiveState property of firewalld">
+          <linux:unit operation="pattern match">^firewalld\.(service|socket)$</linux:unit>
+          <linux:property>ActiveState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_loadstate_is_masked_service_disabled_firewalld_firewalld:obj:1" version="1" comment="Retrieve the LoadState property of firewalld">
+          <linux:unit operation="pattern match">^firewalld\.(service|socket)$</linux:unit>
+          <linux:property>LoadState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_disabled_firewalldtest_service_firewalld_package_firewalld_removed:obj:1" version="1">
+          <linux:name>firewalld</linux:name>
+        </linux:dpkginfo_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_not_running_service_disabled_iptables_iptables:obj:1" version="1" comment="Retrieve the ActiveState property of iptables">
+          <linux:unit operation="pattern match">^iptables\.(service|socket)$</linux:unit>
+          <linux:property>ActiveState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_loadstate_is_masked_service_disabled_iptables_iptables:obj:1" version="1" comment="Retrieve the LoadState property of iptables">
+          <linux:unit operation="pattern match">^iptables\.(service|socket)$</linux:unit>
+          <linux:property>LoadState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_disabled_iptablestest_service_iptables_package_iptables_removed:obj:1" version="1">
+          <linux:name>iptables</linux:name>
+        </linux:dpkginfo_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_not_running_service_disabled_nftables_nftables:obj:1" version="1" comment="Retrieve the ActiveState property of nftables">
+          <linux:unit operation="pattern match">^nftables\.(service|socket)$</linux:unit>
+          <linux:property>ActiveState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_loadstate_is_masked_service_disabled_nftables_nftables:obj:1" version="1" comment="Retrieve the LoadState property of nftables">
+          <linux:unit operation="pattern match">^nftables\.(service|socket)$</linux:unit>
+          <linux:property>LoadState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_disabled_nftablestest_service_nftables_package_nftables_removed:obj:1" version="1">
+          <linux:name>nftables</linux:name>
+        </linux:dpkginfo_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_not_running_service_disabled_rsyslog_rsyslog:obj:1" version="1" comment="Retrieve the ActiveState property of rsyslog">
+          <linux:unit operation="pattern match">^rsyslog\.(service|socket)$</linux:unit>
+          <linux:property>ActiveState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_loadstate_is_masked_service_disabled_rsyslog_rsyslog:obj:1" version="1" comment="Retrieve the LoadState property of rsyslog">
+          <linux:unit operation="pattern match">^rsyslog\.(service|socket)$</linux:unit>
+          <linux:property>LoadState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_disabled_rsyslogtest_service_rsyslog_package_rsyslog_removed:obj:1" version="1">
+          <linux:name>rsyslog</linux:name>
+        </linux:dpkginfo_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_not_running_service_disabled_ufw_ufw:obj:1" version="1" comment="Retrieve the ActiveState property of ufw">
+          <linux:unit operation="pattern match">^ufw\.(service|socket)$</linux:unit>
+          <linux:property>ActiveState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:systemdunitproperty_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_loadstate_is_masked_service_disabled_ufw_ufw:obj:1" version="1" comment="Retrieve the LoadState property of ufw">
+          <linux:unit operation="pattern match">^ufw\.(service|socket)$</linux:unit>
+          <linux:property>LoadState</linux:property>
+        </linux:systemdunitproperty_object>
+        <linux:dpkginfo_object xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-obj_service_disabled_ufwtest_service_ufw_package_ufw_removed:obj:1" version="1">
+          <linux:name>ufw</linux:name>
+        </linux:dpkginfo_object>
+      </oval-def:objects>
+      <oval-def:states>
+        <ind:family_state xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-state_unix_family:ste:1" version="1" operator="AND">
+          <ind:family>unix</ind:family>
+        </ind:family_state>
+        <ind:textfilecontent54_state xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-state_rhcos4_rhel9:ste:1" version="1" operator="AND">
+          <ind:subexpression operation="pattern match">9</ind:subexpression>
+        </ind:textfilecontent54_state>
+        <ind:environmentvariable58_state xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-state_installed_env_is_osbuild:ste:1" version="1" operator="AND">
+          <ind:value>bwrap-osbuild</ind:value>
+        </ind:environmentvariable58_state>
+        <unix:uname_state xmlns:unix="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" id="oval:ssg-state_system_info_architecture_ppcle_64:ste:1" version="1" operator="AND" comment="64 bit architecture">
+          <unix:processor_type operation="equals">ppc64le</unix:processor_type>
+        </unix:uname_state>
+        <ind:textfilecontent54_state xmlns:ind="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" id="oval:ssg-state_grub2_ipv6_disable_argument:ste:1" version="1" operator="AND">
+          <ind:subexpression datatype="int" operation="equals">0</ind:subexpression>
+        </ind:textfilecontent54_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_not_running_service_disabled_firewalld_firewalld:ste:1" version="1" operator="AND" comment="firewalld is not running">
+          <linux:value operation="pattern match">inactive|failed</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_loadstate_is_masked_service_disabled_firewalld_firewalld:ste:1" version="1" operator="AND" comment="LoadState is set to masked">
+          <linux:value>masked</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_not_running_service_disabled_iptables_iptables:ste:1" version="1" operator="AND" comment="iptables is not running">
+          <linux:value operation="pattern match">inactive|failed</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_loadstate_is_masked_service_disabled_iptables_iptables:ste:1" version="1" operator="AND" comment="LoadState is set to masked">
+          <linux:value>masked</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_not_running_service_disabled_nftables_nftables:ste:1" version="1" operator="AND" comment="nftables is not running">
+          <linux:value operation="pattern match">inactive|failed</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_loadstate_is_masked_service_disabled_nftables_nftables:ste:1" version="1" operator="AND" comment="LoadState is set to masked">
+          <linux:value>masked</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_not_running_service_disabled_rsyslog_rsyslog:ste:1" version="1" operator="AND" comment="rsyslog is not running">
+          <linux:value operation="pattern match">inactive|failed</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_loadstate_is_masked_service_disabled_rsyslog_rsyslog:ste:1" version="1" operator="AND" comment="LoadState is set to masked">
+          <linux:value>masked</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_not_running_service_disabled_ufw_ufw:ste:1" version="1" operator="AND" comment="ufw is not running">
+          <linux:value operation="pattern match">inactive|failed</linux:value>
+        </linux:systemdunitproperty_state>
+        <linux:systemdunitproperty_state xmlns:linux="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:ssg-state_service_loadstate_is_masked_service_disabled_ufw_ufw:ste:1" version="1" operator="AND" comment="LoadState is set to masked">
+          <linux:value>masked</linux:value>
+        </linux:systemdunitproperty_state>
+      </oval-def:states>
+    </oval-def:oval_definitions>

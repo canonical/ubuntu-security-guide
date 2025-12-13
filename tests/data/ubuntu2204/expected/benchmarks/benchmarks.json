@@ -89,6 +89,26 @@
           "path": "ubuntu2204_CIS_1/ssg-ubuntu2204-ds.xml.gz",
           "sha256": "1cca38bf5b5be4e76c4e6f2a36208845dde3d40eefc90ac9f1982e29eb0e4e0f",
           "sha256_orig": "59cddd9cd4ca9b85434ef377d68a8a8b20e00f441a25ba64673aad2f56a1a390"
+        },
+        "xccdf": {
+          "path": "ubuntu2204_CIS_1/ssg-ubuntu2204-xccdf.xml",
+          "sha256": "989563c8470d143e64f4b88b16abb4c95aa0209a83f0672bcce591bb47025f49"
+        },
+        "oval": {
+          "path": "ubuntu2204_CIS_1/ssg-ubuntu2204-oval.xml",
+          "sha256": "7d4fa598e3e84afdb6ee7ff5360e3359b14b8d034a329d4c030a2ab3ab8f7908"
+        },
+        "cpe-dict": {
+          "path": "ubuntu2204_CIS_1/ssg-ubuntu2204-cpe-dictionary.xml",
+          "sha256": "23aed8246dbd267dcd539c085da4b7680188713a808a9c59b36d73cb394c52bb"
+        },
+        "cpe-oval": {
+          "path": "ubuntu2204_CIS_1/ssg-ubuntu2204-cpe-oval.xml",
+          "sha256": "bd4d5d0c78a04ad230ed0e649a49cacdebc0be1eda9c549fec4b8da69d65ab8f"
+        },
+        "ocil": {
+          "path": "ubuntu2204_CIS_1/ssg-ubuntu2204-ocil.xml",
+          "sha256": "f0655993a72cf01a433a2529e6b633c9165c70ada477ecdaceb11a563fcf763b"
         }
       },
       "tailoring_files": {
