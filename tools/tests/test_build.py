@@ -60,6 +60,9 @@ def compare_files(expected_file, actual_file):
             expected_text_subbed, actual_text_subbed = replace_dynamic_content(
                 expected_text, actual_text, r"^% .*"
             )
+            expected_text_subbed, actual_text_subbed = replace_dynamic_content(
+                expected_text_subbed, actual_text_subbed, r"^Copyright \d+ "
+            )
         else:
             expected_text_subbed = expected_text
             actual_text_subbed = actual_text
