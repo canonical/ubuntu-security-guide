@@ -1,3 +1,22 @@
+ubuntu-security-guides-enhanced (22.04.17) jammy; urgency=medium
+
+  * CaC content - CIS v2.0.0:
+    - Add missing section to systemd-timesyncd configuration (LP: #2135245)
+    - Improve set_loopback_traffic SCE check
+    - Add support for drop-in config files in journald rules
+    - Add missing rules for sshd drop-in config file permissions
+    - Add 60s timeout for acquiring the APT lock
+  * CaC content - STIG v2r3:
+    - Override auditd_kmod OVAL check to allow old watch format
+    - Add 60s timeout for acquiring the APT lock
+  * CaC content - CIS v1.0.0:
+    - Set permissions on bootloader config (EC2 profile)
+    - Add 60s timeout for acquiring the APT lock
+  * USG tool:
+    - Pin usg-benchmarks dependency to latest binary version (LP: #2136296)
+
+ -- Miha Purg <miha.purg@canonical.com>  Fri, 06 Feb 2026 15:26:15 +0100
+
 ubuntu-security-guides-enhanced (22.04.16) jammy; urgency=medium
 
   * Fix errors in SCE checks when /tmp is mounted with noexec (LP: #2133895)
