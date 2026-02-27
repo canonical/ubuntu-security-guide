@@ -19,6 +19,7 @@ benchmark_releases:
           ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R3 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://public.cyber.mil/stigs/downloads/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_STIG_V1R2_24.04.6
     parent_tag: ubuntu2404_STIG_V1R1_24.04.5
@@ -35,6 +36,7 @@ benchmark_releases:
           ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R2 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://public.cyber.mil/stigs/downloads/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_STIG_V1R1_24.04.5
     parent_tag: 
@@ -51,3 +53,4 @@ benchmark_releases:
           ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://public.cyber.mil/stigs/downloads/
+      release_date: 2025-01-28
