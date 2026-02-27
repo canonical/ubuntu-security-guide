@@ -22,6 +22,7 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_CIS_v2.0.0_24.04.8
     parent_tag: ubuntu2404_CIS_v2.0.0_24.04.7
@@ -43,6 +44,7 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_CIS_v2.0.0_24.04.7
     parent_tag: ubuntu2404_CIS_v1.0.1_24.04.6
@@ -62,6 +64,7 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_CIS_v1.0.1_24.04.6
     parent_tag: ubuntu2404_CIS_v1.0.1_24.04.5
@@ -81,6 +84,7 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_CIS_v1.0.1_24.04.5
     parent_tag: ubuntu2404_CIS_v1.0.0.usg1_24.04.4
@@ -100,6 +104,7 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_CIS_v1.0.0.usg1_24.04.4
     parent_tag: ubuntu2404_CIS_v1.0.0.usg1_24.04.3
@@ -119,6 +124,7 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_CIS_v1.0.0.usg1_24.04.3
     parent_tag: ubuntu2404_CIS_v1.0.0_24.04.2
@@ -138,6 +144,7 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: in_the_future
 
   - cac_tag: ubuntu2404_CIS_v1.0.0_24.04.2
     parent_tag: ubuntu2404_CIS_v1.0.0_24.04.1
@@ -157,6 +164,7 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: 2024-08-26
 
   - cac_tag: ubuntu2404_CIS_v1.0.0_24.04.1
     parent_tag: 
@@ -176,4 +184,5 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: 2024-08-26
 
