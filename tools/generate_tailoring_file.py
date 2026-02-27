@@ -29,6 +29,7 @@ import datetime
 import logging
 import subprocess
 from pathlib import Path
+from string import Template
 
 from cac_tools import CaCProfile
 from lxml import etree
@@ -48,6 +49,8 @@ def generate_tailoring_file(
     benchmark_id: str,
     tailoring_file_output_path: Path,
     timestamp: float,
+    benchmark_version: str,
+    benchmark_release_date: str
 ) -> None:
     """Create a tailoring file based on provided args.
 
@@ -58,7 +61,8 @@ def generate_tailoring_file(
         benchmark_id: benchmark ID (e.g. ubuntu2404_CIS_1)
         tailoring_file_output_path: output path
         timestamp: timestamp to be used in "time" attribute
-
+        title: benchmark title
+        description: benchmark description
     Raises:
         GenerateTailoringError
 
@@ -78,26 +82,27 @@ def generate_tailoring_file(
         timestamp,
         datetime.timezone.utc
         ).isoformat()
+    benchmark_href = BENCHMARK_HREF_PATTERN.format(benchmark_id=benchmark_id)
 
     try:
+        logger.debug(f"Parsing datastream file {datastream_path}")
         datastream_doc = etree.parse(datastream_path)
     except etree.XMLSyntaxError as e:
         raise GenerateTailoringError(f"Failed to process datastream file: {e}") from e
-
     try:
         logger.debug(f"Processing template tailoring file {tailoring_template_path}")
-        parser = etree.XMLParser(remove_blank_text=True)
-        tailor_doc = etree.parse(tailoring_template_path, parser)
-        xml_bench = tailor_doc.find(f".//{{{XMLNS}}}benchmark")
-        xml_bench.attrib["href"] = BENCHMARK_HREF_PATTERN.format(
-            benchmark_id=benchmark_id
+        tailoring_template = Template(tailoring_template_path.read_text()).substitute(
+            benchmark_href=benchmark_href,
+            timestamp=iso_timestamp,
+            benchmark_version=benchmark_version,
+            benchmark_release_date=benchmark_release_date
         )
-        xml_ver = tailor_doc.find(f".//{{{XMLNS}}}version")
-        xml_ver.attrib["time"] = iso_timestamp
-    except etree.XMLSyntaxError as e:
+        parser = etree.XMLParser(remove_blank_text=True)
+        tailor_doc = etree.fromstring(tailoring_template.encode(), parser).getroottree()
+    except Exception as e:
         raise GenerateTailoringError(
             f"Failed to process template tailoring file: {e}"
-            ) from e
+        ) from e
 
     logger.debug(f"Mapping rules and variables to controls for profile {profile_path}")
     control_map = {cid: {"rules": [], "vars": []} for cid in profile.controls}
@@ -204,6 +209,8 @@ if __name__ == "__main__":
         "tailoring_template_path", type=Path, help="Path to tailoring template file"
     )
     argparser.add_argument("benchmark_id", type=str, help="Benchmark ID")
+    argparser.add_argument("benchmark_version", type=str, help="Benchmark version")
+    argparser.add_argument("benchmark_release_date", type=str, help="Benchmark release date")
     argparser.add_argument(
         "output_tailoring_path", type=Path, help="Path to output tailoring file"
     )
@@ -221,6 +228,8 @@ if __name__ == "__main__":
         f"tailoring template {args.tailoring_template_path}"
     )
     logger.info(f"Benchmark ID: {args.benchmark_id}")
+    logger.info(f"Benchmark Version: {args.benchmark_version}")
+    logger.info(f"Benchmark Release Date: {args.benchmark_release_date}")
     logger.info(f"Output tailoring file: {args.output_tailoring_path}")
 
     try:
@@ -231,6 +240,8 @@ if __name__ == "__main__":
             args.benchmark_id,
             args.output_tailoring_path,
             time.time(),
+            args.benchmark_version,
+            args.benchmark_release_date
         )
         validate_tailoring_file(args.output_tailoring_path)
     except GenerateTailoringError as e:
