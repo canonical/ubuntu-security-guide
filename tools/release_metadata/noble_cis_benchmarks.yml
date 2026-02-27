@@ -15,6 +15,7 @@ benchmark_releases:
       cis_level2_server: {}
       cis_level1_workstation: {}
       cis_level2_workstation: {}
+      cis_level1_server_ec2: {}
     description: ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
     release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/110
     reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
@@ -30,6 +31,7 @@ benchmark_releases:
       cis_level2_server: {}
       cis_level1_workstation: {}
       cis_level2_workstation: {}
+      cis_level1_server_ec2: {}
     description: ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
     release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
     reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
