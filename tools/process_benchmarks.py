@@ -357,7 +357,7 @@ def _build_cac_release(cac_repo_dir: Path, commit: str, cac_product: str) -> int
             logger.debug(f"STDOUT: {p.stdout}")
             logger.debug(f"STDERR: {p.stderr}")
         except subprocess.CalledProcessError as e:
-            logger.error(p.stderr)
+            logger.error(e.stderr)
             raise BenchmarkProcessingError(
                 f"Failed to checkout commit {commit} in repo {cac_repo_dir}: {e}"
                 ) from e
