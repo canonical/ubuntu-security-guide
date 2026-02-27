@@ -77,7 +77,7 @@ def _get_release_channel_successions(
     logger.debug("Entered get_release_successions()")
 
     # sanity check tailoring versions (channels) (should be all from 1 to max())
-    channels = sorted({r["release_channel"] for r in all_releases})
+    channels = sorted({int(r["release_channel"]) for r in all_releases})
     channels_good = list(range(1, max(channels) + 1))
     if channels != channels_good:
         raise BenchmarkProcessingError(
@@ -88,7 +88,7 @@ def _get_release_channel_successions(
     # bin by channel_id
     releases_by_channels = {channel: [] for channel in channels}
     for release in all_releases:
-        channel = release["release_channel"]
+        channel = int(release["release_channel"])
         releases_by_channels[channel].append(release)
 
     # sort by release (first to latest) and sanity checks
@@ -169,26 +169,31 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
     benchmark_type = yaml_data["general"]["benchmark_type"]
     latest_release = list(releases_by_channels.values())[-1][-1]
     latest_version = latest_release["benchmark_data"]["version"]
-    latest_channel_number = latest_release["release_channel"]
+    latest_channel_number = int(latest_release["release_channel"])
     latest_channel_id = f"{product}_{benchmark_type}_{latest_channel_number}"
     latest_benchmark_id = f"{latest_channel_id}-{latest_version}"
 
     # Add info from latest releases in each channel to 'channel_data'
     for channel_number, releases_in_channel in releases_by_channels.items():
 
-        latest_release = releases_in_channel[-1]
+        latest_release_in_channel = releases_in_channel[-1]
         channel_id = f"{product}_{benchmark_type}_{channel_number}"
         assert channel_id not in release_channels
+        
+        latest_benchmark_version_in_channel = latest_release_in_channel["benchmark_data"]["version"]
+        latest_benchmark_id_in_channel = f"{channel_id}-{latest_benchmark_version_in_channel}"
+
         release_channels[channel_id] = {
             "id": channel_id,
+            "latest_benchmark_id": latest_benchmark_id_in_channel,
             "benchmark_ids": [], # populated below
             "channel_number": channel_number,
             "is_latest": channel_number == latest_channel_number,
             "cac_product": product,
-            "cac_profiles": list(latest_release["benchmark_data"]["profiles"]), # store profiles here to ensure all benchmarks in one channel have same profiles
-            "release_tag": latest_release["cac_tag"],
-            "release_commit": latest_release["cac_commit"],
-            "release_notes_url": latest_release["benchmark_data"]["release_notes_url"],
+            "cac_profiles": list(latest_release_in_channel["benchmark_data"]["profiles"]), # store profiles in the channel dict to ensure all benchmarks in one channel have same profiles
+            "release_tag": latest_release_in_channel["cac_tag"],
+            "release_commit": latest_release_in_channel["cac_commit"],
+            "release_notes_url": latest_release_in_channel["benchmark_data"]["release_notes_url"],
             "release_timestamp": None, # added at build time
             "data_files": None, # added at build time
             "tailoring_files": None, # added at build time
@@ -319,7 +324,6 @@ def _process_yaml(yaml_data: dict[str, Any]) -> tuple[dict[str, Any], dict[str, 
             latest_breaking_id = None
         profile["latest_breaking_id"] = latest_breaking_id
 
-
     for s in ["profiles", "benchmarks", "release_channels"]:
         logger.debug(f"---{s}---")
         for k, v in locals()[s].items():
@@ -423,7 +427,9 @@ def _create_tailoring_file(
         tailoring_template_path: Path,
         benchmark_id: str,
         output_tailoring_path: Path,
-        release_timestamp: int
+        release_timestamp: int,
+        benchmark_version: str,
+        benchmark_release_date: str
 ) -> None:
     # Generate and validate tailoring file
     if not profile_path.exists():
@@ -442,7 +448,9 @@ def _create_tailoring_file(
             tailoring_template_path,
             benchmark_id,
             output_tailoring_path,
-            release_timestamp
+            release_timestamp,
+            benchmark_version,
+            benchmark_release_date
         )
         validate_tailoring_file(output_tailoring_path)
     except GenerateTailoringError as e:
@@ -460,7 +468,7 @@ def _calc_sha256(path: Path) -> str:
 
 
 def _build_active_releases(
-    release_channels: list[dict[str, Any]],
+    release_data: dict[str, list[dict[str, Any]]],
     cac_repo_dir: Path,
     tailoring_templates_dir: Path,
     dst_dir: Path,
@@ -471,6 +479,8 @@ def _build_active_releases(
     # - generate tailoring files
     # - generate checksums
 
+    release_channels = release_data["release_channels"]
+    
     logger.info(f"Building {len(release_channels)} active releases...")
 
     for i, channel_data in enumerate(release_channels):
@@ -571,8 +581,14 @@ def _build_active_releases(
                 shutil.copy(sce_script, sce_dst_path)
                 sce_dst_path.chmod(0o755)  # SCEs must be executable
 
+            # Get the version and release_date of the latest benchmark in the channel
+            latest_benchmark_id = channel_data["latest_benchmark_id"]
+            latest_benchmark = [b for b in release_data["benchmarks"] if b["id"] == latest_benchmark_id][0]
+            benchmark_version = latest_benchmark["version"]
+            benchmark_release_date = latest_benchmark["release_date"]
+
             # Generate tailoring files
-            logger.debug("Generating tailoring files for benchmark {benchmark_id}...")
+            logger.debug(f"Generating tailoring files for benchmark {latest_benchmark_id}...")
             output_tailoring_files_dir = output_benchmark_dir / "tailoring"
             output_tailoring_files_dir.mkdir()
             channel_data["tailoring_files"] = {}
@@ -597,7 +613,9 @@ def _build_active_releases(
                     tailoring_template_path,
                     channel_id,
                     output_tailoring_path,
-                    release_timestamp
+                    release_timestamp,
+                    benchmark_version,
+                    benchmark_release_date
                 )
 
                 # Calc hashes and set metadata
@@ -653,7 +671,7 @@ def process_benchmarks(
     for benchmark_yaml in sorted(benchmark_yaml_files):
         logger.info(f"Processing yaml - {benchmark_yaml}")
         with Path(benchmark_yaml).open() as f:
-            yaml_data = yaml.safe_load(f.read())
+            yaml_data = yaml.load(f.read(), Loader=yaml.BaseLoader)
 
         # sanity checks
         for k in ["general", "benchmark_releases"]:
@@ -684,7 +702,7 @@ def process_benchmarks(
     with tempfile.TemporaryDirectory() as tmp_dst_dir:
         logger.info(f"Building benchmark data in {tmp_dst_dir}")
         _build_active_releases(
-            benchmarks_json_data["release_channels"],
+            benchmarks_json_data,
             cac_repo_dir,
             tailoring_templates_dir,
             Path(tmp_dst_dir),
