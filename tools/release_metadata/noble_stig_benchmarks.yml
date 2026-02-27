@@ -17,3 +17,4 @@ benchmark_releases:
           ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
       reference_url: https://public.cyber.mil/stigs/downloads/
+      release_date: 2025-01-28

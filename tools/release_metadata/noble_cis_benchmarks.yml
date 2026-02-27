@@ -20,3 +20,4 @@ benchmark_releases:
           ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
       release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/72
       reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+      release_date: 2024-08-26

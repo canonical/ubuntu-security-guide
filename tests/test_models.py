@@ -134,6 +134,7 @@ def test_channel_data(test_metadata):
     metadata = Metadata.from_json(test_metadata)
     channel = metadata.channels["ubuntu2404_CIS_2"]
     assert channel.benchmark_ids == ["ubuntu2404_CIS_2-v1.0.0.usg1", "ubuntu2404_CIS_2-v1.0.1"]
+    assert channel.latest_benchmark_id == "ubuntu2404_CIS_2-v1.0.1"
     assert channel.channel_number == 2
     assert channel.is_latest == False
     assert metadata.channels["ubuntu2404_CIS_3"].is_latest == True
@@ -146,7 +147,7 @@ def test_channel_data(test_metadata):
     assert channel.release_timestamp == 2
     assert channel.tailoring_files["cis_level2_server"] == {
         "path": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
-        "sha256": "a47d4e557e7c3a3e0fa14f320a2550db2a9ed52766239e11fedb6bf56273b578",
+        "sha256": "4c2cd791c54e5fb85e5d6ea5201ec1974d6529cb2e18dfbfde0e9b1621ed0bbc",
     }
     t_rel_path = channel.get_tailoring_file_relative_path("cis_level2_server")
     assert t_rel_path == Path(
