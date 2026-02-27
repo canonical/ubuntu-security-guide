@@ -54,6 +54,7 @@ class ReleaseChannel:
     """Immutable representation of a benchmark release channel."""
 
     id: str
+    latest_benchmark_id: str
     benchmark_ids: list[str]
     channel_number: int
     is_latest: bool
@@ -83,6 +84,7 @@ class ReleaseChannel:
             }
             return cls(
                 id=data["id"],
+                latest_benchmark_id=data["latest_benchmark_id"],
                 benchmark_ids=data["benchmark_ids"],
                 channel_number=data["channel_number"],
                 is_latest=data["is_latest"],
