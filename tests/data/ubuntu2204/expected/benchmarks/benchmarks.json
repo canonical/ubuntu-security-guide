@@ -62,12 +62,14 @@
       },
       "description": "ComplianceAsCode implementation of CIS Ubuntu 22.04 LTS v1.0.0 benchmark.\n",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/pull/72",
-      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "release_date": "2022-08-30"
     }
   ],
   "release_channels": [
     {
       "id": "ubuntu2204_CIS_1",
+      "latest_benchmark_id": "ubuntu2204_CIS_1-v1.0.0",
       "benchmark_ids": [
         "ubuntu2204_CIS_1-v1.0.0"
       ],
@@ -114,19 +116,19 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2204_CIS_1/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "8e21dbf26af2cca82677762a0538d6e80a2c9d7460c0f0ccfbd452a4c5fe8515"
+          "sha256": "b38485596080fb772fef0ccaa7473627dfb2e0b2520785cd7dac7174ea07c3e3"
         },
         "cis_level2_server": {
           "path": "ubuntu2204_CIS_1/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "b853d52b5b0f74e83526572140a2d86c530e3dd4306f1e51ce15dd1958f4a7b2"
+          "sha256": "91afc0d49ee6abe460208b969ea5ee19a5bc95821b522d60e4c7584d1720e062"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2204_CIS_1/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "e53604488f0b3471cb4077f53e8a4fbfad4e65b17981aee9d87f4445bb5121bf"
+          "sha256": "79e748a8e5fdfc59d782117fa1ff940bb0b1f21bd7868cab85174015763ed838"
         },
         "cis_level2_workstation": {
           "path": "ubuntu2204_CIS_1/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "d4035350c83f06a571c8c86dda9bb814609d9e61414d28726f7a30a35ac35c48"
+          "sha256": "5525e69dd955b3671aca9cc87f86be1f95c26cffc5eedffd9fdb3885ad5d081e"
         }
       }
     }
