@@ -177,7 +177,8 @@
       },
       "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
-      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "release_date": "2024-08-26"
     },
     {
       "id": "ubuntu2404_CIS_2-v1.0.0.usg1",
@@ -198,7 +199,8 @@
       },
       "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
-      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "release_date": "in_the_future"
     },
     {
       "id": "ubuntu2404_CIS_2-v1.0.1",
@@ -219,7 +221,8 @@
       },
       "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.1 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
-      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "release_date": "in_the_future"
     },
     {
       "id": "ubuntu2404_CIS_3-v2.0.0",
@@ -239,7 +242,8 @@
       },
       "description": "ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v2.0.0 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
-      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/"
+      "reference_url": "https://www.cisecurity.org/benchmark/ubuntu_linux/",
+      "release_date": "in_the_future"
     },
     {
       "id": "ubuntu2404_STIG_1-V1R1",
@@ -257,7 +261,8 @@
       },
       "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
-      "reference_url": "https://public.cyber.mil/stigs/downloads/"
+      "reference_url": "https://public.cyber.mil/stigs/downloads/",
+      "release_date": "2025-01-28"
     },
     {
       "id": "ubuntu2404_STIG_2-V1R2",
@@ -275,7 +280,8 @@
       },
       "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R2 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
-      "reference_url": "https://public.cyber.mil/stigs/downloads/"
+      "reference_url": "https://public.cyber.mil/stigs/downloads/",
+      "release_date": "in_the_future"
     },
     {
       "id": "ubuntu2404_STIG_2-V1R3",
@@ -293,12 +299,14 @@
       },
       "description": "ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R3 benchmark.",
       "release_notes_url": "https://github.com/canonical/ubuntu-security-guide/",
-      "reference_url": "https://public.cyber.mil/stigs/downloads/"
+      "reference_url": "https://public.cyber.mil/stigs/downloads/",
+      "release_date": "in_the_future"
     }
   ],
   "release_channels": [
     {
       "id": "ubuntu2404_CIS_1",
+      "latest_benchmark_id": "ubuntu2404_CIS_1-v1.0.0",
       "benchmark_ids": [
         "ubuntu2404_CIS_1-v1.0.0"
       ],
@@ -345,24 +353,25 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "40fdfe10a2bd09db8a4ff00f423da15d5dfe6abd7947f63d454858e61f838acb"
+          "sha256": "38da2806b06651af75be349464d3d1a7ca3e5cb4c8e4bae79f9d522baade6025"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "e99ff55293caf4112cf8507136a8a50985386521314a09f8d02684acf2ee871c"
+          "sha256": "5abe51d80d6da53937e24e35c6b91fc5a6caf021147ff965ee867ad1ee22a44d"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "a6ed77738a5e97bc152027f3790cbda92cc6f171ed6d620ec30fa2e7c05ac2f1"
+          "sha256": "e5ed864dc7a33fe332c2982a103558666733865054faad9676de558481af1f5a"
         },
         "cis_level2_workstation": {
           "path": "ubuntu2404_CIS_1/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "4848e8aa8da869dff3419e7c8b8dccf89fce094dd4b9af4af22a27232c03f6b9"
+          "sha256": "c7c050f284abee3ae21e2eb1a0baef38749f10c5ce5e2e1e60063a2b56a7c5d7"
         }
       }
     },
     {
       "id": "ubuntu2404_CIS_2",
+      "latest_benchmark_id": "ubuntu2404_CIS_2-v1.0.1",
       "benchmark_ids": [
         "ubuntu2404_CIS_2-v1.0.0.usg1",
         "ubuntu2404_CIS_2-v1.0.1"
@@ -410,24 +419,25 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "d91b9fd28372d617b1e86af5a7fbadd9644708e40e1ca669062083181638d6d2"
+          "sha256": "c7b15385f3ec25f2e513a9f909f5369358d3c07f8c4dac086057817e94169942"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "a47d4e557e7c3a3e0fa14f320a2550db2a9ed52766239e11fedb6bf56273b578"
+          "sha256": "4c2cd791c54e5fb85e5d6ea5201ec1974d6529cb2e18dfbfde0e9b1621ed0bbc"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "43954c3f8851858d10e436c1d947bec13bf1491412e14fd9c10104de008671be"
+          "sha256": "a34071e20b673192241a98f0139a69b5cb9685764daa5cc73b60a8af582c548e"
         },
         "cis_level2_workstation": {
           "path": "ubuntu2404_CIS_2/tailoring/cis_level2_workstation-tailoring.xml",
-          "sha256": "68106821091b132721cc6e0d3f43db6fb7dd3b3403a07d06b0288c0e763ca7a1"
+          "sha256": "bfa01ba7e4225a1606f37c401ec2e97fe0793d8ebb202e12303fc4f8d2b79b8b"
         }
       }
     },
     {
       "id": "ubuntu2404_CIS_3",
+      "latest_benchmark_id": "ubuntu2404_CIS_3-v2.0.0",
       "benchmark_ids": [
         "ubuntu2404_CIS_3-v2.0.0"
       ],
@@ -473,20 +483,21 @@
       "tailoring_files": {
         "cis_level1_server": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level1_server-tailoring.xml",
-          "sha256": "17cf49e248d595712829c6d29f59fda08d26a8b1b60571c12993d7144122b2c1"
+          "sha256": "da9c95df62b5a06250e53900417e26f882c3cd864931fd4ffbf6198fb68abef2"
         },
         "cis_level2_server": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level2_server-tailoring.xml",
-          "sha256": "3e74bdfbf075934e9f06ac2c39f8f181f9769f6f486a6c68bf7b128f83cdd605"
+          "sha256": "330aa92b81abb2b1a4ec7541a66681ab94c6377ad4b4ddc70b04c8a18e7e4b19"
         },
         "cis_level1_workstation": {
           "path": "ubuntu2404_CIS_3/tailoring/cis_level1_workstation-tailoring.xml",
-          "sha256": "f745905551347a63e4134b33a3ab4313e3290fe8a7b3b1493af79917bf47429a"
+          "sha256": "11e346a8e93a8b84da725cafad36be5da513945fe7dff2d21333116eaa26b36e"
         }
       }
     },
     {
       "id": "ubuntu2404_STIG_1",
+      "latest_benchmark_id": "ubuntu2404_STIG_1-V1R1",
       "benchmark_ids": [
         "ubuntu2404_STIG_1-V1R1"
       ],
@@ -530,12 +541,13 @@
       "tailoring_files": {
         "stig": {
           "path": "ubuntu2404_STIG_1/tailoring/stig-tailoring.xml",
-          "sha256": "a76157f82edcb81953b5bd9d1dbb300249ca8d75eb3b613a98d1e56593a27851"
+          "sha256": "899321197449679af153c7eef3a242efd8624abdf483f290abfad715fa013185"
         }
       }
     },
     {
       "id": "ubuntu2404_STIG_2",
+      "latest_benchmark_id": "ubuntu2404_STIG_2-V1R3",
       "benchmark_ids": [
         "ubuntu2404_STIG_2-V1R2",
         "ubuntu2404_STIG_2-V1R3"
@@ -580,7 +592,7 @@
       "tailoring_files": {
         "stig": {
           "path": "ubuntu2404_STIG_2/tailoring/stig-tailoring.xml",
-          "sha256": "8cc81c293bfef3ec75acbef9a45283cef70ddb73583758fed684be19cd8279fb"
+          "sha256": "4abc8c496332877da83e06add33fb99c36319e3b52dca87dc8493b3ea380424b"
         }
       }
     }
