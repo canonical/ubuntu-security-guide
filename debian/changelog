@@ -1,3 +1,22 @@
+ubuntu-security-guides-enhanced (24.04.8) noble; urgency=medium
+
+  * CaC content - CIS v1.0.0:
+    - Add missing section to systemd-timesyncd configuration (LP: #2135245)
+    - Add support for drop-in config files in journald rules
+    - Add missing rules for sshd drop-in config file permissions
+    - Align /var/log ownership rules with Ubuntu CIS (LP: #2142301)
+    - Improve chronyd_configure_pool_and_server rule to add trailing newline (LP: #2141667)
+    - Fix incorrect username parsing in file_owner template (LP: #2137602)
+    - Improve remediation for no_shelllogin_for_systemaccounts (LP: #2133747)
+  * CaC content - STIG V1R1:
+    - Fix incorrect username parsing in file_owner template (LP: #2137602)
+  * USG tool:
+    - Pin usg-benchmarks dependency to latest binary version (LP: #2136296)
+    - Fix benchmark version and release date in tailoring files (LP: #2142286)
+    - Add cis_level1_server_ec2 profile to release metadata
+
+ -- Miha Purg <miha.purg@canonical.com>  Mon, 02 Mar 2026 16:39:27 +0100
+
 ubuntu-security-guides-enhanced (24.04.7) noble; urgency=medium
 
   * Fix errors in SCE checks when /tmp is mounted with noexec (LP: #2133895)
