@@ -3,6 +3,23 @@ general:
   product: ubuntu2404
   product_long: Ubuntu 24.04 LTS (Noble Numbat)
 benchmark_releases:
+- cac_tag: noble-cis-1.7
+  parent_tag: noble-cis-1.6
+  release_channel: 1
+  cac_commit: 67628a04bf83b4794b6c844e4ec2595ae557affe
+  usg_version: 24.04.8
+  benchmark_data:
+    version: v1.0.0
+    profiles:
+      cis_level1_server: {}
+      cis_level2_server: {}
+      cis_level1_workstation: {}
+      cis_level2_workstation: {}
+      cis_level1_server_ec2: {}
+    description: ComplianceAsCode implementation of CIS Ubuntu 24.04 LTS v1.0.0 benchmark.
+    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/121
+    reference_url: https://www.cisecurity.org/benchmark/ubuntu_linux/
+    release_date: 2024-08-26
 - cac_tag: noble-cis-1.6
   parent_tag: noble-cis-1.5
   release_channel: 1
