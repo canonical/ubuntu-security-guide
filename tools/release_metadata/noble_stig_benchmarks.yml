@@ -3,6 +3,19 @@ general:
   product: ubuntu2404
   product_long: Ubuntu 24.04 LTS (Noble Numbat)
 benchmark_releases:
+- cac_tag: noble-stig-1.2
+  parent_tag: noble-stig-1.1
+  release_channel: 1
+  cac_commit: 16263e39e8242eb907440fe883acce4e60bba1f5
+  usg_version: 24.04.8
+  benchmark_data:
+    version: V1R1
+    profiles:
+      stig: {}
+    description: ComplianceAsCode implementation of STIG Ubuntu 24.04 LTS V1R1 benchmark.
+    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/121
+    reference_url: https://public.cyber.mil/stigs/downloads/
+    release_date: 2025-01-28
 - cac_tag: noble-stig-1.1
   parent_tag: noble-stig-1.0
   release_channel: 1
