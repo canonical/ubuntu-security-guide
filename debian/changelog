@@ -1,3 +1,15 @@
+ubuntu-security-guides-enhanced (22.04.18) jammy; urgency=medium
+
+  * CaC content - CIS v2.0.0:
+    - Fix /var/log ownership rules to account for non-shell accounts (LP: #2142301)
+    - Improve chronyd_configure_pool_and_server rule to add trailing newline (LP: #2141667)
+    - Fix incorrect username parsing in file_owner template (LP: #2137602)
+  * USG tool:
+    - Fix benchmark version and release date in tailoring files (LP: #2142286)
+ 
+
+ -- Miha Purg <miha.purg@canonical.com>  Thu, 12 Mar 2026 09:56:14 +0100
+
 ubuntu-security-guides-enhanced (22.04.17) jammy; urgency=medium
 
   * CaC content - CIS v2.0.0:
