@@ -3,6 +3,19 @@ general:
   product: ubuntu2204
   product_long: Ubuntu 22.04 LTS (Jammy Jellyfish)
 benchmark_releases:
+- cac_tag: jammy-stig-1.9
+  parent_tag: jammy-stig-1.8
+  release_channel: 1
+  cac_commit: e60393aa18d8a0920925bb1e28fb95a6952737e1
+  usg_version: 22.04.19
+  benchmark_data:
+    version: V2R3
+    profiles:
+      stig: {}
+    description: ComplianceAsCode implementation of STIG Ubuntu 22.04 LTS V2R3 benchmark.
+    release_notes_url: https://github.com/canonical/ubuntu-security-guide/pull/124
+    reference_url: https://public.cyber.mil/stigs/downloads/
+    release_date: 2025-01-30
 - cac_tag: jammy-stig-2.1
   parent_tag: jammy-stig-1.8
   release_channel: 2
