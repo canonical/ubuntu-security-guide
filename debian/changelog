@@ -1,3 +1,99 @@
+ubuntu-security-guides-enhanced (24.04.9) noble; urgency=medium
+
+* CaC content - STIG V1R6:
+    - Fix accounts_tmout OVAL check to fail when TMOUT is set to 0
+    - Implement Ubuntu 24.04 STIG rule UBTU-24-100860
+    - Replace DoD-specific verbiage with organization-agnostic wording in rule
+      texts
+    - Add single-word kernel argument support to grub2_bootloader_argument
+      template
+    - Remove leftover find arguments in file permission templates and journald
+      rules
+    - Clarify kernel module disabling behavior in describe_module_disable macro
+      text
+    - Allow both /sbin and /usr/sbin paths in aide_check_audit_tools OVAL check
+    - Fix idempotency in bash_ensure_ini_config macro used by SSSD rules
+    - Fix logical operator in aide_string macro evaluation
+    - Migrate kernel module loading audit rules to
+      audit_rules_kernel_module_loading template
+    - Add syscall_grouping support to audit_rules_kernel_module_loading
+      template
+    - Parameterize grub2_audit_backlog_limit_argument rule with variable
+      defaulting to 8192
+    - Expand chronyd_specify_remote_server to check confdir and sourcedir
+      directives
+    - Add support for systemd-journald drop-in configuration files on Ubuntu
+    - Align description, OVAL check, and remediations in
+      directory_permissions_var_log_audit
+    - Align audit rule keys between descriptions and remediations in
+      audit_rules_watch rules
+    - Define dconf_gdm_dir variable on Ubuntu and update dconf boolean checks
+    - Store plain login banner text in XCCDF values for banner remediations
+    - Remove redundant sudo call in no_empty_passwords_etc_shadow Bash
+      remediation
+    - Update no_empty_passwords to remove nullok from /etc/pam.d/common-auth on
+      Ubuntu
+    - Update root_permissions_syslibrary_files on Ubuntu to check .so files
+      without GID filter
+    - Fix bash_ensure_ini_config macro to ignore commented-out lines
+    - Enable package_nfs-kernel-server_removed and service_nfs_disabled for
+      UBTU-24-100050
+    - Enable audit_rules_etc_cron_d and audit_rules_var_spool_cron for
+      UBTU-24-200270
+    - Implement Ubuntu 24.04 STIG privilege escalation controls
+      UBTU-24-300019/20/21
+    - Update and add Ubuntu 24.04 STIG dconf controls UBTU-24-200040 through
+      UBTU-24-200043
+    - Refactor package OCIL macros to align manual check wording for
+      installed/removed packages
+    - Fix grub2_audit_argument to set audit=1 in both GRUB_CMDLINE_LINUX
+      variables
+    - Fix chronyd_or_ntpd_set_maxpoll remediations when /etc/chrony.d does not
+      exist
+    - Fix rsyslog_remote_access_monitoring OVAL check to match
+      case-insensitive RainerScript
+    - Mark package_rng-tools_installed as not applicable when FIPS mode is
+      enabled
+    - Update dconf OVAL checks and Bash remediations to use GVariant format
+    - Fix grub2_audit_backlog_limit_argument writing literal variable name to
+      /etc/default/grub
+    - Update Ubuntu 24.04 STIG profile and controls from V1R1 to V1R5
+    - Fix grub2_bootloader_argument_absent OVAL template to detect present args
+      in grub.cfg
+    - Remove display_login_attempts from Ubuntu 24.04 default profile to
+      prevent TTY lockouts
+    - Update tmpfiles.d rule paths, OVAL checks, and Bash remediations per STIG
+      V1R6
+    - Add package_nfs-common_removed to Ubuntu 24.04 STIG control
+      UBTU-24-100050
+    - Update Ubuntu 24.04 STIG profile and reference data from V1R5 to V1R6
+    - Add Ubuntu/Debian package override for package[openssh-client] platform
+      check
+    - Reference XCCDF variable for approved MACs in
+      ssh_use_approved_macs_ordered_stig
+    - Set Ubuntu 24.04 package name to opensc-pkcs11 for smartcard package rule
+    - Fix chronyd_specify_remote_server Bash remediation dot escaping and
+      invalid server lines
+    - Update fdisk audit rule path and OCIL to /usr/sbin/fdisk realpath per
+      STIG
+    - Enforce upper bound (unlock_time=0) in PAM faillock unlock_time check on
+      Ubuntu 24.04
+    - Fix chronyd_server_directive OVAL regex to match only lines starting with
+      server
+    - Fix wireless_disable_interfaces Bash remediations for multiple interfaces
+    - Update audit_rules_dac_modification and unsuccessful_file_modification
+      OVAL templates
+    - Update file_ownership_var_log_audit_stig OVAL on Ubuntu to check
+      effective log files
+    - Fix duplicate directory path in file_ownership_var_log_audit_stig chown
+      remediation
+    - Use rsh-redone package names in rsh removal rules on Ubuntu 24.04
+    - Enable SCE check for dir_perms_world_writable_sticky_bits on Ubuntu
+    - Fix sshd_use_directory_configuration to prevent and detect recursive
+      Include loops
+
+ -- Alan Moore <alan.moore@canonical.com>  Thu, 15 Oct 2026 14:35:32 +0100
+
 ubuntu-security-guides-enhanced (24.04.8) noble; urgency=medium
 
   * CaC content - CIS v1.0.0:
@@ -94,4 +190,3 @@ ubuntu-security-guides-enhanced (24.04.1) noble; urgency=medium
   * Initial release of USG for Ubuntu 24.04 with CIS v1.0.0 profiles
 
  -- Miha Purg <miha.purg@canonical.com>  Wed, 26 Feb 2025 13:21:17 +0100
-
