@@ -1,6 +1,6 @@
 ubuntu-security-guides-enhanced (24.04.9) noble; urgency=medium
 
-* CaC content - New profile for DISA STIG V1R6:
+  * CaC content - New profile for DISA STIG V1R6:
     - Fix accounts_tmout OVAL check to fail when TMOUT is set to 0
     - Implement Ubuntu 24.04 STIG rule UBTU-24-100860
     - Replace DoD-specific verbiage with organization-agnostic wording in rule
@@ -68,7 +68,7 @@ ubuntu-security-guides-enhanced (24.04.9) noble; urgency=medium
     - Fix sshd_use_directory_configuration to prevent and detect recursive
       Include loops
 
- -- Alan Moore <alan.moore@canonical.com>  Thu, 15 Oct 2026 14:35:32 +0100
+ -- Alan Moore <alan.moore@canonical.com>  Thu, 19 Nov 2026 14:34:29 +0000
 
 ubuntu-security-guides-enhanced (24.04.8) noble; urgency=medium
 
