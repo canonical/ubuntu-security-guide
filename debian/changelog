@@ -1,3 +1,75 @@
+ubuntu-security-guides-enhanced (24.04.9) noble; urgency=medium
+
+  * CaC content - New profile for DISA STIG V1R6:
+    - Fix accounts_tmout OVAL check to fail when TMOUT is set to 0
+    - Implement Ubuntu 24.04 STIG rule UBTU-24-100860
+    - Replace DoD-specific verbiage with organization-agnostic wording in rule
+      texts
+    - Remove leftover find arguments in file permission templates and journald
+      rules
+    - Allow both /sbin and /usr/sbin paths in aide_check_audit_tools OVAL check
+    - Fix idempotency in bash_ensure_ini_config macro used by SSSD rules
+    - Migrate kernel module loading audit rules to
+      audit_rules_kernel_module_loading template
+    - Add syscall_grouping support to audit_rules_kernel_module_loading
+      template
+    - Expand chronyd_specify_remote_server to check confdir and sourcedir
+      directives
+    - Add support for systemd-journald drop-in configuration files on Ubuntu
+    - Align description, OVAL check, and remediations in
+      directory_permissions_var_log_audit
+    - Store plain login banner text in XCCDF values for banner remediations
+    - Remove redundant sudo call in no_empty_passwords_etc_shadow Bash
+      remediation
+    - Update no_empty_passwords to remove nullok from /etc/pam.d/common-auth on
+      Ubuntu
+    - Update root_permissions_syslibrary_files on Ubuntu to check .so files
+      without GID filter
+    - Enable package_nfs-kernel-server_removed, package_nfs-common_removed
+      and service_nfs_disabled for UBTU-24-100050
+    - Enable audit_rules_etc_cron_d and audit_rules_var_spool_cron for
+      UBTU-24-200270
+    - Enable sudo_restrict_privilege_elevation_to_authorizedfor for UBTU-24-300019
+    - Enable sudo_remove_nopasswdfor for UBTU-24-300020
+    - Enable dconf_gnome_disable_automount_open for UBTU-24-200040
+    - Enable dconf_gnome_disable_autorun for UBTU-24-200041
+    - Enable dconf_gnome_lock_screen_on_smartcard_removal for UBTU-24-200042
+    - Enable dconf_gnome_screensaver_mode_blank for UBTU-24-200043
+    - Fix grub2_audit_argument to set audit=1 in both GRUB_CMDLINE_LINUX_DEFAULT
+      and GRUB_CMDLINE_LINUX variables
+    - Fix chronyd_or_ntpd_set_maxpoll remediations when /etc/chrony.d does not
+      exist
+    - Fix rsyslog_remote_access_monitoring OVAL check to match
+      case-insensitive RainerScript keywords
+    - Update dconf OVAL checks and Bash remediations to use GVariant format
+      for dconf_gnome_disable_ctrlaltdel_reboot
+    - Fix grub2_audit_backlog_limit_argument writing literal variable name to
+      /etc/default/grub
+    - Update tmpfiles.d rule paths, OVAL checks, and Bash remediations per STIG
+      V1R6
+    - Add Ubuntu package override for package[openssh-client] platform
+      check
+    - Set Ubuntu 24.04 package name to opensc-pkcs11 for smartcard package rule
+    - Fix chronyd_specify_remote_server Bash remediation dot escaping and
+      invalid server lines
+    - Update fdisk audit rule path and OCIL to /usr/sbin/fdisk realpath per
+      STIG rule UBTU-24-900750
+    - Enforce upper bound (unlock_time=0) in PAM faillock unlock_time check on
+      Ubuntu 24.04
+    - Fix chronyd_server_directive OVAL regex to match only lines starting with
+      server
+    - Fix wireless_disable_interfaces Bash remediations for multiple interfaces
+    - Require both auid>=1000 and auid=0 rules in audit_rules_dac_modification OVAL template
+    - Allow auid!=-1 in audit_rules_dac_modification and audit_rules_unsuccessful_file_modification OVAL templates
+    - Update file_ownership_var_log_audit_stig OVAL check on Ubuntu to verify effective and rotated audit log files
+    - Allow leading whitespace for log_file in auditd.conf and restrict remediation chown to matching log files in file_ownership_var_log_audit_stig
+    - Use rsh-redone package names in rsh removal rules on Ubuntu 24.04
+    - Enable SCE check for dir_perms_world_writable_sticky_bits on Ubuntu
+    - Fix sshd_use_directory_configuration to prevent and detect recursive
+      Include loops
+
+ -- Alan Moore <alan.moore@canonical.com>  Thu, 19 Nov 2026 14:34:29 +0000
+
 ubuntu-security-guides-enhanced (24.04.8) noble; urgency=medium
 
   * CaC content - CIS v1.0.0:
@@ -94,4 +166,3 @@ ubuntu-security-guides-enhanced (24.04.1) noble; urgency=medium
   * Initial release of USG for Ubuntu 24.04 with CIS v1.0.0 profiles
 
  -- Miha Purg <miha.purg@canonical.com>  Wed, 26 Feb 2025 13:21:17 +0100
-
